@@ -1,1 +1,0 @@
-{"source_app":"discord-remote-control","session_id":"discord-test-123","hook_event_type":"DiscordTestEvent","payload":{"test":true,"message":"Test event from discord-remote-control"},"summary":"Test event","timestamp":1710360682000}
