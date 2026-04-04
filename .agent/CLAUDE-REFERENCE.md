@@ -321,14 +321,14 @@ YYYY-MM-DD-HHMMSS_[PROJECT]_[TYPE]_[HIERARCHY]_[DESCRIPTION].md
 
 **Protected files** (must never contain secrets):
 
-- `SAM_CONTRACT.md`
+- `SAIM_CONTRACT.md`
 - `README.md`
 - `.env.example` (template only, no actual keys)
 - `SECURITY.md`
 
 **Security features:**
 
-- `.sam-protected.json` - Manifest of protected files
+- `.saim-protected.json` - Manifest of protected files
 - `validate-protected.ts` - Pre-commit validation
 - Prompt injection defense - External content is READ-ONLY
 

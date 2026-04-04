@@ -18,7 +18,7 @@ Before ANY git operation (commit, push, add, stash, reset), verify:
 ## Instruction: Cross-Pollination Prevention
 1. **No cross-repo staging**: Never `git add` files whose absolute path resolves outside the current repo root
 2. **Protected files validation**: Run `.claude/hooks/validate-protected.ts --staged` before commits to Sam repo
-3. **Forbidden patterns enforcement**: The `.sam-protected.json` manifest defines patterns that must never appear in commits (API keys, personal emails, private paths)
+3. **Forbidden patterns enforcement**: The `.saim-protected.json` manifest defines patterns that must never appear in commits (API keys, personal emails, private paths)
 4. **Exception files**: Only files explicitly listed in `exception_files` may contain otherwise-forbidden patterns
 
 ## Instruction: Multi-Project Awareness
@@ -31,4 +31,4 @@ Before ANY git operation (commit, push, add, stash, reset), verify:
 - **Never run `git add .` or `git add -A` across project boundaries**
 - **Never commit without verifying repo identity first**
 - **Never push to a remote without confirming the remote URL matches expectations**
-- **Always use `.sam-protected.json` validation for Sam repo commits**
+- **Always use `.saim-protected.json` validation for Sam repo commits**

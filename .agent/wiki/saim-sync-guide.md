@@ -18,10 +18,10 @@ When you improve your private setup, you want to share those improvements with S
 
 Sam has built-in protection to prevent accidents:
 
-### 1. **Protected Files List** (`.sam-protected.json`)
+### 1. **Protected Files List** (`.saim-protected.json`)
 Defines files that must NOT be overwritten with private content:
 - `README.md` - Sam-specific (not Private README)
-- `SAM_CONTRACT.md` - Defines Sam boundaries
+- `SAIM_CONTRACT.md` - Defines Sam boundaries
 - `.claude/hooks/lib/pai-paths.ts` - Sam path resolution
 - `.claude/hooks/self-test.ts` - Sam health check
 - `.claude/.env.example` - Template (no real keys)
@@ -107,7 +107,7 @@ bun .claude/hooks/validate-protected.ts
 Expected output:
 ```
 ✅ README.md
-✅ SAM_CONTRACT.md
+✅ SAIM_CONTRACT.md
 ✅ .claude/Hooks/lib/pai-paths.ts
 ...
 ✅ All protected files validated successfully!
@@ -179,7 +179,7 @@ cp ${PAI_DIR}/../README.md ~$HOME/Projects/sam/README.md
 
 **Problem:** Public README explains public template, Private README is private
 
-**Solution:** Check `.sam-protected.json` before copying
+**Solution:** Check `.saim-protected.json` before copying
 
 ### Mistake 4: Not Testing After Sync
 ```bash
@@ -215,20 +215,20 @@ git commit --no-verify -m "message"
 
 ## 📁 Protected Files Reference
 
-See `.sam-protected.json` for the complete list.
+See `.saim-protected.json` for the complete list.
 
 **Categories:**
 
 1. **Core Documents**
    - `README.md` - Sam-specific introduction
-   - `SAM_CONTRACT.md` - Defines what Sam guarantees
+   - `SAIM_CONTRACT.md` - Defines what Sam guarantees
    - `SECURITY.md` - Public security guidance
 
 2. **Sam Infrastructure**
    - `.claude/hooks/lib/pai-paths.ts` - Path resolution library
    - `.claude/hooks/self-test.ts` - Health check system
    - `.claude/hooks/validate-protected.ts` - Protection validator
-   - `.sam-protected.json` - This manifest
+   - `.saim-protected.json` - This manifest
 
 3. **Sanitized Config**
    - `.claude/.env.example` - Template with placeholders
@@ -276,7 +276,7 @@ A: Yes, but not recommended. You can skip by not installing the pre-commit hook 
 A: That's fine! The validation checks the *content*, not that files don't change. Just ensure the content stays Sam-appropriate.
 
 **Q: How do I add a new protected file?**
-A: Edit `.sam-protected.json` and add the file path to the appropriate category.
+A: Edit `.saim-protected.json` and add the file path to the appropriate category.
 
 **Q: Can I use rsync instead of manual copying?**
 A: Use with extreme caution. Better to copy specific files to avoid accidents.

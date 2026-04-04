@@ -269,7 +269,7 @@ Prevents modification of protected files:
 
 ```typescript
 const PROTECTED_FILES = [
-  "SAM_CONTRACT.md",
+  "SAIM_CONTRACT.md",
   "README.md",
   "SECURITY.md"
 ];

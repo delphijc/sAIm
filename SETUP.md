@@ -28,7 +28,7 @@ Required variables:
 
 ### 3. Customize Assistant Name
 Edit `.agent/config/profile.json` and `.claude/CLAUDE.md`:
-- Change "PAI" to your assistant's name (e.g., "Nova", "Sam")
+- Change "PAI" to your assistant's name (e.g., "Nova", "sAIm")
 - Update `voiceId` if desired
 - Adjust colors and other settings
 

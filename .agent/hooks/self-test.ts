@@ -203,7 +203,7 @@ test(
   'PAI Contract',
   () => {
     // PAI_CONTRACT.md is in repo root
-    const contractPath = join(REPO_ROOT, 'SAM_CONTRACT.md');
+    const contractPath = join(REPO_ROOT, 'SAIM_CONTRACT.md');
     return existsSync(contractPath);
   },
   'PAI contract document present',

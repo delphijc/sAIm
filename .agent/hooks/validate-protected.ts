@@ -28,7 +28,7 @@ interface ProtectedManifest {
 }
 
 const PAI_ROOT = join(import.meta.dir, '../..');
-const MANIFEST_PATH = join(PAI_ROOT, '.sam-protected.json');
+const MANIFEST_PATH = join(PAI_ROOT, '.saim-protected.json');
 
 // Colors for terminal output
 const RED = '\x1b[31m';
@@ -211,7 +211,7 @@ async function main() {
     console.log('  2. Remove personal email addresses');
     console.log('  3. Remove references to private data');
     console.log('  4. Ensure Sam-specific files reference "Sam"');
-    console.log('\n📖 See .sam-protected.json for details\n');
+    console.log('\n📖 See .saim-protected.json for details\n');
     process.exit(1);
   } else {
     console.log(`\n${GREEN}✅ All protected files validated successfully!${RESET}\n`);

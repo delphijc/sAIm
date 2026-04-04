@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Sam** is an open-source template for building AI-powered personal operating systems on top of Claude Code. It transforms Claude Code from a chatbot into a structured personal AI system with memory, skills, automation, and multi-agent orchestration. The `.agent/` directory is symlinked to `~/.claude`, so it is loaded automatically by Claude Code.
+**sAIm** is an open-source template for building AI-powered personal operating systems on top of Claude Code. It transforms Claude Code from a chatbot into a structured personal AI system with memory, skills, automation, and multi-agent orchestration. The `.agent/` directory is symlinked to `~/.claude`, so it is loaded automatically by Claude Code.
 
 ## Runtime & Tooling
 
@@ -84,14 +84,14 @@ Before any git operation:
 2. Verify remote: `git remote get-url origin`
 3. Never `git add .` or `git add -A`
 4. Run `bun .claude/hooks/validate-protected.ts --staged` before committing
-5. `.sam-protected.json` defines forbidden patterns (API keys, emails, private paths)
+5. `.saim-protected.json` defines forbidden patterns (API keys, emails, private paths)
 
 ## Two-Repository Security Model
 
 - **Private setup (`~/.claude/`)** — contains secrets, personal data, voice IDs. NEVER public.
-- **Public Sam repo** — sanitized template only. No personal data, no API keys.
+- **Public sAIm repo** — sanitized template only. No personal data, no API keys.
 
-`.sam-protected.json` is the manifest enforcing this boundary. The `validate-protected.ts` pre-commit hook checks staged files against it.
+`.saim-protected.json` is the manifest enforcing this boundary. The `validate-protected.ts` pre-commit hook checks staged files against it.
 
 ## CLI Development Convention
 
@@ -108,4 +108,4 @@ Default to **Tier 1 (llcli-style)**: manual arg parsing, zero external dependenc
 | `.agent/skills/CORE/CONSTITUTION.md` | Foundational philosophy |
 | `.agent/wiki/architecture.md` | Detailed technical architecture |
 | `.agent/settings.json` | Hook definitions and global config |
-| `.sam-protected.json` | Protected files manifest |
+| `.saim-protected.json` | Protected files manifest |

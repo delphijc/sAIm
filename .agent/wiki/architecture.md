@@ -242,7 +242,7 @@ Sam Public (this repo)          Private Setup (~/.claude)
 ```
 
 ### Protected Files
-- `SAM_CONTRACT.md`
+- `SAIM_CONTRACT.md`
 - `README.md`
 - `.env.example`
 - `SECURITY.md`

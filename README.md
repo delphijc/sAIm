@@ -1,11 +1,11 @@
 
 
-# Sam - Smart AI Manager.
+# sAIm - Smart AI Manager.
 
 ### Smart AI manager  and operating system
 
 
-[Sam Avatar](./blue-team-defender.png)
+[sAIm Avatar](./blue-team-defender.png)
 
 </br>
 
@@ -14,21 +14,21 @@
 [**Quick Start**](#-quick-start) · [**Documentation**](#-documentation) · [**Components**](#-components) · [**Origins**](#-origins)
 
 > [!NOTE]
-> **Citation:** Sam is a fork of the original [PAI 1.0 platform](https://github.com/danielmiessler/PAI) created by Daniel Miessler. It builds upon the core philosophies of his [Fabric](https://github.com/danielmiessler/fabric) project and the [Human 3.0](https://danielmiessler.com/blog/human-3-0-evolution-artificial-intelligence/) manifesto.
+> **Citation:** sAIm is a fork of the original [PAI 1.0 platform](https://github.com/danielmiessler/PAI) created by Daniel Miessler. It builds upon the core philosophies of his [Fabric](https://github.com/danielmiessler/fabric) project and the [Human 3.0](https://danielmiessler.com/blog/human-3-0-evolution-artificial-intelligence/) manifesto.
 
 ---
 
 # AI that works for *you*
 
-Sam is an open-source template for building your own AI-powered operating system. It provides the heavy lifting—infrastructure, skills, memory, and orchestration—so you can focus on building an AI that truly represents you.
+sAIm is an open-source template for building your own AI-powered operating system. It provides the heavy lifting—infrastructure, skills, memory, and orchestration—so you can focus on building an AI that truly represents you.
 
-Unlike commercial assistants that serve their creators, Sam is designed to serve **you**. It runs on your infrastructure, keeps your data local where possible, and grows with you.
+Unlike commercial assistants that serve their creators, sAIm is designed to serve **you**. It runs on your infrastructure, keeps your data local where possible, and grows with you.
 
 <br/>
 
-## What is Sam?
+## What is sAIm?
 
-Sam (formerly PAI) is a platform-independent AI infrastructure system. It orchestrates agents, manages long-term memory, and executes complex workflows using "skills". While currently optimized for prompt-based coding and agentic workflows, it is designed to be model-agnostic.
+sAIm (formerly PAI) is a platform-independent AI infrastructure system. It orchestrates agents, manages long-term memory, and executes complex workflows using "skills". While currently optimized for prompt-based coding and agentic workflows, it is designed to be model-agnostic.
 
 ### Key Capabilities
 
@@ -39,7 +39,7 @@ Sam (formerly PAI) is a platform-independent AI infrastructure system. It orches
 | **26+ Agents** | Specialized personas (Engineer, Architect, Researcher, Pentester, Designer, etc.) |
 | **248 Patterns** | Fabric AI patterns for content processing and extraction |
 | **Voice Output** | Audible responses via ElevenLabs integration |
-| **Discord Remote Control** | Remote access to Sam via Discord with persistent memory |
+| **Discord Remote Control** | Remote access to sAIm via Discord with persistent memory |
 | **Task Runner** | JSONL-based job queue with multi-LLM backend support |
 | **Git Isolation** | Worktree-based sandboxing for safe experimentation |
 | **Memory System** | Persistent semantic memory with SQLite and association tracking |
@@ -58,18 +58,18 @@ Sam (formerly PAI) is a platform-independent AI infrastructure system. It orches
 
 1.  **Clone the Repository**
     ```bash
-    git clone https://github.com/delphijc/sam.git ~/sam
-    cd ~/sam
+    git clone https://github.com/delphijc/saim.git ~/saim
+    cd ~/saim
     ```
 
 2.  **Create Symlink**
-    Sam expects to be at `~/.claude`. Create a symlink:
+    sAIm expects to be at `~/.claude`. Create a symlink:
     ```bash
     # Backup existing .claude if present
     [ -d ~/.claude ] && mv ~/.claude ~/.claude.backup
 
     # Create symlink
-    ln -s ~/sam/.agent ~/.claude
+    ln -s ~/saim/.agent ~/.claude
     ```
 
 3.  **Run Setup Wizard**
@@ -87,13 +87,13 @@ Sam (formerly PAI) is a platform-independent AI infrastructure system. It orches
     ```bash
     claude
     ```
-    Sam automatically loads via the SessionStart hook.
+    sAIm automatically loads via the SessionStart hook.
 
 <br/>
 
 ## Architecture
 
-Sam follows a **Skills-as-Containers** architecture with event-driven automation:
+sAIm follows a **Skills-as-Containers** architecture with event-driven automation:
 
 1.  **Skills System**: Self-contained capability packages with domain expertise, routing logic, workflows, and CLI tools. Skills auto-activate based on user intent via `USE WHEN` triggers.
 2.  **Agents System**: 26+ specialized AI personas (Engineer, Architect, Researcher, Security Architect, Designer, etc.) with specific permissions and capabilities for delegation.
@@ -109,7 +109,7 @@ Sam follows a **Skills-as-Containers** architecture with event-driven automation
 Self-contained capability packages. Key skills include:
 - **CORE**: System identity, configuration, and mandatory response format (auto-loads at session start)
 - **fabric**: 248 AI patterns for content processing
-- **discord-remote-control**: Remote access to Sam via Discord with image, file, and voice note support
+- **discord-remote-control**: Remote access to sAIm via Discord with image, file, and voice note support
 - **Research**: Multi-source parallel research with Perplexity and Gemini agents
 - **create-agent/create-skill**: Framework creation tools
 - **Observability**: Real-time agent monitoring dashboard
@@ -160,10 +160,10 @@ Services managed via systemd (auto-start on boot):
 Comprehensive documentation is available in the [**Wiki**](.agent/wiki/):
 
 - [**Getting Started**](.agent/wiki/getting-started.md) - Installation and first run
-- [**Architecture Overview**](.agent/wiki/architecture.md) - How Sam is built
+- [**Architecture Overview**](.agent/wiki/architecture.md) - How sAIm is built
 - [**Skills System**](.agent/wiki/skills-system.md) - Modular capabilities guide
 - [**Hooks System**](.agent/wiki/hooks-system.md) - Event automation
-- [**SAM Contract**](.agent/wiki/SAM_CONTRACT.md) - Core guarantees
+- [**SAM Contract**](.agent/wiki/SAIM_CONTRACT.md) - Core guarantees
 
 Additional resources:
 - [**Core Constitution**](.agent/skills/CORE/CONSTITUTION.md) - Complete philosophy
@@ -173,7 +173,7 @@ Additional resources:
 
 ## Origins
 
-Sam is a fork of the original [PAI 1.0 platform](https://github.com/danielmiessler/PAI) created by Daniel Miessler. It builds upon:
+sAIm is a fork of the original [PAI 1.0 platform](https://github.com/danielmiessler/PAI) created by Daniel Miessler. It builds upon:
 
 - [**Fabric**](https://github.com/danielmiessler/fabric) - AI patterns project (248 patterns maintained locally)
 - [**Human 3.0**](https://danielmiessler.com/blog/human-3-0-evolution-artificial-intelligence/) - Philosophy of AI augmentation

@@ -242,7 +242,7 @@ These files are **Sam-specific** and must NOT be overwritten with private conten
 
 ### **Protected Files:**
 ```
-sam-contract.md                    # This file
+saim-contract.md                    # This file
 README.md                          # Sam-specific (not Private README)
 .claude/Hooks/lib/pai-paths.ts     # Path resolution
 .claude/Hooks/self-test.ts         # Health check
