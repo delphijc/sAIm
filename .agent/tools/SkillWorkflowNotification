@@ -1,0 +1,18 @@
+#!/bin/bash
+# skill-workflow-notification - Called when a skill workflow is invoked
+# This script exists primarily as a signal for the observability system
+# which detects workflow invocations by watching for calls to this script.
+#
+# Usage: skill-workflow-notification WORKFLOWNAME SKILLNAME
+#
+# Example: skill-workflow-notification GIT CORE
+#
+# The observability system parses Bash tool calls for this pattern:
+#   /skill-workflow-notification\s+(\w+)\s+(\w+)
+# and extracts workflow and skill names for display.
+
+WORKFLOW_NAME="${1:-unknown}"
+SKILL_NAME="${2:-unknown}"
+
+# Output confirmation (captured by observability)
+echo "Workflow invoked: ${WORKFLOW_NAME} from ${SKILL_NAME}"

@@ -1,0 +1,22 @@
+[Unit]
+Description=Awareness Dashboard Client (Frontend Vite Dev Server)
+After=network-online.target awareness-dashboard-server.service
+Wants=network-online.target
+Requires=awareness-dashboard-server.service
+PartOf=awareness-dashboard.target
+
+[Service]
+Type=simple
+WorkingDirectory=__HOME__/Projects/awareness/dashboard/apps/client
+ExecStart=/home/linuxbrew/.linuxbrew/bin/node __HOME__/Projects/awareness/dashboard/apps/client/node_modules/vite/bin/vite.js
+Restart=on-failure
+RestartSec=5
+StartLimitInterval=60
+StartLimitBurst=3
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=awareness-dashboard-client
+Environment="VITE_API_BASE=http://localhost:4100"
+
+[Install]
+WantedBy=awareness-dashboard.target

@@ -1,0 +1,720 @@
+#!/usr/bin/env bash
+# PAI Heartbeat — Cross-project pulse check
+#
+# Scans all projects in ~/Projects/, collects git vitals, and emits:
+#   - A markdown heartbeat report saved to PAI memory/heartbeats/
+#   - A condensed POST to the memory-server (localhost:4242) for semantic memory
+#   - An optional Discord webhook notification (DISCORD_HEARTBEAT_WEBHOOK env var)
+#   - An optional POST to the observability event stream (localhost:4000)
+#
+# Usage:
+#   pai-heartbeat              — Run full heartbeat
+#   pai-heartbeat --dry-run    — Print report to stdout, no side effects
+#
+# Schedule: systemd timer every 6 hours (or launchd on macOS)
+# Target runtime: < 30 seconds (git stat reads only, no test runs)
+
+set -euo pipefail
+
+# ---------------------------------------------------------------------------
+# Configuration
+# ---------------------------------------------------------------------------
+
+PROJECTS_DIR="${HOME}/Projects"
+PAI_DIR="${PAI_DIR:-${HOME}/.claude}"
+LOG_DIR="${HOME}/Library/Logs"
+LOG_FILE="${LOG_DIR}/pai-heartbeat.log"
+MEMORY_SERVER="http://localhost:4242"
+OBSERVABILITY_SERVER="http://localhost:4000"
+
+# Discord webhook URL — set DISCORD_HEARTBEAT_WEBHOOK in your environment or
+# ~/.claude/.env to enable Discord notifications.
+DISCORD_WEBHOOK="${DISCORD_HEARTBEAT_WEBHOOK:-}"
+
+DRY_RUN=false
+if [[ "${1:-}" == "--dry-run" ]]; then
+  DRY_RUN=true
+fi
+
+# Ordered list of all known projects (tab-separated safe names)
+PROJECTS=(
+  awareness
+  chatterbox
+  cyber-alert-mgr
+  firststudent
+  "frontmatter.studio"
+  jay-gentic
+  markdown-editor
+  nlm
+  realms-of-tomorrow
+  sam
+  security-stack
+  task_runner
+  voice-server
+)
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+log() {
+  local msg="[$(date '+%Y-%m-%d %H:%M:%S')] $1"
+  if [[ "$DRY_RUN" == false ]]; then
+    echo "$msg" >> "$LOG_FILE" 2>/dev/null || true
+  fi
+  echo "$msg" >&2
+}
+
+# Human-readable relative time from a Unix epoch integer
+relative_time() {
+  local epoch="${1:-0}"
+  if [[ "$epoch" == "0" || -z "$epoch" ]]; then
+    echo "never"
+    return
+  fi
+
+  local now
+  now=$(date +%s)
+  local diff=$(( now - epoch ))
+
+  if (( diff < 120 )); then
+    echo "just now"
+  elif (( diff < 3600 )); then
+    echo "$(( diff / 60 ))m ago"
+  elif (( diff < 86400 )); then
+    echo "$(( diff / 3600 ))h ago"
+  elif (( diff < 604800 )); then
+    echo "$(( diff / 86400 ))d ago"
+  else
+    echo "$(( diff / 604800 ))w ago"
+  fi
+}
+
+# Truncate a string to N characters with ellipsis
+truncate_str() {
+  local str="${1:-}"
+  local max="${2:-50}"
+  if (( ${#str} > max )); then
+    echo "${str:0:$(( max - 3 ))}..."
+  else
+    echo "$str"
+  fi
+}
+
+# Check if a TCP port is listening (macOS/Linux compatible)
+port_open() {
+  local port="${1}"
+  (echo "" > /dev/tcp/localhost/"$port") 2>/dev/null && return 0 || return 1
+}
+
+# Compute "6 hours ago" as Unix epoch, cross-platform
+six_hours_ago_epoch() {
+  # macOS uses -v flag; GNU date uses -d flag
+  if date -v-6H +%s &>/dev/null 2>&1; then
+    date -v-6H +%s
+  else
+    date -d "6 hours ago" +%s 2>/dev/null || echo "0"
+  fi
+}
+
+# Compute "N days ago" as Unix epoch, cross-platform
+n_days_ago_epoch() {
+  local n="${1:-14}"
+  if date -v-"${n}"d +%s &>/dev/null 2>&1; then
+    date -v-"${n}"d +%s
+  else
+    date -d "${n} days ago" +%s 2>/dev/null || echo "0"
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# Per-project data collection
+# Writes a single tab-separated line to stdout:
+#   project  branch  last_epoch  last_msg  changes  commits_6h  stale_count
+# ---------------------------------------------------------------------------
+
+collect_project_data() {
+  local project="${1}"
+  local project_dir="${PROJECTS_DIR}/${project}"
+
+  local branch="N/A"
+  local last_epoch=0
+  local last_msg="(directory not found)"
+  local changes=0
+  local commits_6h=0
+  local stale_count=0
+
+  if [[ ! -d "$project_dir" ]]; then
+    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+      "$project" "$branch" "$last_epoch" "$last_msg" "$changes" "$commits_6h" "$stale_count"
+    return
+  fi
+
+  if ! git -C "$project_dir" rev-parse --git-dir &>/dev/null 2>&1; then
+    branch="no-git"
+    last_msg="(not a git repo)"
+    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+      "$project" "$branch" "$last_epoch" "$last_msg" "$changes" "$commits_6h" "$stale_count"
+    return
+  fi
+
+  branch=$(git -C "$project_dir" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "detached")
+  last_epoch=$(git -C "$project_dir" log -1 --format="%ct" 2>/dev/null || echo "0")
+  last_epoch="${last_epoch:-0}"
+
+  last_msg=$(git -C "$project_dir" log -1 --format="%s" 2>/dev/null || echo "(no commits)")
+  last_msg=$(truncate_str "$last_msg" 60)
+
+  # Count all modified/added/deleted/untracked files
+  changes=$(git -C "$project_dir" status --porcelain 2>/dev/null | wc -l | tr -d ' ')
+
+  # Commits in the last 6 hours
+  local cutoff_6h
+  cutoff_6h=$(six_hours_ago_epoch)
+  if [[ "$cutoff_6h" != "0" ]]; then
+    commits_6h=$(git -C "$project_dir" log \
+      --after="@${cutoff_6h}" \
+      --format="%H" 2>/dev/null | wc -l | tr -d ' ')
+  fi
+
+  # Stale branches: last commit older than 14 days, excluding current HEAD branch
+  local cutoff_14d
+  cutoff_14d=$(n_days_ago_epoch 14)
+
+  if [[ "$cutoff_14d" != "0" ]]; then
+    while IFS= read -r b; do
+      # Strip leading asterisk + spaces from git branch output
+      b="${b#\* }"
+      b="${b#  }"
+      b=$(echo "$b" | tr -d '[:space:]')
+      [[ -z "$b" ]] && continue
+      [[ "$b" == "$branch" ]] && continue
+
+      local b_epoch
+      b_epoch=$(git -C "$project_dir" log -1 --format="%ct" "$b" 2>/dev/null || echo "0")
+      b_epoch="${b_epoch:-0}"
+
+      if (( b_epoch > 0 && b_epoch < cutoff_14d )); then
+        (( stale_count++ )) || true
+      fi
+    done < <(git -C "$project_dir" branch 2>/dev/null)
+  fi
+
+  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+    "$project" "$branch" "$last_epoch" "$last_msg" "$changes" "$commits_6h" "$stale_count"
+}
+
+# ---------------------------------------------------------------------------
+# Build and emit the full heartbeat report
+# Writes the report to stdout via a temp file, then prints the timestamp
+# as the very last line (used by main to separate report from ts_safe).
+# ---------------------------------------------------------------------------
+
+generate_report() {
+  local timestamp
+  timestamp=$(date '+%Y-%m-%d %H:%M')
+
+  local ts_safe
+  ts_safe=$(date '+%Y-%m-%d-%H%M')
+
+  log "Starting heartbeat scan for ${#PROJECTS[@]} projects..."
+
+  # Collect project rows into temp files in parallel
+  local tmpdir
+  tmpdir=$(mktemp -d)
+
+  for project in "${PROJECTS[@]}"; do
+    (
+      collect_project_data "$project" > "${tmpdir}/${project}.row" 2>/dev/null
+    ) &
+  done
+
+  # Wait for all background jobs
+  wait
+
+  # --- Parse rows and build report sections ---
+
+  local table_rows=""
+  local attention_items=""
+  local attention_count=0
+  local now
+  now=$(date +%s)
+  local inactive_threshold=$(( 3 * 24 * 3600 ))
+
+  for project in "${PROJECTS[@]}"; do
+    local row_file="${tmpdir}/${project}.row"
+    [[ ! -f "$row_file" ]] && continue
+
+    local proj branch last_epoch last_msg changes commits_6h stale_count
+    IFS=$'\t' read -r proj branch last_epoch last_msg changes commits_6h stale_count \
+      < "$row_file" || continue
+
+    # Human-readable last-commit time
+    local last_rel
+    last_rel=$(relative_time "${last_epoch:-0}")
+
+    # Changes display
+    local changes_display="clean"
+    if (( ${changes:-0} > 0 )); then
+      changes_display="${changes} modified"
+    fi
+
+    # Activity display
+    local activity_display="—"
+    if (( ${commits_6h:-0} > 0 )); then
+      activity_display="${commits_6h} commits"
+    fi
+
+    local msg_short
+    msg_short=$(truncate_str "$last_msg" 40)
+
+    table_rows="${table_rows}| ${proj} | ${branch} | ${last_rel} - \"${msg_short}\" | ${changes_display} | ${activity_display} |\n"
+
+    # Attention: uncommitted changes on main/master
+    if (( ${changes:-0} > 0 )) && [[ "$branch" == "main" || "$branch" == "master" ]]; then
+      attention_items="${attention_items}- [${proj}] ${changes} uncommitted change(s) on ${branch}\n"
+      (( attention_count++ )) || true
+    fi
+
+    # Attention: large change set on feature branches
+    if (( ${changes:-0} > 5 )) && [[ "$branch" != "main" && "$branch" != "master" ]]; then
+      attention_items="${attention_items}- [${proj}] ${changes} uncommitted change(s) on branch ${branch}\n"
+      (( attention_count++ )) || true
+    fi
+
+    # Attention: no activity in 3+ days
+    if (( ${last_epoch:-0} > 0 )); then
+      local days_idle=$(( (now - last_epoch) / 86400 ))
+      if (( days_idle >= 3 )); then
+        attention_items="${attention_items}- [${proj}] No activity in ${days_idle} day(s) — last: \"${msg_short}\"\n"
+        (( attention_count++ )) || true
+      fi
+    fi
+
+    # Attention: stale branches
+    if (( ${stale_count:-0} > 0 )); then
+      attention_items="${attention_items}- [${proj}] ${stale_count} stale branch(es) older than 14 days\n"
+      (( attention_count++ )) || true
+    fi
+  done
+
+  rm -rf "$tmpdir"
+
+  # Attention section text
+  local attention_text
+  if [[ -z "$attention_items" ]]; then
+    attention_text="No issues detected — all projects appear healthy."
+  else
+    attention_text=$(printf '%b' "$attention_items")
+  fi
+
+  # Recommendations
+  local recommendations=""
+  if printf '%b' "$attention_items" | grep -q "uncommitted.*main\|uncommitted.*master"; then
+    recommendations="${recommendations}- Commit or stash pending changes on main branches before they accumulate\n"
+  fi
+  if printf '%b' "$attention_items" | grep -q "No activity in"; then
+    recommendations="${recommendations}- Review idle projects — they may need a status update or can be archived\n"
+  fi
+  if printf '%b' "$attention_items" | grep -q "stale branch"; then
+    recommendations="${recommendations}- Prune stale branches to keep repos navigable\n"
+  fi
+  if [[ -z "$recommendations" ]]; then
+    recommendations="- All projects look healthy — no immediate action required\n"
+  fi
+
+  # Emit the report to stdout
+  printf '# Heartbeat: %s\n\n' "$timestamp"
+  printf '> Generated by pai-heartbeat | Projects scanned: %d\n\n' "${#PROJECTS[@]}"
+  printf '## Project Pulse\n\n'
+  printf '| Project | Branch | Last Commit | Changes | Activity (6h) |\n'
+  printf '|---------|--------|-------------|---------|----------------|\n'
+  printf '%b' "$table_rows"
+  printf '\n'
+  printf '## Attention Needed\n\n'
+  printf '%s\n\n' "$attention_text"
+  printf '## Recommendations\n\n'
+  printf '%b' "$recommendations"
+  printf '\n'
+  echo "---"
+  printf '*Run at: %s | Next run: ~6 hours*\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')"
+
+  # Last line: the safe timestamp for the filename (parsed by main)
+  printf '\n__TS_SAFE__:%s\n' "$ts_safe"
+}
+
+# ---------------------------------------------------------------------------
+# Side effects
+# ---------------------------------------------------------------------------
+
+save_report() {
+  local report="${1}"
+  local ts_safe="${2}"
+
+  # Derive the memory directory from the current working directory
+  local safe_pwd=$(echo "$PWD" | sed 's|/|-|g')
+  local heartbeat_dir="${PAI_DIR}/projects/${safe_pwd}/memory/heartbeats"
+  mkdir -p "$heartbeat_dir"
+
+  local report_path="${heartbeat_dir}/${ts_safe}-heartbeat.md"
+  printf '%s\n' "$report" > "$report_path"
+  log "Report saved to: $report_path"
+  echo "$report_path"
+}
+
+wait_for_memory_lock() {
+  local lock_file="${PAI_DIR}/discord-remote-control/.memory-lock"
+  local max_wait=30
+  local elapsed=0
+
+  while [ -f "$lock_file" ] && [ $elapsed -lt $max_wait ]; do
+    log "Memory server lock held — waiting... ($elapsed/${max_wait}s)"
+    sleep 1
+    elapsed=$((elapsed + 1))
+  done
+
+  if [ -f "$lock_file" ]; then
+    log "WARNING: Memory lock timeout after ${max_wait}s — proceeding anyway (stale lock)"
+    rm -f "$lock_file" 2>/dev/null || true
+  fi
+}
+
+post_to_memory_server() {
+  local summary="${1}"
+
+  if ! port_open 4242; then
+    log "Memory server not available on port 4242 — skipping memory extract"
+    return
+  fi
+
+  # Wait for any active memory extraction to finish
+  wait_for_memory_lock
+
+  local now_human
+  now_human=$(date '+%Y-%m-%d %H:%M')
+  local epoch
+  epoch=$(date +%s)
+
+  # Escape the summary for JSON embedding
+  local safe_summary
+  safe_summary=$(printf '%s' "$summary" | \
+    sed 's/\\/\\\\/g' | \
+    sed 's/"/\\"/g' | \
+    tr -d '\n\r' | \
+    sed 's/	/ /g')
+
+  # Post cross-project overview tagged to "sam" (the PAI infrastructure project)
+  local payload
+  payload="{\"userMessage\":\"PAI heartbeat pulse check at ${now_human}\",\"assistantResponse\":\"${safe_summary}\",\"sessionId\":\"heartbeat-${epoch}\",\"source\":\"pai-heartbeat\",\"project\":\"sam\"}"
+
+  local http_code
+  http_code=$(curl -s -o /dev/null -w "%{http_code}" \
+    -X POST "${MEMORY_SERVER}/memory/extract" \
+    -H "Content-Type: application/json" \
+    -d "$payload" \
+    --connect-timeout 5 \
+    --max-time 10 2>/dev/null || echo "000")
+
+  if [[ "$http_code" == "200" ]]; then
+    log "Memory extract posted successfully"
+  else
+    log "Memory extract failed (HTTP ${http_code})"
+  fi
+}
+
+# Post per-project attention items to the memory server, tagged with the correct project name.
+# Accepts the full report text and re-parses attention lines grouped by project.
+post_per_project_memory() {
+  local report="${1}"
+
+  if ! port_open 4242; then
+    log "Memory server not available on port 4242 — skipping per-project memory posts"
+    return
+  fi
+
+  local now_human
+  now_human=$(date '+%Y-%m-%d %H:%M')
+  local epoch
+  epoch=$(date +%s)
+
+  # Collect unique project names that appear in attention items (lines like "- [proj] ...")
+  local proj_names=()
+  while IFS= read -r line; do
+    local pname
+    pname=$(printf '%s' "$line" | sed -n 's/^- \[\([^]]*\)\].*/\1/p')
+    if [[ -n "$pname" ]]; then
+      # Only add if not already in the list
+      local already=false
+      for existing in "${proj_names[@]:-}"; do
+        [[ "$existing" == "$pname" ]] && already=true && break
+      done
+      [[ "$already" == false ]] && proj_names+=("$pname")
+    fi
+  done < <(printf '%s\n' "$report" | grep '^\- \[')
+
+  if [[ ${#proj_names[@]} -eq 0 ]]; then
+    log "No per-project attention items — skipping per-project memory posts"
+    return
+  fi
+
+  for pname in "${proj_names[@]}"; do
+    # Gather all attention lines for this project
+    local proj_attn_lines
+    proj_attn_lines=$(printf '%s\n' "$report" | grep "^\- \[${pname}\]" || true)
+    [[ -z "$proj_attn_lines" ]] && continue
+
+    local safe_attn
+    safe_attn=$(printf '%s' "$proj_attn_lines" | \
+      sed 's/\\/\\\\/g' | \
+      sed 's/"/\\"/g' | \
+      tr -d '\n\r' | \
+      sed 's/	/ /g')
+
+    local proj_payload
+    proj_payload="{\"userMessage\":\"PAI heartbeat for ${pname} at ${now_human}\",\"assistantResponse\":\"${safe_attn}\",\"sessionId\":\"heartbeat-${pname}-${epoch}\",\"source\":\"pai-heartbeat\",\"project\":\"${pname}\"}"
+
+    local http_code
+    http_code=$(curl -s -o /dev/null -w "%{http_code}" \
+      -X POST "${MEMORY_SERVER}/memory/extract" \
+      -H "Content-Type: application/json" \
+      -d "$proj_payload" \
+      --connect-timeout 5 \
+      --max-time 10 2>/dev/null || echo "000")
+
+    if [[ "$http_code" == "200" ]]; then
+      log "Per-project memory post OK: ${pname}"
+    else
+      log "Per-project memory post failed for ${pname} (HTTP ${http_code})"
+    fi
+  done
+}
+
+# Save a small focused markdown file per project that has attention items.
+# Files are written to $PAI_DIR/projects/<safe-project-path>/memory/heartbeats/
+save_per_project_reports() {
+  local report="${1}"
+  local ts_safe="${2}"
+
+  # Collect unique project names from attention items
+  local proj_names=()
+  while IFS= read -r line; do
+    local pname
+    pname=$(printf '%s' "$line" | sed -n 's/^- \[\([^]]*\)\].*/\1/p')
+    if [[ -n "$pname" ]]; then
+      local already=false
+      for existing in "${proj_names[@]:-}"; do
+        [[ "$existing" == "$pname" ]] && already=true && break
+      done
+      [[ "$already" == false ]] && proj_names+=("$pname")
+    fi
+  done < <(printf '%s\n' "$report" | grep '^\- \[')
+
+  if [[ ${#proj_names[@]} -eq 0 ]]; then
+    log "No per-project attention items — skipping per-project report files"
+    return
+  fi
+
+  local timestamp
+  timestamp=$(date '+%Y-%m-%d %H:%M')
+
+  for pname in "${proj_names[@]}"; do
+    # Collect git vitals for this project
+    local proj_dir="${PROJECTS_DIR}/${pname}"
+    local branch="N/A"
+    local last_msg="(unknown)"
+    local last_rel="unknown"
+
+    if [[ -d "$proj_dir" ]] && git -C "$proj_dir" rev-parse --git-dir &>/dev/null 2>&1; then
+      branch=$(git -C "$proj_dir" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "detached")
+      local last_epoch
+      last_epoch=$(git -C "$proj_dir" log -1 --format="%ct" 2>/dev/null || echo "0")
+      last_epoch="${last_epoch:-0}"
+      last_rel=$(relative_time "$last_epoch")
+      last_msg=$(git -C "$proj_dir" log -1 --format="%s" 2>/dev/null || echo "(no commits)")
+      last_msg=$(truncate_str "$last_msg" 60)
+    fi
+
+    # Attention items for this project
+    local proj_attn_lines
+    proj_attn_lines=$(printf '%s\n' "$report" | grep "^\- \[${pname}\]" || true)
+
+    # Recommendations: re-use the same pattern logic applied per-project
+    local proj_recs=""
+    if printf '%s\n' "$proj_attn_lines" | grep -q "uncommitted.*main\|uncommitted.*master"; then
+      proj_recs="${proj_recs}- Commit or stash pending changes on main branches before they accumulate\n"
+    fi
+    if printf '%s\n' "$proj_attn_lines" | grep -q "No activity in"; then
+      proj_recs="${proj_recs}- Review idle project — may need a status update or can be archived\n"
+    fi
+    if printf '%s\n' "$proj_attn_lines" | grep -q "stale branch"; then
+      proj_recs="${proj_recs}- Prune stale branches to keep the repo navigable\n"
+    fi
+    if [[ -z "$proj_recs" ]]; then
+      proj_recs="- No specific recommendations\n"
+    fi
+
+    # Write the per-project report file
+    # Derive the memory directory from the project path
+    local proj_path=$(find "$PROJECTS_DIR/$pname" -maxdepth 0 2>/dev/null | sed 's|/|-|g' | head -1)
+    local proj_heartbeat_dir="${PAI_DIR}/projects/${proj_path}/memory/heartbeats"
+    mkdir -p "$proj_heartbeat_dir"
+
+    local proj_report_path="${proj_heartbeat_dir}/${ts_safe}-heartbeat.md"
+    {
+      printf '# Heartbeat: %s — %s\n\n' "$pname" "$timestamp"
+      printf '**Branch:** %s\n' "$branch"
+      printf '**Last Commit:** %s — "%s"\n\n' "$last_rel" "$last_msg"
+      printf '## Attention Items\n\n'
+      printf '%s\n\n' "$proj_attn_lines"
+      printf '## Recommendations\n\n'
+      printf '%b' "$proj_recs"
+      printf '\n---\n'
+      printf '*Generated by pai-heartbeat at %s*\n' "$timestamp"
+    } > "$proj_report_path"
+
+    log "Per-project report saved: ${proj_report_path}"
+  done
+}
+
+post_to_observability() {
+  local attn_count="${1:-0}"
+
+  if ! port_open 4000; then
+    log "Observability server not available on port 4000 — skipping"
+    return
+  fi
+
+  local iso_ts
+  iso_ts=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
+
+  local payload
+  payload="{\"type\":\"heartbeat\",\"timestamp\":\"${iso_ts}\",\"source\":\"pai-heartbeat\",\"data\":{\"projects\":${#PROJECTS[@]},\"attention_items\":${attn_count}}}"
+
+  curl -s -o /dev/null \
+    -X POST "${OBSERVABILITY_SERVER}/events" \
+    -H "Content-Type: application/json" \
+    -d "$payload" \
+    --connect-timeout 3 \
+    --max-time 8 2>/dev/null || true
+
+  log "Observability event posted"
+}
+
+post_to_discord() {
+  local discord_msg="${1}"
+
+  # Resolve webhook URL from env var or PAI .env file
+  if [[ -z "$DISCORD_WEBHOOK" ]]; then
+    local env_file="${PAI_DIR}/.env"
+    if [[ -f "$env_file" ]]; then
+      DISCORD_WEBHOOK=$(grep -E '^DISCORD_HEARTBEAT_WEBHOOK=' "$env_file" 2>/dev/null \
+        | head -1 | cut -d'=' -f2- | tr -d '"' | tr -d "'" | tr -d '[:space:]' || true)
+    fi
+  fi
+
+  if [[ -z "$DISCORD_WEBHOOK" ]]; then
+    log "No DISCORD_HEARTBEAT_WEBHOOK configured — skipping Discord notification"
+    return
+  fi
+
+  # Truncate to Discord's 2000 char limit
+  if (( ${#discord_msg} > 1900 )); then
+    discord_msg="${discord_msg:0:1900}...(truncated)"
+  fi
+
+  # Escape for JSON
+  local safe_msg
+  safe_msg=$(printf '%s' "$discord_msg" | \
+    sed 's/\\/\\\\/g' | \
+    sed 's/"/\\"/g' | \
+    sed 's/$/\\n/' | \
+    tr -d '\n' | \
+    sed 's/\\n$//')
+
+  local http_code
+  http_code=$(curl -s -o /dev/null -w "%{http_code}" \
+    -X POST "$DISCORD_WEBHOOK" \
+    -H "Content-Type: application/json" \
+    -d "{\"content\":\"${safe_msg}\"}" \
+    --connect-timeout 5 \
+    --max-time 10 2>/dev/null || echo "000")
+
+  if [[ "$http_code" == "200" || "$http_code" == "204" ]]; then
+    log "Discord notification sent"
+  else
+    log "Discord notification failed (HTTP ${http_code})"
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+main() {
+  mkdir -p "$LOG_DIR"
+  log "=== PAI Heartbeat starting ==="
+
+  # Capture the full report output
+  local full_output
+  full_output=$(generate_report)
+
+  # Extract the safe timestamp embedded as the last line
+  local ts_safe
+  ts_safe=$(echo "$full_output" | grep '^__TS_SAFE__:' | cut -d':' -f2-)
+
+  # Strip the sentinel line to get the clean report
+  local report
+  report=$(echo "$full_output" | grep -v '^__TS_SAFE__:')
+
+  if [[ "$DRY_RUN" == true ]]; then
+    echo "$report"
+    log "Dry run complete — no files written"
+    return
+  fi
+
+  # Save to disk
+  local saved_path
+  saved_path=$(save_report "$report" "$ts_safe")
+
+  # Count attention items for posting
+  local attn_count
+  attn_count=$(echo "$report" | grep -c '^\- \[' 2>/dev/null || echo "0")
+
+  # Build condensed summary for semantic memory
+  local now_human
+  now_human=$(date '+%Y-%m-%d %H:%M')
+  local attn_lines
+  attn_lines=$(echo "$report" | grep '^\- \[' | head -5 | tr '\n' ' ')
+  local summary
+  summary="PAI heartbeat at ${now_human}: scanned ${#PROJECTS[@]} projects, ${attn_count} attention item(s). ${attn_lines}"
+
+  # Post to services (errors are soft — they don't abort the heartbeat)
+  post_to_memory_server "$summary" || log "WARNING: Memory post encountered an error"
+  post_per_project_memory "$report" || log "WARNING: Per-project memory posts encountered an error"
+  post_to_observability "$attn_count" || log "WARNING: Observability post encountered an error"
+
+  # Build Discord message
+  local discord_msg
+  local discord_attn_lines
+  discord_attn_lines=$(echo "$report" | grep '^\- \[' | head -8)
+  if [[ -n "$discord_attn_lines" && "$attn_count" -gt 0 ]]; then
+    discord_msg="**PAI Heartbeat** — ${now_human}
+${attn_count} item(s) need attention:
+\`\`\`
+${discord_attn_lines}
+\`\`\`"
+  else
+    discord_msg="**PAI Heartbeat** — ${now_human}
+All ${#PROJECTS[@]} projects are healthy."
+  fi
+
+  post_to_discord "$discord_msg" || log "WARNING: Discord notification encountered an error"
+
+  # Save focused per-project report files for projects with attention items
+  save_per_project_reports "$report" "$ts_safe" || log "WARNING: Per-project report save encountered an error"
+
+  log "=== PAI Heartbeat complete: ${saved_path} ==="
+  echo "$saved_path"
+}
+
+main "$@"

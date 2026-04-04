@@ -1,0 +1,24 @@
+{
+  "description": "PAI Project Registry - All managed projects under ~/Projects/",
+  "updated": "2026-03-15",
+  "projects": [
+    {
+      "name": "sAIm",
+      "path": "~/Projects/sAIm",
+      "remote": "https://github.com/delphijc/sAIm.git",
+      "branch": "main",
+      "description": "Sam - smart AI manager agent orchestration, skills, memory",
+      "hookVariant": "full",
+      "status": "active"
+    },
+    {
+      "name": "voice-server",
+      "path": "~/Projects/voice-server",
+      "remote": "https://github.com/delphijc/voice-server.git",
+      "branch": "main",
+      "description": "Voice synthesis server for PAI TTS",
+      "hookVariant": "isolation-only",
+      "status": "active"
+    }
+  ]
+}

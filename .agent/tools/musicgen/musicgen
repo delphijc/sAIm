@@ -1,0 +1,124 @@
+#!/usr/bin/env bash
+# musicgen - CLI wrapper for MusicGen-small audio generation
+#
+# Usage:
+#   musicgen --prompt "text description" [--duration SECONDS] [--output PATH]
+#   musicgen --help
+#
+# Examples:
+#   musicgen --prompt "ocean waves with distant whale songs" --duration 15 --output /tmp/ocean.wav
+#   musicgen --prompt "ambient forest at night" --duration 20
+#   musicgen --prompt "upbeat lo-fi hip hop loop"
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VENV_PYTHON="${SCRIPT_DIR}/venv/bin/python"
+GENERATE_SCRIPT="${SCRIPT_DIR}/generate.py"
+
+# ── Sanity checks ──────────────────────────────────────────────────────────────
+
+if [[ ! -f "${VENV_PYTHON}" ]]; then
+  echo "[musicgen] Error: venv not found at ${SCRIPT_DIR}/venv" >&2
+  echo "[musicgen] Run: python3 -m venv ${SCRIPT_DIR}/venv && ${SCRIPT_DIR}/venv/bin/pip install audiocraft torch torchaudio" >&2
+  exit 1
+fi
+
+if [[ ! -f "${GENERATE_SCRIPT}" ]]; then
+  echo "[musicgen] Error: generate.py not found at ${GENERATE_SCRIPT}" >&2
+  exit 1
+fi
+
+# ── Argument parsing ───────────────────────────────────────────────────────────
+
+PROMPT=""
+DURATION=""
+OUTPUT=""
+MODEL=""
+EXTRA_ARGS=()
+
+show_help() {
+  cat <<EOF
+musicgen - Generate audio from a text prompt using Meta's MusicGen-small
+
+USAGE:
+  musicgen --prompt TEXT [OPTIONS]
+
+OPTIONS:
+  --prompt TEXT        Text description of the audio to generate (required)
+  --duration SECONDS   Length of generated audio in seconds (default: 10, max: 30)
+  --output PATH        Output WAV file path (default: auto-generated in /tmp/)
+  --model MODEL_ID     HuggingFace model ID (default: facebook/musicgen-small)
+  --help               Show this help message and exit
+
+EXAMPLES:
+  musicgen --prompt "ocean waves with distant whale songs" --duration 15 --output /tmp/ocean.wav
+  musicgen --prompt "peaceful ambient piano" --duration 20
+  musicgen --prompt "upbeat electronic loop with synth bass" --duration 30 --output ~/music/loop.wav
+  musicgen --prompt "thunderstorm in a forest" --model facebook/musicgen-medium
+
+NOTES:
+  - First run downloads model weights (~300MB for musicgen-small)
+  - Weights are cached in ~/.cache/huggingface/
+  - CPU inference: expect ~2-5x real-time (10s clip takes 20-50s to generate)
+  - Model variants: musicgen-small (300M), musicgen-medium (1.5B), musicgen-large (3.3B)
+EOF
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --prompt)
+      PROMPT="$2"
+      shift 2
+      ;;
+    --duration)
+      DURATION="$2"
+      shift 2
+      ;;
+    --output)
+      OUTPUT="$2"
+      shift 2
+      ;;
+    --model)
+      MODEL="$2"
+      shift 2
+      ;;
+    --help|-h)
+      show_help
+      exit 0
+      ;;
+    *)
+      echo "[musicgen] Unknown argument: $1" >&2
+      echo "Run 'musicgen --help' for usage." >&2
+      exit 1
+      ;;
+  esac
+done
+
+# ── Validate required arguments ────────────────────────────────────────────────
+
+if [[ -z "${PROMPT}" ]]; then
+  echo "[musicgen] Error: --prompt is required." >&2
+  echo "Run 'musicgen --help' for usage." >&2
+  exit 1
+fi
+
+# ── Build Python args ──────────────────────────────────────────────────────────
+
+PYTHON_ARGS=("--prompt" "${PROMPT}")
+
+if [[ -n "${DURATION}" ]]; then
+  PYTHON_ARGS+=("--duration" "${DURATION}")
+fi
+
+if [[ -n "${OUTPUT}" ]]; then
+  PYTHON_ARGS+=("--output" "${OUTPUT}")
+fi
+
+if [[ -n "${MODEL}" ]]; then
+  PYTHON_ARGS+=("--model" "${MODEL}")
+fi
+
+# ── Execute ────────────────────────────────────────────────────────────────────
+
+exec "${VENV_PYTHON}" "${GENERATE_SCRIPT}" "${PYTHON_ARGS[@]}"

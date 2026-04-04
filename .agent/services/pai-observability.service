@@ -1,0 +1,17 @@
+[Unit]
+Description=PAI Observability Dashboard
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/.claude/skills/observability
+ExecStart=/bin/bash -c 'cd %h/.claude/skills/observability && bash manage.sh start'
+Restart=on-failure
+RestartSec=20
+StartLimitInterval=300
+StartLimitBurst=3
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,194 @@
+# ValidateSkill Workflow
+
+**Purpose:** Check if an existing skill follows the canonical structure with proper TitleCase naming.
+
+---
+
+## Step 1: Read the Authoritative Source
+
+**REQUIRED FIRST:** Read the canonical structure:
+
+```
+${PAI_DIR}/Skills/CORE/SkillSystem.md
+```
+
+---
+
+## Step 2: Read the Target Skill Files
+
+Progressive disclosure structure requires both files:
+
+```bash
+${PAI_DIR}/Skills/[SkillName]/SKILL.md
+${PAI_DIR}/Skills/[SkillName]/Reference.md
+```
+
+---
+
+## Step 3: Check TitleCase Naming
+
+### Skill Directory
+```bash
+ls ${PAI_DIR}/Skills/ | grep -i [skillname]
+```
+
+Verify TitleCase:
+- ✓ `Blogging`, `Daemon`, `create-skill`
+- ✗ `createskill`, `create-skill`, `CREATE_SKILL`
+
+### Workflow Files
+```bash
+ls ${PAI_DIR}/Skills/[SkillName]/workflows/
+```
+
+Verify TitleCase:
+- ✓ `Create.md`, `UpdateDaemonInfo.md`, `SyncRepo.md`
+- ✗ `create.md`, `update-daemon-info.md`, `SYNC_REPO.md`
+
+### Tool Files
+```bash
+ls ${PAI_DIR}/Skills/[SkillName]/tools/
+```
+
+Verify TitleCase:
+- ✓ `ManageServer.ts`, `ManageServer.help.md`
+- ✗ `manage-server.ts`, `MANAGE_SERVER.ts`
+
+---
+
+## Step 4: Check YAML Frontmatter
+
+Verify the YAML has:
+
+### Single-Line Description with USE WHEN
+```yaml
+---
+name: SkillName
+description: [What it does]. USE WHEN [intent triggers using OR]. [Additional capabilities].
+---
+```
+
+**Check for violations:**
+- Multi-line description using `|` (WRONG)
+- Missing `USE WHEN` keyword (WRONG)
+- Separate `triggers:` array in YAML (OLD FORMAT - WRONG)
+- Separate `workflows:` array in YAML (OLD FORMAT - WRONG)
+- `name:` not in TitleCase (WRONG)
+
+---
+
+## Step 5: Check Markdown Body
+
+Verify the body has:
+
+### Workflow Routing Section
+```markdown
+## Workflow Routing
+
+**When executing a workflow, output this notification:**
+
+```
+Running the **WorkflowName** workflow from the **SkillName** skill...
+```
+
+| Workflow | Trigger | File |
+|----------|---------|------|
+| **WorkflowOne** | "trigger phrase" | `workflows/WorkflowOne.md` |
+```
+
+**Check for violations:**
+- Missing `## Workflow Routing` section
+- Workflow names not in TitleCase
+- File paths not matching actual file names
+
+### Examples Section
+```markdown
+## Examples
+
+**Example 1: [Use case]**
+```
+User: "[Request]"
+→ [Action]
+→ [Result]
+```
+```
+
+**Check:** Examples section required (WRONG if missing)
+
+---
+
+## Step 6: Check Workflow Files
+
+```bash
+ls ${PAI_DIR}/Skills/[SkillName]/workflows/
+```
+
+Verify:
+- Every file uses TitleCase naming
+- Every file has a corresponding entry in `## Workflow Routing` section
+- Every routing entry points to an existing file
+- Routing table names match file names exactly
+
+---
+
+## Step 7: Check Structure
+
+```bash
+ls -la ${PAI_DIR}/Skills/[SkillName]/
+```
+
+Verify:
+- `tools/` directory exists (even if empty)
+- No `backups/` directory inside skill
+- Reference docs at skill root (not in workflows/)
+
+---
+
+## Step 8: Report Results
+
+**COMPLIANT** if all checks pass:
+
+### Progressive Disclosure Structure
+- [ ] Both `SKILL.md` and `Reference.md` exist
+- [ ] SKILL.md is ~60-80 lines (startup minimal)
+- [ ] Reference.md is ~100-150 lines (on-demand detailed)
+- [ ] SKILL.md has pointer to Reference.md
+- [ ] Reference.md has "Tier 2 documentation" note at top
+
+### Naming (TitleCase)
+- [ ] Skill directory uses TitleCase
+- [ ] All workflow files use TitleCase
+- [ ] All reference docs use TitleCase
+- [ ] All tool files use TitleCase
+- [ ] Routing table names match file names
+
+### SKILL.md YAML Frontmatter
+- [ ] `name:` uses TitleCase
+- [ ] `description:` is single-line with `USE WHEN`
+- [ ] No separate `triggers:` or `workflows:` arrays
+- [ ] Description under 1024 characters
+
+### SKILL.md Markdown Body
+- [ ] `## Workflow Routing` section present
+- [ ] Workflow notification text included
+- [ ] `## Examples` section with 2-3 patterns
+- [ ] All workflows have routing entries
+- [ ] `## Extended Context` section points to Reference.md
+
+### Reference.md Contents
+- [ ] Skill Philosophy section present
+- [ ] Core Methodology sections documented
+- [ ] Domain-Specific sections for key concepts
+- [ ] Tool Usage section with recommendations
+- [ ] Standards and Best Practices listed
+- [ ] Common Patterns section included
+
+### Directory Structure
+- [ ] `tools/` directory exists
+- [ ] `workflows/` directory exists with all routed files
+- [ ] No `backups/` inside skill
+- [ ] All workflow routing entries match actual files
+
+**NON-COMPLIANT** if any check fails. Recommend using CanonicalizeSkill workflow to fix issues.
+
+**OPTIMAL** Result: Skill follows progressive disclosure pattern with minimal startup footprint and full on-demand capability.

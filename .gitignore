@@ -1,0 +1,106 @@
+# Dependencies
+node_modules/
+__pycache__/
+.venv/
+venv/
+*.egg-info/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+.cache/
+
+# IDE and editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment variables (CRITICAL - never commit secrets!)
+.env
+.env.local
+.env.*.local
+.env.discord
+.agent/.env
+.agent/.env.local
+.agent/.env.discord
+
+# Credentials and auth
+.agent/.credentials.json
+.credentials.json
+
+# Runtime and logs
+*.log
+*.pid
+*.lock
+.frontmatter.log
+
+# SQLite databases (contain personal data)
+*.db
+*.db-shm
+*.db-wal
+
+# System and temporary files
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+*.tmp
+*.bak
+
+# Session and debug data
+.agent/cache/
+.agent/debug/
+.agent/session-env/
+.agent/shell-snapshots/
+.agent/todos/
+.agent/plans/
+.agent/file-history/
+.agent/paste-cache/
+.agent/hook-events/
+.agent/telemetry/
+.agent/sessions/
+.agent/backups/
+
+# Runtime state
+.agent/agent-sessions.json
+.agent/stats-cache.json
+.agent/history.jsonl
+.agent/.session-briefing-state.json
+.agent/.compact-reminder-state.json
+.agent/mcp-needs-auth-cache.json
+
+# Recordings and personal data
+.agent/Recordings/
+.agent/history/
+.agent/History/Sessions/
+.agent/History/TranscribedAudio/
+.agent/reports/
+
+# Discord remote control runtime data
+.agent/discord-remote-control/history/
+.agent/discord-remote-control/sessions/
+.agent/discord-remote-control/raw-outputs/
+.agent/discord-remote-control/raw-transcripts/
+.agent/discord-remote-control/TranscribedAudio/
+.agent/discord-remote-control/wisdom/
+
+# Project-specific session data
+.agent/projects/*/session.json
+.agent/projects/*/logs/
+
+# Testing
+.coverage
+coverage/
+.pytest_cache/
+.bun/
+
+# Keep these template files
+!.agent/.env.template
+!.agent/.env.example
+!.agent/config/.gitkeep
+!.agent/History/.gitkeep

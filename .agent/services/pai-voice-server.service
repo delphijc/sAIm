@@ -1,0 +1,17 @@
+[Unit]
+Description=PAI Voice Server (ChatterboxTTS)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/Projects/voice-server
+ExecStart=%h/Projects/voice-server/start.sh
+Restart=on-failure
+RestartSec=10
+StartLimitInterval=300
+StartLimitBurst=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

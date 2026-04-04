@@ -1,0 +1,7 @@
+[Unit]
+Description=Awareness Dashboard (Backend + Frontend)
+Wants=awareness-dashboard-server.service awareness-dashboard-client.service
+After=awareness-dashboard-server.service awareness-dashboard-client.service
+
+[Install]
+WantedBy=pai-infrastructure.target

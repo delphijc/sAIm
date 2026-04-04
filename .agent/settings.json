@@ -1,0 +1,261 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "env": {
+    "PAI_DIR": "${HOME}/.claude",
+    "DA": "Sam",
+    "PAI_SIMPLE_COLORS": "0",
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "128000",
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "permissions": {
+    "allow": [
+      "Bash",
+      "Read",
+      "Write",
+      "Edit",
+      "MultiEdit",
+      "Glob",
+      "Grep",
+      "WebFetch(domain:*)",
+      "WebSearch",
+      "NotebookRead",
+      "NotebookEdit",
+      "TodoWrite",
+      "ExitPlanMode",
+      "Task",
+      "mcp__*"
+    ],
+    "deny": [
+      "Bash(diskutil partitionDisk)",
+      "Bash(diskutil eraseDisk)",
+      "Bash(diskutil eraseVolume)",
+      "Bash(diskutil reformat)",
+      "Bash(diskutil zeroDisk)",
+      "Bash(diskutil appleRAID)",
+      "Bash(diskutil randomDisk)",
+      "Bash(diskutil coreStorage)",
+      "Bash(diskutil cs)",
+      "Bash(diskutil disableJournal)",
+      "Bash(diskutil resetFusion)",
+      "Bash(diskutil disableOwnership)",
+      "Bash(diskutil apfs deleteContainer)",
+      "Bash(diskutil apfs eraseVolume)",
+      "Bash(diskutil apfs decryptVolume)",
+      "Bash(diskutil apfs changePassphrase)",
+      "Bash(diskutil apfs deleteVolume)",
+      "Bash(diskutil apfs deleteVolumeGroup)",
+      "Bash(diskutil apfs deleteSnapshot)",
+      "Bash(rm -rf /)",
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf ~)",
+      "Bash(rm -rf $HOME)",
+      "Bash(rm -rf $PAI_HOME)",
+      "Bash(rm -rf $PAI_DIR)",
+      "Bash(sudo rm -rf /)",
+      "Bash(sudo rm -rf /*)",
+      "Bash(fork bomb)",
+      "Bash(dd if=/dev/zero of=/dev/sda)",
+      "Bash(mkfs.ext4 /dev/sda)",
+      "Bash( /dev/sda)",
+      "Bash(> /dev/sda)"
+    ]
+  },
+  "model": "haiku",
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [],
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${HOME}/.claude/bin/run-hook.sh security-validator.ts"
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${HOME}/.claude/bin/run-hook.sh capture-all-events.ts --event-type PreToolUse"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${HOME}/.claude/bin/run-hook.sh capture-all-events.ts --event-type PostToolUse"
+          },
+          {
+            "type": "command",
+            "command": "${HOME}/.claude/bin/run-hook.sh update-tab-on-action.ts"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${HOME}/.claude/bin/run-hook.sh capture-session-summary.ts"
+          },
+          {
+            "type": "command",
+            "command": "${HOME}/.claude/bin/run-hook.sh capture-all-events.ts --event-type SessionEnd"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${HOME}/.claude/bin/run-hook.sh load-on-demand-references.ts"
+          },
+          {
+            "type": "command",
+            "command": "${HOME}/.claude/bin/run-hook.sh update-tab-titles.ts"
+          },
+          {
+            "type": "command",
+            "command": "${HOME}/.claude/bin/run-hook.sh capture-all-events.ts --event-type UserPromptSubmit"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${HOME}/.claude/bin/run-hook.sh load-core-context.ts"
+          },
+          {
+            "type": "command",
+            "command": "${HOME}/.claude/bin/run-hook.sh initialize-session.ts"
+          },
+          {
+            "type": "command",
+            "command": "${HOME}/.claude/bin/run-hook.sh capture-all-events.ts --event-type SessionStart"
+          },
+          {
+            "type": "command",
+            "command": "${HOME}/.claude/bin/run-hook.sh voice-notification-reminder.ts"
+          },
+          {
+            "type": "command",
+            "command": "${HOME}/.claude/bin/run-hook.sh session-briefing.ts"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${HOME}/.claude/bin/run-hook.sh stop-hook.ts"
+          },
+          {
+            "type": "command",
+            "command": "${HOME}/.claude/bin/run-hook.sh memory-capture.ts"
+          },
+          {
+            "type": "command",
+            "command": "${HOME}/.claude/bin/run-hook.sh validate-response-format.ts"
+          },
+          {
+            "type": "command",
+            "command": "${HOME}/.claude/bin/run-hook.sh capture-all-events.ts --event-type Stop"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${HOME}/.claude/bin/run-hook.sh subagent-start-hook.ts"
+          },
+          {
+            "type": "command",
+            "command": "${HOME}/.claude/bin/run-hook.sh capture-all-events.ts --event-type SubagentStart"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${HOME}/.claude/bin/run-hook.sh subagent-stop-hook.ts"
+          },
+          {
+            "type": "command",
+            "command": "${HOME}/.claude/bin/run-hook.sh capture-all-events.ts --event-type SubagentStop"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${HOME}/.claude/bin/run-hook.sh context-compression-hook.ts"
+          },
+          {
+            "type": "command",
+            "command": "${HOME}/.claude/bin/run-hook.sh session-briefing.ts --precompact"
+          },
+          {
+            "type": "command",
+            "command": "${HOME}/.claude/bin/run-hook.sh capture-all-events.ts --event-type PreCompact"
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${HOME}/.claude/bin/run-hook.sh capture-all-events.ts --event-type PostCompact"
+          },
+          {
+            "type": "command",
+            "command": "${HOME}/.claude/bin/run-hook.sh session-briefing.ts"
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash ${HOME}/.claude/statusline-command.sh"
+  },
+  "enabledPlugins": {},
+  "alwaysThinkingEnabled": true,
+  "effortLevel": "medium",
+  "_envDocs": {
+    "description": "Platform-agnostic environment variables used throughout the Personal AI system",
+    "DA": "Digital Assistant name - your AI's identity (e.g., 'Sam', 'PAI', 'Nova'). Used in statusline, hooks, and agent identification.",
+    "PAI_DIR": "Root directory for all PAI configuration. The setup.sh script updates this automatically. If hooks fail with 'No such file or directory', update this to your actual path (e.g., /Users/john/.claude).",
+    "PAI_SIMPLE_COLORS": "Set to '1' to use basic ANSI colors in statusline instead of 24-bit RGB. Enable if you see garbled colors or display issues in your terminal. Default: 0 (use full color).",
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "Maximum tokens for Claude responses. Higher values allow longer outputs but cost more."
+  },
+  "_setupNote": "IMPORTANT: Run 'bash .agent/setup.sh --fix-paths' to automatically update all hardcoded paths to your home directory. If you see hook errors, the setup script was not run or paths need updating.",
+  "max_tokens": 8192,
+  "$version": 2
+}

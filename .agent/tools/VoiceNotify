@@ -1,0 +1,18 @@
+#!/bin/bash
+# VoiceNotify - Background voice notification helper
+# Usage: VoiceNotify "Your message here"
+
+MESSAGE="${1:?Message required}"
+RATE="${2:-240}"
+VOICE_ENABLED="${3:-true}"
+
+# Fire background curl request and discard output
+(
+  curl -s -X POST http://localhost:8888/notify \
+    -H "Content-Type: application/json" \
+    -d "{\"message\":\"${MESSAGE}\",\"rate\":${RATE},\"voice_enabled\":${VOICE_ENABLED}}" \
+    >/dev/null 2>&1
+) &
+
+# Return immediately without waiting
+exit 0

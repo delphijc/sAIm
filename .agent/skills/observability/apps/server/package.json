@@ -1,0 +1,21 @@
+{
+  "name": "multi-agent-observability-server",
+  "version": "1.2.0",
+  "module": "src/index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "start": "bun src/index.ts",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "test": "echo \"No tests defined\""
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/ws": "^8.5.13",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {}
+}

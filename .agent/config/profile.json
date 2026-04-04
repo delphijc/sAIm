@@ -1,0 +1,21 @@
+{
+  "user": {
+    "name": "YOUR_USERNAME",
+    "email": "your.email@example.com"
+  },
+  "assistant": {
+    "name": "PAI",
+    "color": "purple",
+    "voiceId": "Jessica"
+  },
+  "paths": {
+    "home": "$HOME",
+    "pai_dir": "$HOME/.claude",
+    "projects_root": "$HOME/Projects"
+  },
+  "voice": {
+    "enabled": true,
+    "port": 8888
+  },
+  "version": "1.0.0"
+}

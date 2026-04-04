@@ -1,0 +1,85 @@
+#!/bin/sh
+# PAI Memory Lifecycle Runner
+# Unified entry point for daily journal, consolidation, and retrospective
+#
+# Usage:
+#   pai-memory-lifecycle journal      — Generate daily journal
+#   pai-memory-lifecycle consolidate  — Run memory consolidation
+#   pai-memory-lifecycle retrospective [daily|weekly|full] — Run retrospective
+#   pai-memory-lifecycle nightly      — Full nightly routine (consolidate + journal + daily retro)
+
+set -e
+
+SCRIPT_DIR="$(dirname "$(readlink -f "$0" 2>/dev/null || realpath "$0")")"
+PAI_DIR="${PAI_DIR:-$HOME/.claude}"
+MEMORY_DIR="$PAI_DIR/skills/discord-remote-control/service/memory"
+LOG_DIR="$HOME/Library/Logs"
+LOG_FILE="$LOG_DIR/pai-memory-lifecycle.log"
+
+log() {
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
+}
+
+case "${1:-help}" in
+  journal)
+    log "Starting daily journal generation..."
+    cd "$MEMORY_DIR"
+    bun run daily-journal.ts 2>&1 | tee -a "$LOG_FILE"
+    log "Daily journal complete."
+    ;;
+
+  consolidate)
+    log "Starting memory consolidation..."
+    cd "$MEMORY_DIR"
+    bun run consolidation.ts 2>&1 | tee -a "$LOG_FILE"
+    log "Memory consolidation complete."
+    ;;
+
+  retrospective)
+    MODE="${2:-daily}"
+    log "Starting $MODE retrospective..."
+    cd "$MEMORY_DIR"
+    bun -e "
+      import { initializeMemory } from './db.ts';
+      import { runAndSaveRetrospective, formatForDiscord } from './retrospective.ts';
+      import path from 'path';
+      const paiDir = process.env.PAI_DIR || path.join(process.env.HOME || '', '.claude');
+      await initializeMemory({ paiDir });
+      const { report, filePath } = runAndSaveRetrospective('${MODE}');
+      console.log(formatForDiscord(report));
+      console.log('Saved to:', filePath);
+    " 2>&1 | tee -a "$LOG_FILE"
+    log "$MODE retrospective complete."
+    ;;
+
+  nightly)
+    log "=== Starting nightly memory lifecycle ==="
+
+    # Step 1: Consolidation (cleanup before analysis)
+    log "Step 1/3: Memory consolidation"
+    "$0" consolidate || log "WARNING: Consolidation had errors"
+
+    # Step 2: Daily retrospective
+    log "Step 2/3: Daily retrospective"
+    "$0" retrospective daily || log "WARNING: Retrospective had errors"
+
+    # Step 3: Daily journal (last, so it can reference retro results)
+    log "Step 3/3: Daily journal"
+    "$0" journal || log "WARNING: Journal had errors"
+
+    log "=== Nightly memory lifecycle complete ==="
+    ;;
+
+  help|*)
+    echo "PAI Memory Lifecycle Runner"
+    echo ""
+    echo "Usage: $(basename "$0") <command> [options]"
+    echo ""
+    echo "Commands:"
+    echo "  journal                  Generate daily journal"
+    echo "  consolidate              Run memory consolidation"
+    echo "  retrospective [mode]     Run retrospective (daily|weekly|full)"
+    echo "  nightly                  Full nightly routine"
+    echo "  help                     Show this help"
+    ;;
+esac

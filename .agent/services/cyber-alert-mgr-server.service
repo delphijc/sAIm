@@ -1,0 +1,19 @@
+[Unit]
+Description=Cyber Alert Manager Backend Server (Express/Bun)
+After=network-online.target
+Wants=network-online.target
+PartOf=pai-infrastructure.target
+
+[Service]
+Type=simple
+WorkingDirectory=__HOME__/Projects/cyber-alert-mgr/server
+ExecStart=__HOME__/.bun/bin/bun run index.js
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+Environment="NODE_ENV=production"
+Environment="PORT=4200"
+
+[Install]
+WantedBy=pai-infrastructure.target

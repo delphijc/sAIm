@@ -1,0 +1,5 @@
+#!/bin/sh
+set -a
+. "$HOME/.claude/.env"
+set +a
+exec bun index.ts "$@"

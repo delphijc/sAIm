@@ -1,0 +1,19 @@
+[Unit]
+Description=Cyber Alert Manager Frontend (Vite React)
+After=network-online.target
+Wants=network-online.target
+PartOf=pai-infrastructure.target
+
+[Service]
+Type=simple
+WorkingDirectory=__HOME__/Projects/cyber-alert-mgr
+ExecStart=/home/linuxbrew/.linuxbrew/bin/node __HOME__/Projects/cyber-alert-mgr/node_modules/vite/bin/vite.js --host 0.0.0.0 --port 5174
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+Environment="NODE_ENV=development"
+Environment="VITE_API_URL=http://localhost:4200"
+
+[Install]
+WantedBy=pai-infrastructure.target

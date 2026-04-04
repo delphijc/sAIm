@@ -1,0 +1,17 @@
+[Unit]
+Description=PAI Discord Remote Control
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/.claude/skills/discord-remote-control
+ExecStart=%h/.claude/skills/discord-remote-control/scripts/start.sh
+Restart=on-failure
+RestartSec=15
+StartLimitInterval=300
+StartLimitBurst=3
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

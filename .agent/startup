@@ -1,0 +1,87 @@
+#!/bin/zsh
+# Sam Project Startup Script
+# Starts PAI infrastructure (voice server, observability) and optionally Claude Code
+# Usage:
+#   ./startup                    - Start all PAI services
+#   ./startup --stop             - Stop all services
+#   ./startup --start-voice      - Start voice services only
+#   ./startup --start-observe    - Start observability dashboard only
+#   ./startup --restart          - Restart all services
+
+set -e
+
+# Set PAI_DIR from git root or use symlink convention
+if [ -z "$PAI_DIR" ]; then
+  GIT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
+  if [ -n "$GIT_ROOT" ] && [ -d "$GIT_ROOT/.claude" ]; then
+    export PAI_DIR="$GIT_ROOT/.claude"
+  elif [ -d "$(pwd)/.claude" ]; then
+    export PAI_DIR="$(pwd)/.claude"
+  else
+    export PAI_DIR="$HOME/Projects/sam/.claude"
+  fi
+fi
+
+
+# Function to delegate to Su.ts with all arguments
+startup_delegation() {
+  local command="${1:---start}"
+  echo "🚀 Starting Sam development environment...\n"
+
+  # Call Su.ts with the requested command
+  bun "${PAI_DIR}/skills/StartUp/tools/Su.ts" "$command"
+
+  # Wait a moment for servers to stabilize (only if starting)
+  if [[ "$command" == "--start" || "$command" == "--restart" || "$command" == "--start-voice" || "$command" == "--start-observe" ]]; then
+    sleep 2
+  fi
+}
+
+# Main command routing
+case "${1:-}" in
+  --help|-h|help)
+    cat << 'EOF'
+Sam Project Startup Script
+
+Delegated interface to PAI StartUp skill (Su.ts)
+
+USAGE:
+  ./startup                    Start all PAI infrastructure (default)
+  ./startup --stop             Stop all services
+  ./startup --restart          Restart all services
+
+  ./startup --start-voice      Start voice services only
+  ./startup --stop-voice       Stop voice services only
+  ./startup --restart-voice    Restart voice services only
+
+  ./startup --start-observe    Start observability dashboard only
+  ./startup --stop-observe     Stop observability dashboard only
+  ./startup --restart-observe  Restart observability dashboard only
+
+  ./startup --help             Show this help message
+
+For more details, run: bun ~/.claude/skills/StartUp/tools/Su.ts --help
+EOF
+    ;;
+  "")
+    # No argument: start all services
+    startup_delegation "--start"
+    ;;
+  --start|--stop|--restart|-sd|--shutdown|--start-voice|--stop-voice|--restart-voice|--start-observe|--stop-observe|--restart-observe)
+    # Pass through recognized commands to Su.ts
+    # Handle aliases
+    case "$1" in
+      -sd|--shutdown)
+        startup_delegation "--stop"
+        ;;
+      *)
+        startup_delegation "$1"
+        ;;
+    esac
+    ;;
+  *)
+    echo "❌ Unknown command: $1"
+    echo "Use './startup --help' for usage information"
+    exit 1
+    ;;
+esac

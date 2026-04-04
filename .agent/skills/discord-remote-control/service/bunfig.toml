@@ -1,0 +1,7 @@
+# Bun configuration - minimal setup
+# Tests run from __tests__/ directory by default
+
+[install]
+# Supply chain protection: reject packages published less than 15 days ago
+# 15 days = 1,296,000 seconds
+minimumReleaseAge = 1296000

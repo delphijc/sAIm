@@ -1,0 +1,803 @@
+#!/usr/bin/env bash
+# pai-weekly-strategy -- Weekly cross-project strategic analysis
+#
+# Gathers 7 days of git data across all ~/Projects/, reads daily journals and
+# heartbeat reports, then invokes Claude Code for deep strategic analysis:
+#   - Architecture review (cross-project patterns, technical debt)
+#   - Progress & velocity analysis (what shipped, what's stalled)
+#   - Strategic recommendations (top 3 priorities, quick wins, risks)
+#
+# Output: ~/.claude/projects/<project-path>/memory/strategy/YYYY-MM-DD-weekly-strategy.md
+# Logs:   ~/Library/Logs/pai-weekly-strategy.log
+#
+# Usage:
+#   pai-weekly-strategy           -- Run full weekly analysis (today as week-end)
+#   pai-weekly-strategy --dry-run -- Gather data only, skip Claude invocation
+#   pai-weekly-strategy --help    -- Show this help
+
+set -euo pipefail
+
+# ---------------------------------------------------------------------------
+# Configuration
+# ---------------------------------------------------------------------------
+PAI_DIR="${PAI_DIR:-$HOME/.claude}"
+PROJECTS_ROOT="$HOME/Projects"
+MEMORY_BASE="$PAI_DIR/projects/$(echo "$PWD" | sed 's|/|-|g')/memory"
+STRATEGY_DIR="$MEMORY_BASE/strategy"
+JOURNALS_DIR="$HOME/Projects/sam/.agent/History/journals"
+HEARTBEATS_DIR="$MEMORY_BASE/heartbeats"
+LOG_DIR="$HOME/Library/Logs"
+LOG_FILE="$LOG_DIR/pai-weekly-strategy.log"
+MEMORY_SERVER="http://localhost:4242"
+VOICE_SERVER="http://localhost:8888"
+
+DRY_RUN=0
+
+# ---------------------------------------------------------------------------
+# Argument parsing
+# ---------------------------------------------------------------------------
+for arg in "$@"; do
+  case "$arg" in
+    --dry-run) DRY_RUN=1 ;;
+    --help|-h)
+      sed -n '2,20p' "$0" | grep '^#' | sed 's/^# \?//'
+      exit 0
+      ;;
+  esac
+done
+
+# ---------------------------------------------------------------------------
+# Logging
+# ---------------------------------------------------------------------------
+mkdir -p "$LOG_DIR"
+
+log() {
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
+}
+
+log_section() {
+  log "--- $1 ---"
+}
+
+# ---------------------------------------------------------------------------
+# Date arithmetic (portable -- no GNU date required on macOS)
+# ---------------------------------------------------------------------------
+TODAY="$(date '+%Y-%m-%d')"
+
+week_dates() {
+  python3 -c "
+import datetime
+today = datetime.date.today()
+for i in range(7):
+    d = today - datetime.timedelta(days=i)
+    print(d.strftime('%Y-%m-%d'))
+"
+}
+
+WEEK_START="$(python3 -c "
+import datetime
+print((datetime.date.today() - datetime.timedelta(days=6)).strftime('%Y-%m-%d'))
+")"
+
+log "=========================================="
+log "PAI Weekly Strategy Analysis starting"
+log "Week: $WEEK_START to $TODAY"
+log "=========================================="
+
+# ---------------------------------------------------------------------------
+# Step 1: Gather git data across all projects
+# ---------------------------------------------------------------------------
+log_section "Step 1: Git data collection"
+
+gather_git_data() {
+  local output=""
+  local total_commits=0
+
+  for project_dir in "$PROJECTS_ROOT"/*/; do
+    local project_name
+    project_name="$(basename "$project_dir")"
+
+    # Skip non-git directories
+    if [ ! -d "$project_dir/.git" ]; then
+      continue
+    fi
+
+    # Verify this is a valid git repo at exactly this path
+    local repo_root
+    repo_root="$(git -C "$project_dir" rev-parse --show-toplevel 2>/dev/null)" || continue
+
+    if [ "$(realpath "$repo_root" 2>/dev/null || echo "$repo_root")" != "$(realpath "$project_dir" 2>/dev/null || echo "${project_dir%/}")" ]; then
+      continue
+    fi
+
+    # Get commits from the last 7 days
+    local git_log
+    git_log="$(git -C "$project_dir" log \
+      --since="7 days ago" \
+      --oneline \
+      --no-merges \
+      --format="%ad %s" \
+      --date=short 2>/dev/null)" || continue
+
+    local commit_count=0
+    if [ -n "$git_log" ]; then
+      commit_count="$(echo "$git_log" | wc -l | tr -d ' ')"
+    fi
+
+    total_commits=$((total_commits + commit_count))
+
+    # Get changed file stats summary
+    local file_stats
+    file_stats="$(git -C "$project_dir" diff \
+      --stat \
+      "HEAD@{7 days ago}" HEAD 2>/dev/null | tail -1)" || file_stats="(no diff available)"
+
+    # Get top 3 active branches
+    local active_branches
+    active_branches="$(git -C "$project_dir" branch \
+      --sort=-committerdate \
+      --format='%(refname:short)' 2>/dev/null | head -3 | tr '\n' ', ' | sed 's/,$//')"
+
+    output="${output}
+### Project: ${project_name}
+- Commits (7d): ${commit_count}
+- Changed files: ${file_stats}
+- Active branches: ${active_branches:-main}
+- Recent commits:
+$(echo "$git_log" | head -10 | sed 's/^/  - /')
+"
+  done
+
+  echo "Total commits across all projects (7d): ${total_commits}"
+  echo ""
+  echo "$output"
+}
+
+GIT_DATA="$(gather_git_data)"
+log "Git data collected ($(echo "$GIT_DATA" | wc -l | tr -d ' ') lines)"
+
+# ---------------------------------------------------------------------------
+# Step 2: Read daily journals
+# ---------------------------------------------------------------------------
+log_section "Step 2: Reading daily journals"
+
+gather_journals() {
+  local output=""
+  local count=0
+
+  if [ ! -d "$JOURNALS_DIR" ]; then
+    echo "(No journals directory found at $JOURNALS_DIR)"
+    return
+  fi
+
+  for date_str in $(week_dates); do
+    local year_month="${date_str:0:7}"
+    local journal_path="$JOURNALS_DIR/$year_month/$date_str-journal.md"
+
+    if [ -f "$journal_path" ]; then
+      count=$((count + 1))
+      # Skip YAML frontmatter (between first and second ---)
+      local content
+      content="$(awk '/^---/{if(++n==2){found=1;next}} found' "$journal_path" 2>/dev/null | head -80)"
+      output="${output}
+=== Journal: ${date_str} ===
+${content}
+"
+    fi
+  done
+
+  if [ $count -eq 0 ]; then
+    echo "(No journals found for the past 7 days)"
+  else
+    echo "Found ${count} journal(s)"
+    echo ""
+    echo "$output"
+  fi
+}
+
+JOURNAL_DATA="$(gather_journals)"
+log "Journal data collected"
+
+# ---------------------------------------------------------------------------
+# Step 3: Read heartbeat reports
+# ---------------------------------------------------------------------------
+log_section "Step 3: Reading heartbeat reports"
+
+gather_heartbeats() {
+  local output=""
+  local count=0
+
+  if [ ! -d "$HEARTBEATS_DIR" ]; then
+    echo "(No heartbeats directory found at $HEARTBEATS_DIR)"
+    return
+  fi
+
+  for date_str in $(week_dates); do
+    for hb_file in "$HEARTBEATS_DIR"/${date_str}*.md "$HEARTBEATS_DIR"/${date_str}*.json; do
+      if [ -f "$hb_file" ]; then
+        count=$((count + 1))
+        local content
+        content="$(head -60 "$hb_file" 2>/dev/null)"
+        output="${output}
+=== Heartbeat: $(basename "$hb_file") ===
+${content}
+"
+      fi
+    done
+  done
+
+  if [ $count -eq 0 ]; then
+    echo "(No heartbeat reports found for the past 7 days)"
+  else
+    echo "Found ${count} heartbeat report(s)"
+    echo ""
+    echo "$output"
+  fi
+}
+
+HEARTBEAT_DATA="$(gather_heartbeats)"
+log "Heartbeat data collected"
+
+# ---------------------------------------------------------------------------
+# Step 4: Build analysis payload
+# ---------------------------------------------------------------------------
+log_section "Step 4: Building analysis payload"
+
+# Write the assembled payload to a temp file to avoid shell variable size limits
+# and to enable safe embedding in prompts without delimiter collision.
+TMPDIR_STRATEGY="$(mktemp -d)"
+trap 'rm -rf "$TMPDIR_STRATEGY"' EXIT
+
+PAYLOAD_FILE="$TMPDIR_STRATEGY/payload.txt"
+
+{
+  echo "# PAI Weekly Strategy Analysis Context"
+  echo "## Week: ${WEEK_START} to ${TODAY}"
+  echo "## Analysis Date: ${TODAY}"
+  echo ""
+  echo "---"
+  echo ""
+  echo "## Git Activity Summary (Past 7 Days)"
+  echo ""
+  echo "$GIT_DATA"
+  echo ""
+  echo "---"
+  echo ""
+  echo "## Daily Journals (Past 7 Days)"
+  echo ""
+  echo "$JOURNAL_DATA"
+  echo ""
+  echo "---"
+  echo ""
+  echo "## Heartbeat Reports (Past 7 Days)"
+  echo ""
+  echo "$HEARTBEAT_DATA"
+  echo ""
+  echo "---"
+} > "$PAYLOAD_FILE"
+
+PAYLOAD_BYTES="$(wc -c < "$PAYLOAD_FILE" | tr -d ' ')"
+log "Analysis payload built (${PAYLOAD_BYTES} bytes, written to temp file)"
+
+# ---------------------------------------------------------------------------
+# Step 5: Dry-run exit point
+# ---------------------------------------------------------------------------
+if [ "$DRY_RUN" -eq 1 ]; then
+  log "DRY RUN mode -- skipping Claude invocation."
+  log "Payload preview (first 50 lines):"
+  head -50 "$PAYLOAD_FILE" | tee -a "$LOG_FILE"
+  exit 0
+fi
+
+# ---------------------------------------------------------------------------
+# Step 6: Build prompt files via Python
+#
+# Prompts are assembled in Python rather than bash heredocs so that arbitrary
+# payload content (which could contain any delimiter string) never breaks the
+# prompt construction. The payload is read from the temp file.
+# ---------------------------------------------------------------------------
+log_section "Step 6: Building prompt files"
+
+python3 - "$TMPDIR_STRATEGY" "$PAYLOAD_FILE" <<'PYEOF'
+import sys, os
+
+tmpdir       = sys.argv[1]
+payload_path = sys.argv[2]
+
+with open(payload_path) as f:
+    payload = f.read()
+
+# ---- Architecture prompt ------------------------------------------------
+arch_prompt = (
+    "You are performing an architecture review as a senior software architect "
+    "for a personal AI infrastructure project called SAM (Personal AI System).\n\n"
+    "Analyze the following week of activity data across all projects and produce "
+    "a structured report section titled \"## Architecture Insights\".\n\n"
+    "Focus on:\n"
+    "1. Cross-project dependency analysis -- which projects are tightly coupled, "
+    "which are cleanly isolated\n"
+    "2. Technical debt identification -- recurring patterns of complexity, "
+    "workarounds, or refactors needed\n"
+    "3. Shared pattern opportunities -- code or logic that appears in multiple "
+    "projects and could be extracted into a shared library\n"
+    "4. Structural health -- are the right services responsible for the right things?\n\n"
+    "Be specific and actionable. Cite actual project names and commit messages "
+    "from the data. Use markdown formatting.\n\n"
+    "DATA:\n"
+    + payload
+    + "\nRespond with ONLY the \"## Architecture Insights\" section markdown. No preamble.\n"
+)
+
+# ---- Progress prompt ----------------------------------------------------
+progress_prompt = (
+    "You are performing a progress and velocity analysis as a senior engineering "
+    "manager reviewing a personal AI infrastructure project called SAM.\n\n"
+    "Analyze the following week of activity data and produce a structured report "
+    "section titled \"## Progress & Velocity\".\n\n"
+    "Focus on:\n"
+    "1. What was accomplished per project this week (concrete deliverables, not just activity)\n"
+    "2. Projects that appear stalled (low commit activity, no forward progress)\n"
+    "3. Velocity trends -- is momentum increasing or decreasing?\n"
+    "4. Mismatches between effort (many commits) and outcomes (unclear results)\n\n"
+    "Be specific. Reference actual commit messages and project names. "
+    "Use markdown tables where helpful.\n\n"
+    "DATA:\n"
+    + payload
+    + "\nRespond with ONLY the \"## Progress & Velocity\" section markdown. No preamble.\n"
+)
+
+# ---- Strategy prompt ----------------------------------------------------
+strategy_prompt = (
+    "You are Sam, a personal AI assistant for Jayson Cavendish, analyzing his "
+    "PAI (Personal AI Infrastructure) projects at the end of the week.\n\n"
+    "Based on the following week of git activity, daily journals, and heartbeat "
+    "data, produce these sections:\n\n"
+    "1. \"## Executive Summary\" -- 2-3 sentence overview of what happened this week, "
+    "what moved forward, what matters most right now\n\n"
+    "2. \"## Project Scoreboard\" -- A markdown table with columns: "
+    "Project | Commits | Key Changes | Health (Active/Stalled/Unknown) | Priority (High/Medium/Low)\n\n"
+    "3. \"## Top 3 Priorities for Next Week\" -- Numbered list. Each priority must be "
+    "specific, actionable, and tied to actual evidence from the data. Not generic.\n\n"
+    "4. \"## Quick Wins\" -- Bullet list of 3-5 things that could be completed in under "
+    "2 hours each, based on what you see is close to done or easy to unlock\n\n"
+    "5. \"## Risks & Blockers\" -- Bullet list of concrete risks. What could break, "
+    "what dependencies might be fragile, what is missing attention?\n\n"
+    "6. \"## Agent Team Recommendations\" -- Brief note on what the architect agent and "
+    "planner agent would specifically flag this week\n\n"
+    "Be direct, honest, and strategic. This is a personal system -- Jayson reads "
+    "this Monday morning to plan his week.\n\n"
+    "DATA:\n"
+    + payload
+    + "\nRespond with ONLY the six sections listed above in markdown. "
+    "No additional commentary or preamble.\n"
+)
+
+for name, content in [
+    ("arch",     arch_prompt),
+    ("progress", progress_prompt),
+    ("strategy", strategy_prompt),
+]:
+    with open(os.path.join(tmpdir, f"{name}.txt"), "w") as fh:
+        fh.write(content)
+
+print("Prompt files written.")
+PYEOF
+
+log "Prompt files ready in $TMPDIR_STRATEGY"
+
+# ---------------------------------------------------------------------------
+# Step 7: Invoke Claude for each analysis pass
+# ---------------------------------------------------------------------------
+log_section "Step 7: Claude strategic analysis"
+
+# stream-json + --verbose works around the known Claude Code regression where
+# --print alone returns an empty result field even when the model produces text.
+CLAUDE_BIN="${CLAUDE_BIN:-claude}"
+
+run_claude_analysis() {
+  local prompt_file="$1"
+  local label="$2"
+  log "  Running Claude analysis: ${label}..."
+
+  local result
+  result="$( "$CLAUDE_BIN" \
+    --print \
+    --output-format stream-json \
+    --verbose \
+    < "$prompt_file" \
+    2>>"$LOG_FILE" | python3 -c "
+import sys, json
+for line in sys.stdin:
+    line = line.strip()
+    if not line:
+        continue
+    try:
+        event = json.loads(line)
+        if event.get('type') == 'assistant':
+            for block in (event.get('message', {}).get('content') or []):
+                if block.get('type') == 'text':
+                    print(block['text'], end='')
+    except (json.JSONDecodeError, KeyError):
+        pass
+" 2>/dev/null)" || {
+    log "  WARNING: Claude analysis failed for ${label}, using placeholder"
+    result="(Analysis unavailable -- Claude invocation failed for ${label})"
+  }
+
+  echo "$result"
+}
+
+log "Running architecture analysis..."
+ARCH_SECTION="$(run_claude_analysis "$TMPDIR_STRATEGY/arch.txt" "architecture")"
+
+log "Running progress analysis..."
+PROGRESS_SECTION="$(run_claude_analysis "$TMPDIR_STRATEGY/progress.txt" "progress")"
+
+log "Running strategy analysis..."
+STRATEGY_SECTION="$(run_claude_analysis "$TMPDIR_STRATEGY/strategy.txt" "strategy")"
+
+log "All Claude analyses complete."
+
+# ---------------------------------------------------------------------------
+# Step 8: Assemble the final report
+# ---------------------------------------------------------------------------
+log_section "Step 8: Assembling report"
+
+mkdir -p "$STRATEGY_DIR"
+REPORT_FILE="$STRATEGY_DIR/${TODAY}-weekly-strategy.md"
+
+PROJECT_COUNT="$(echo "$GIT_DATA" | grep -c "^### Project:" 2>/dev/null || echo "0")"
+JOURNAL_COUNT="$(echo "$JOURNAL_DATA" | grep -c "^=== Journal:" 2>/dev/null || echo "0")"
+HEARTBEAT_COUNT="$(echo "$HEARTBEAT_DATA" | grep -c "^=== Heartbeat:" 2>/dev/null || echo "0")"
+
+{
+  echo "# Weekly Strategy Report: Week of ${WEEK_START}"
+  echo ""
+  echo "> Generated: ${TODAY}"
+  echo "> Coverage: ${WEEK_START} to ${TODAY}"
+  echo ""
+  echo "$STRATEGY_SECTION"
+  echo ""
+  echo "$ARCH_SECTION"
+  echo ""
+  echo "$PROGRESS_SECTION"
+  echo ""
+  echo "---"
+  echo ""
+  echo "## Raw Data Summary"
+  echo ""
+  echo "**Projects scanned:** ${PROJECT_COUNT}"
+  echo "**Journals read:** ${JOURNAL_COUNT}"
+  echo "**Heartbeats read:** ${HEARTBEAT_COUNT}"
+  echo "**Analysis timestamp:** $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+} > "$REPORT_FILE"
+
+log "Report saved to: $REPORT_FILE"
+
+# ---------------------------------------------------------------------------
+# Step 9: Post key findings to memory-server
+# ---------------------------------------------------------------------------
+log_section "Step 9: Posting to memory-server"
+
+# Wait for any active memory extraction lock to be released
+wait_for_memory_lock() {
+  local lock_file="${PAI_DIR}/discord-remote-control/.memory-lock"
+  local max_wait=30
+  local elapsed=0
+
+  while [ -f "$lock_file" ] && [ $elapsed -lt $max_wait ]; do
+    log "Memory server lock held — waiting... ($elapsed/${max_wait}s)"
+    sleep 1
+    elapsed=$((elapsed + 1))
+  done
+
+  if [ -f "$lock_file" ]; then
+    log "WARNING: Memory lock timeout after ${max_wait}s — proceeding anyway (stale lock)"
+    rm -f "$lock_file" 2>/dev/null || true
+  fi
+}
+
+wait_for_memory_lock
+
+if curl -sf "$MEMORY_SERVER/memory/health" >/dev/null 2>&1; then
+  log "Memory-server available at $MEMORY_SERVER"
+
+  # Extract executive summary paragraph from the report
+  EXEC_SUMMARY="$(awk '/^## Executive Summary/{found=1;next} found && /^##/{exit} found && NF{print}' \
+    "$REPORT_FILE" | head -5 | tr '\n' ' ')"
+
+  MEMORY_PAYLOAD="$(python3 -c "
+import json, sys
+summary = sys.argv[1][:500]
+print(json.dumps({
+  'userMessage': 'Weekly strategy analysis for week of ${WEEK_START}',
+  'assistantResponse': summary,
+  'sessionId': 'weekly-strategy-${TODAY}',
+  'source': 'pai-weekly-strategy',
+  'project': 'sam'
+}))
+" "${EXEC_SUMMARY:-Weekly strategy report generated for ${TODAY}.}")"
+
+  if curl -sf \
+    -X POST \
+    -H "Content-Type: application/json" \
+    -d "$MEMORY_PAYLOAD" \
+    "$MEMORY_SERVER/memory/extract" >/dev/null 2>&1; then
+    log "Executive summary stored in semantic memory"
+  else
+    log "WARNING: Failed to post to memory-server (non-fatal)"
+  fi
+else
+  log "Memory-server not available at $MEMORY_SERVER (skipping -- non-fatal)"
+fi
+
+# ---------------------------------------------------------------------------
+# Step 9b: Per-project memory posts and strategy files
+# ---------------------------------------------------------------------------
+log_section "Step 9b: Per-project memory posts and strategy files"
+
+python3 - "$REPORT_FILE" "$PAI_DIR" "$TODAY" "$WEEK_START" "$MEMORY_SERVER" <<'PERPROJECT_PY'
+import json, os, re, sys, urllib.request, urllib.error
+
+report_path  = sys.argv[1]
+pai_dir      = sys.argv[2]
+today        = sys.argv[3]
+week_start   = sys.argv[4]
+memory_server = sys.argv[5]
+
+report = open(report_path).read()
+lines  = report.split('\n')
+
+# ------------------------------------------------------------------
+# 1. Discover project names from the Project Scoreboard table rows.
+#    Expected table format (any column order):
+#      | project_name | ... |
+#    We skip header/separator rows that start with | --- or | **Project
+# ------------------------------------------------------------------
+project_names = []
+in_scoreboard = False
+for line in lines:
+    if re.search(r'^##\s+Project Scoreboard', line):
+        in_scoreboard = True
+        continue
+    if in_scoreboard and line.startswith('## '):
+        break
+    if in_scoreboard and line.startswith('|'):
+        cell = line.split('|')[1].strip() if '|' in line else ''
+        # Skip header and separator rows
+        if not cell or cell.startswith('-') or cell.lower().startswith('project') or cell.startswith('**'):
+            continue
+        name = cell.strip('* ').strip()
+        if name and name not in project_names:
+            project_names.append(name)
+
+if not project_names:
+    # Fallback: look for ### Project: <name> markers from raw git data embedded in report
+    for line in lines:
+        m = re.match(r'^###\s+Project:\s+(.+)', line)
+        if m:
+            name = m.group(1).strip()
+            if name not in project_names:
+                project_names.append(name)
+
+print(f"[per-project] Discovered {len(project_names)} projects: {project_names}", flush=True)
+
+# ------------------------------------------------------------------
+# 2. Extract per-project content: scoreboard row + any line that
+#    mentions the project name in Priorities / Risks / Recommendations
+# ------------------------------------------------------------------
+def extract_section(section_heading_pattern, all_lines):
+    """Return lines belonging to a section (up to the next ##)."""
+    result = []
+    inside = False
+    for l in all_lines:
+        if re.search(section_heading_pattern, l):
+            inside = True
+            continue
+        if inside and l.startswith('## '):
+            break
+        if inside:
+            result.append(l)
+    return result
+
+scoreboard_lines = extract_section(r'^##\s+Project Scoreboard', lines)
+priorities_lines = extract_section(r'^##\s+(Top\s+\d+\s+Priorities|Priorities)', lines)
+risks_lines      = extract_section(r'^##\s+Risks', lines)
+rec_lines        = extract_section(r'^##\s+Recommendations', lines)
+
+def lines_mentioning(project, candidate_lines):
+    pattern = re.compile(re.escape(project), re.IGNORECASE)
+    return [l for l in candidate_lines if pattern.search(l)]
+
+def scoreboard_row(project, sb_lines):
+    pattern = re.compile(re.escape(project), re.IGNORECASE)
+    header = next((l for l in sb_lines if l.startswith('|') and
+                   (l.strip().lower().startswith('| project') or '---' in l)), None)
+    row    = next((l for l in sb_lines if pattern.search(l) and l.startswith('|')), None)
+    parts = []
+    if header:
+        parts.append(header)
+        # include separator row if present
+        sep = next((l for l in sb_lines if l.startswith('|') and '---' in l), None)
+        if sep:
+            parts.append(sep)
+    if row:
+        parts.append(row)
+    return parts
+
+for project in project_names:
+    # Build per-project content
+    sb_rows   = scoreboard_row(project, scoreboard_lines)
+    pri_match = lines_mentioning(project, priorities_lines)
+    risk_match= lines_mentioning(project, risks_lines)
+    rec_match = lines_mentioning(project, rec_lines)
+
+    sections = []
+    if sb_rows:
+        sections.append('## Scoreboard\n' + '\n'.join(sb_rows))
+    if pri_match:
+        sections.append('## Priorities\n' + '\n'.join(pri_match))
+    if risk_match:
+        sections.append('## Risks\n' + '\n'.join(risk_match))
+    if rec_match:
+        sections.append('## Recommendations\n' + '\n'.join(rec_match))
+
+    content = f"# Weekly Strategy: {project} — Week of {week_start}\n\n"
+    content += f"> Date range: {week_start} to {today}\n\n"
+    if sections:
+        content += '\n\n'.join(sections)
+    else:
+        content += f"No specific findings extracted for {project} this week.\n"
+
+    # ------------------------------------------------------------------
+    # 3. Save per-project strategy file
+    # ------------------------------------------------------------------
+    safe_name = project.replace('/', '-').replace(' ', '-').lower()
+    project_memory_dir = os.path.join(
+        pai_dir,
+        'projects',
+        safe_name,
+        'memory', 'strategy'
+    )
+    os.makedirs(project_memory_dir, exist_ok=True)
+    out_path = os.path.join(project_memory_dir, f'{today}-weekly-strategy.md')
+    with open(out_path, 'w') as fh:
+        fh.write(content)
+    print(f"[per-project] Saved: {out_path}", flush=True)
+
+    # ------------------------------------------------------------------
+    # 4. Post per-project findings to memory-server
+    # ------------------------------------------------------------------
+    payload = json.dumps({
+        'userMessage':      f'Weekly strategy review for {project} — week of {week_start}',
+        'assistantResponse': content[:800],
+        'sessionId':        f'weekly-strategy-{project}-{today}',
+        'source':           'pai-weekly-strategy',
+        'project':          project,
+    }).encode()
+
+    try:
+        req = urllib.request.Request(
+            f'{memory_server}/memory/extract',
+            data=payload,
+            headers={'Content-Type': 'application/json'},
+            method='POST',
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            _ = resp.read()
+        print(f"[per-project] Memory post OK: {project}", flush=True)
+    except Exception as e:
+        print(f"[per-project] WARNING: Memory post failed for {project}: {e}", flush=True)
+
+PERPROJECT_PY
+
+log "Per-project strategy files and memory posts complete"
+
+# ---------------------------------------------------------------------------
+# Step 10: Voice and Discord notifications
+# ---------------------------------------------------------------------------
+log_section "Step 10: Notifications"
+
+# Voice notification via voice-server
+SPOKEN_SUMMARY="$(awk '/^## Executive Summary/{found=1;next} found && /^##/{exit} found && NF{print;exit}' \
+  "$REPORT_FILE" | head -c 280)"
+
+if [ -n "$SPOKEN_SUMMARY" ]; then
+  VOICE_PAYLOAD="$(python3 -c "
+import json, sys
+print(json.dumps({'text': sys.argv[1]}))
+" "Weekly strategy report ready. ${SPOKEN_SUMMARY}")"
+
+  if curl -sf \
+    -X POST \
+    -H "Content-Type: application/json" \
+    -d "$VOICE_PAYLOAD" \
+    "${VOICE_SERVER}/notify" >/dev/null 2>&1; then
+    log "Voice notification sent"
+  else
+    log "Voice-server not available or notification failed (non-fatal)"
+  fi
+fi
+
+# Discord webhook -- use DISCORD_WEBHOOK_URL from environment or .agent/.env
+DISCORD_WEBHOOK_URL="${DISCORD_WEBHOOK_URL:-}"
+
+if [ -z "$DISCORD_WEBHOOK_URL" ] && [ -f "$HOME/Projects/sam/.agent/.env" ]; then
+  DISCORD_WEBHOOK_URL="$(grep '^DISCORD_WEBHOOK_URL=' \
+    "$HOME/Projects/sam/.agent/.env" 2>/dev/null | cut -d'=' -f2-)" || true
+fi
+
+if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+  DISCORD_BODY="$(python3 - "$REPORT_FILE" "$WEEK_START" "$TODAY" <<'DISCORDPY'
+import json, sys
+
+report_path = sys.argv[1]
+week_start  = sys.argv[2]
+today       = sys.argv[3]
+
+lines = open(report_path).read().split('\n')
+
+# Extract executive summary (text between ## Executive Summary and next ##)
+summary_lines = []
+in_summary = False
+for line in lines:
+    if line.startswith('## Executive Summary'):
+        in_summary = True
+        continue
+    if in_summary and line.startswith('## '):
+        break
+    if in_summary and line.strip():
+        summary_lines.append(line.strip())
+
+summary = ' '.join(summary_lines[:3])[:400]
+
+# Extract numbered priorities
+priority_lines = []
+in_priorities = False
+for line in lines:
+    if line.startswith('## Top 3 Priorities'):
+        in_priorities = True
+        continue
+    if in_priorities and line.startswith('## '):
+        break
+    if in_priorities and line.strip() and line.strip()[0].isdigit():
+        priority_lines.append(line.strip())
+
+priorities = '\n'.join(priority_lines[:3])
+
+msg = f"**Weekly Strategy Report -- Week of {week_start}**\n\n"
+if summary:
+    msg += f"{summary}\n\n"
+if priorities:
+    msg += f"**Top 3 Priorities:**\n{priorities}\n\n"
+msg += f"Full report: {today}-weekly-strategy.md"
+msg = msg[:1900]
+
+print(json.dumps({'content': msg}))
+DISCORDPY
+)"
+
+  if curl -sf \
+    -X POST \
+    -H "Content-Type: application/json" \
+    -d "$DISCORD_BODY" \
+    "$DISCORD_WEBHOOK_URL" >/dev/null 2>&1; then
+    log "Discord webhook notification sent"
+  else
+    log "Discord webhook failed (non-fatal)"
+  fi
+else
+  log "DISCORD_WEBHOOK_URL not set -- skipping Discord webhook"
+fi
+
+# ---------------------------------------------------------------------------
+# Done
+# ---------------------------------------------------------------------------
+log "=========================================="
+log "Weekly strategy analysis complete."
+log "Report: $REPORT_FILE"
+log "=========================================="
+
+echo ""
+echo "Weekly strategy report saved to:"
+echo "  $REPORT_FILE"

@@ -1,0 +1,23 @@
+[Unit]
+Description=Awareness Dashboard Server (Backend API)
+After=network-online.target
+Wants=network-online.target
+PartOf=awareness-dashboard.target
+
+[Service]
+Type=simple
+WorkingDirectory=__HOME__/Projects/awareness/dashboard/apps/server
+ExecStart=__HOME__/.bun/bin/bun run src/index.ts
+Restart=on-failure
+RestartSec=5
+StartLimitInterval=60
+StartLimitBurst=3
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=awareness-dashboard-server
+Environment="AWARENESS_DB=__HOME__/Projects/awareness/data/awareness.db"
+Environment="DASHBOARD_PORT=4100"
+Environment="NODE_ENV=production"
+
+[Install]
+WantedBy=awareness-dashboard.target

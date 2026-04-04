@@ -1,0 +1,20 @@
+#!/bin/sh
+# pai-awareness-pipeline — Daily 6am awareness pipeline
+# 1. Pull feeds from the last 24 hours (or since last successful pull)
+# 2. Generate the daily digest from scored items
+# 3. Generate the Intelligence Brief + Goal-Aligned Brief
+
+AWARENESS_DIR="/Projects/awareness"
+BUN="bun"
+CLI="src/cli/index.ts"
+
+cd "$AWARENESS_DIR" || exit 1
+
+echo "=== Step 1: Feed pull ==="
+$BUN run $CLI run "$@"
+
+echo "=== Step 2: Daily Digest ==="
+$BUN run $CLI digest --since 24
+
+echo "=== Step 3: Intelligence Brief + Goal-Aligned Brief ==="
+$BUN run $CLI brief generate
