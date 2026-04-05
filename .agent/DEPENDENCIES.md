@@ -236,7 +236,7 @@ See `.env.example` for the complete list with descriptions. Key categories:
 | **Transcription** | `WHISPER_MODEL` | For transcribe-audio |
 | **Discord Bot** | `DISCORD_BOT_TOKEN`, `DISCORD_GUILD_ID`, `DISCORD_CHANNEL_ID`, `DISCORD_ALLOWED_USER_IDS` | For Discord remote control |
 | **Web Scraping** | `BRIGHTDATA_API_KEY` | For bright-data skill |
-| **Voice Synthesis** | `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`, `ELEVENLABS_MODEL` | For premium voices |
+| **Voice Synthesis (alt)** | `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`, `ELEVENLABS_MODEL` | Optional: ElevenLabs cloud TTS (if `VOICE_PROVIDER=elevenlabs`) |
 | **Task Runner** | `OLLAMA_URL`, `OLLAMA_MODEL`, `GEMINI_MODEL`, `CLAUDE_MODEL`, `QWEN_MODEL` | For task runner backends |
 | **Shell Config** | `PAI_DIR`, `PAI_HOME` | Set in shell profile |
 

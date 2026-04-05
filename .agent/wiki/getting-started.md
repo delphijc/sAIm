@@ -122,10 +122,11 @@ The key variables to configure during setup:
 ANTHROPIC_API_KEY=sk-ant-...   # Required for Claude
 ```
 
-**Optional (voice):**
+**Optional (voice - ChatterboxTTS local is the default):**
 ```bash
-ELEVENLABS_API_KEY=...         # ElevenLabs TTS
-ELEVENLABS_VOICE_ID=...        # Voice ID (e.g., "Jessica")
+VOICE_PROVIDER=chatterbox      # chatterbox (local/free), elevenlabs, or none
+CHATTERBOX_VOICE_ID=jessica    # ChatterboxTTS voice name
+# ELEVENLABS_API_KEY=...       # Only if VOICE_PROVIDER=elevenlabs
 ```
 
 **Optional (research agents):**

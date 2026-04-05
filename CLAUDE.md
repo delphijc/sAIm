@@ -64,7 +64,7 @@ Optional systemd services under `pai-infrastructure.target`:
 
 | Service | Port | Purpose |
 |---------|------|---------|
-| voice-server | 8888 | ElevenLabs TTS |
+| voice-server | 8888 | ChatterboxTTS (local) via HTTP API |
 | observability-dashboard | 5172 | Real-time agent monitoring (React/Bun) |
 | discord-remote-control | — | Discord bot interface |
 | awareness-dashboard-server | 4100 | Awareness backend |

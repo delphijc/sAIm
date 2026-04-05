@@ -535,7 +535,7 @@ User says: "write a blog", "create a post", "write an article"
 ${PAI_DIR}/Agents/engineer.md
 
 Frontmatter:
-- voice_id: [ElevenLabs voice ID]
+- voiceId: [ChatterboxTTS voice name, e.g. Jessica]
 - capabilities: [what agent can do]
 
 Body:
@@ -960,7 +960,7 @@ Sam uses mandatory structured output format that integrates with voice server fo
 ```
 
 **Why COMPLETED Line Is Critical:**
-- **Voice Integration:** This line is spoken aloud via ElevenLabs
+- **Voice Integration:** This line is spoken aloud via ChatterboxTTS (local)
 - **User Feedback:** Daniel hears completion via agent-specific voice
 - **Event Logging:** Captured to history/raw-outputs/
 - **Status Tracking:** Enables observability dashboard
@@ -983,19 +983,19 @@ Sam uses mandatory structured output format that integrates with voice server fo
      -H "Content-Type: application/json" \
      -d '{
        "message": "Blog post published and verified live on production",
-       "voice_id": "s3TPKV1kjDlVtZbl4Ksh",
+       "voice_id": "Jessica",
        "title": "Sam"
      }'
    ```
 
 4. **Voice server processes** (`${PAI_DIR}/voice-server/server.ts`)
    - Sanitizes message (security)
-   - Calls ElevenLabs API with voice_id
-   - Receives MP3 audio
-   - Plays via afplay (macOS)
-   - Shows macOS notification
+   - Calls ChatterboxTTS (python-sidecar on port 8889) with voice name
+   - Receives audio
+   - Plays via afplay (macOS) or aplay (Linux)
+   - Shows system notification
 
-5. **Daniel hears completion** in agent-specific voice
+5. **User hears completion** in agent-specific voice
 
 **COMPLETED Line Writing Standards:**
 
@@ -1136,20 +1136,20 @@ ${PAI_DIR}/History/
 
 **Sam's 12+ Specialized Agents:**
 
-| Agent | Purpose | Voice ID |
-|-------|---------|----------|
-| sam | Main orchestrator, delegates tasks | s3TPKV1kjDlVtZbl4Ksh |
-| intern | High-agency genius generalist | d3MFdIuCfbAIwiu7jC4a |
-| engineer | TDD implementation with spec-driven dev | fATgBRI8wg5KkDFg8vBd |
-| principal-engineer | Strategic architecture + planning | iLVmqjzCGGvqtMCk6vVQ |
-| architect | System design + specifications | muZKMsIDGYtIkjjiUS82 |
-| designer | UX/UI design + visual systems | ZF6FPAbjXT4488VcRRnw |
-| artist | AI image generation + creative prompts | ZF6FPAbjXT4488VcRRnw |
-| pentester | Security testing + vulnerability assessment | xvHLFjaUEpx4BOf7EiDd |
-| writer | Content creation + blog management | gfRt6Z3Z8aTbpLfexQ7N |
-| perplexity-researcher | Web research via Perplexity API | AXdMgz6evoL7OPd7eU12 |
-| claude-researcher | Multi-query research with WebSearch | AXdMgz6evoL7OPd7eU12 |
-| gemini-researcher | Multi-perspective Gemini research | 2zRM7PkgwBPiau2jvVXc |
+| Agent | Purpose | Voice Name |
+|-------|---------|------------|
+| sam | Main orchestrator, delegates tasks | Jessica |
+| intern | High-agency genius generalist | Jessica |
+| engineer | TDD implementation with spec-driven dev | Zoe |
+| principal-engineer | Strategic architecture + planning | Serena |
+| architect | System design + specifications | Serena |
+| designer | UX/UI design + visual systems | Isha |
+| artist | AI image generation + creative prompts | Isha |
+| pentester | Security testing + vulnerability assessment | Oliver |
+| writer | Content creation + blog management | Serena |
+| perplexity-researcher | Web research via Perplexity API | Ava |
+| claude-researcher | Multi-query research with WebSearch | Ava |
+| gemini-researcher | Multi-perspective Gemini research | Ava |
 
 **Delegation Patterns:**
 
@@ -1252,7 +1252,7 @@ ${PAI_DIR}/
 ├── scratchpad/                      # Temporary working files
 │   └── YYYY-MM-DD-HHMMSS_*/        # Dated subdirectories
 │
-├── voice-server/                    # ElevenLabs TTS integration
+├── voice-server/                    # ChatterboxTTS HTTP API integration
 │   ├── server.ts                   # Main server
 │   ├── manage.sh                   # Control script
 │   └── macos-service/              # LaunchAgent
@@ -1356,7 +1356,7 @@ read ${PAI_DIR}/Skills/CORE/SKILL.md
 ```markdown
 ---
 name: agent-name
-voice_id: [ElevenLabs voice ID]
+voiceId: [ChatterboxTTS voice name, e.g. Jessica]
 ---
 
 # Agent Name
@@ -1370,7 +1370,7 @@ voice_id: [ElevenLabs voice ID]
 - [Tool access]
 
 ## Voice Configuration
-**Voice ID:** [ElevenLabs voice ID]
+**Voice Name:** [ChatterboxTTS voice name, e.g. Jessica, Zoe, Ava]
 **When to use voice:** ALWAYS (mandatory)
 
 ## Instructions

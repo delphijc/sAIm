@@ -338,14 +338,14 @@ Voice reference files are audio samples used by Chatterbox TTS for **voice cloni
 | File | Size | Voice | Agent | Source |
 |------|------|-------|-------|--------|
 | `jessica_ref.wav` | 267KB | Jessica | Main/Default | Original ✅ |
-| `jamie_ref.wav` | 59KB | Jamie | Main agents | ElevenLabs ✅ |
+| `jamie_ref.wav` | 59KB | Jamie | Main agents | Reference sample ✅ |
 | `ava_ref.wav` | 59KB | Ava | Researcher | Fallback† |
 | `zoe_ref.wav` | 59KB | Zoe | Engineer | Fallback† |
 | `serena_ref.wav` | 59KB | Serena | Architect/Writer | Fallback† |
 | `isha_ref.wav` | 59KB | Isha | Designer | Fallback† |
 | `oliver_ref.wav` | 59KB | Oliver | Pentester | Fallback† |
 
-**† Fallback:** Currently using copies of jamie_ref.wav. For better voice matching, download actual voice samples from ElevenLabs.
+**† Fallback:** Currently using copies of jamie_ref.wav. For better Chatterbox voice cloning, replace with actual voice samples.
 
 ### How Voice Cloning Works
 

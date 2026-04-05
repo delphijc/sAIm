@@ -38,7 +38,7 @@ sAIm (formerly PAI) is a platform-independent AI infrastructure system. It orche
 | **40+ Skills** | Modular capabilities for research, coding, security, content analysis, and more |
 | **26+ Agents** | Specialized personas (Engineer, Architect, Researcher, Pentester, Designer, etc.) |
 | **248 Patterns** | Fabric AI patterns for content processing and extraction |
-| **Voice Output** | Audible responses via ElevenLabs integration |
+| **Voice Output** | Audible responses via ChatterboxTTS (local) |
 | **Discord Remote Control** | Remote access to sAIm via Discord with persistent memory |
 | **Task Runner** | JSONL-based job queue with multi-LLM backend support |
 | **Git Isolation** | Worktree-based sandboxing for safe experimentation |
@@ -143,7 +143,7 @@ Services managed via systemd (auto-start on boot):
 
 | Service | Port | Role |
 |---------|------|------|
-| **Voice Server** | 8888 | Text-to-speech via ElevenLabs |
+| **Voice Server** | 8888 | Text-to-speech via ChatterboxTTS (local) |
 | **Observability Dashboard** | 5172 | Real-time agent monitoring UI |
 | **Discord Remote Control** | — | Discord-based remote interface |
 | **Python Sidecar** | 8889 | TTS model inference server |

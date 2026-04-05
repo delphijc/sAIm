@@ -71,7 +71,7 @@ Sam is an open-source template for building AI-powered operating systems on top 
 | **38 Skills** | 10 domain clusters + utilities (research, coding, analysis, content creation) |
 | **17+ Agents** | Engineer, Architect, Researcher, Pentester, Brainstorming Coach, etc. |
 | **251 Patterns** | Fabric AI patterns for content processing |
-| **Voice Output** | Audible responses via ElevenLabs |
+| **Voice Output** | Audible responses via ChatterboxTTS (local) |
 | **Task Queue** | JSONL-based job orchestration |
 | **Dashboard** | React UI for monitoring and control |
 | **Git Isolation** | Worktree-based sandboxing |

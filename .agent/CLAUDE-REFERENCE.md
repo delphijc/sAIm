@@ -31,7 +31,7 @@ bash .agent/setup.sh
 # Health check
 bun ${PAI_DIR}/hooks/self-test.ts
 
-# Voice server (optional, requires ELEVENLABS_API_KEY)
+# Voice server (optional, uses ChatterboxTTS local by default)
 ~/.claude/voice-server/manage.sh start|stop|status
 
 # Observability dashboard (optional)
@@ -54,7 +54,7 @@ Sam **optionally** includes four systemctl-managed services that auto-start on b
 
 | Service | Port | Type | Status | Purpose | Requirement |
 |---------|------|------|--------|---------|------------|
-| **voice-server** | 8888 | Node.js HTTP | ✅ Active | Text-to-speech API via ElevenLabs | Optional |
+| **voice-server** | 8888 | Node.js HTTP | ✅ Active | Text-to-speech API via ChatterboxTTS (local) | Optional |
 | **observability-dashboard** | 5172 | Node.js HTTP | ✅ Active | Real-time agent activity monitoring | Optional |
 | **python-sidecar** | 8889 | Python HTTP | ✅ Active | TTS model inference server | Optional |
 | **discord-remote-control** | — | Node.js | ✅ Active | Discord bot remote interface | Optional |
@@ -352,7 +352,8 @@ YYYY-MM-DD-HHMMSS_[PROJECT]_[TYPE]_[HIERARCHY]_[DESCRIPTION].md
 ```bash
 PERPLEXITY_API_KEY=...
 GOOGLE_API_KEY=...
-ELEVENLABS_API_KEY=...
+VOICE_PROVIDER=chatterbox
+CHATTERBOX_VOICE_ID=jessica
 BRIGHTDATA_API_KEY=...
 ```
 
@@ -381,7 +382,7 @@ BRIGHTDATA_API_KEY=...
 
 **Configured Functionality (needs setup):**
 
-- Voice server (requires `ELEVENLABS_API_KEY`)
+- Voice server (ChatterboxTTS local by default; requires `ELEVENLABS_API_KEY` only if `VOICE_PROVIDER=elevenlabs`)
 - Research skills (requires various API keys)
 - MCP integrations (requires provider keys)
 
@@ -451,8 +452,8 @@ bash ~/.claude/setup.sh
 # Check if server is running
 curl http://localhost:8888/health
 
-# Check .env has keys
-grep ELEVENLABS ~/.claude/.env
+# Check .env has voice config
+grep -E "VOICE_PROVIDER|CHATTERBOX_VOICE_ID" ~/.claude/.env
 ```
 
 **Skill not activating:**

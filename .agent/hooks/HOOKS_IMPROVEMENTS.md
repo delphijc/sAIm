@@ -24,7 +24,7 @@ Comprehensive improvements to Claude Code hooks to fix notification infrastructu
 
 #### ✅ Created Reference Voice Files
 Created voice reference files for Chatterbox TTS voice cloning:
-- `jamie_ref.wav` - Downloaded from ElevenLabs (59KB)
+- `jamie_ref.wav` - Voice reference sample for Chatterbox cloning (59KB)
 - `ava_ref.wav` - Fallback copy of jamie
 - `zoe_ref.wav` - Fallback copy of jamie
 - `serena_ref.wav` - Fallback copy of jamie
@@ -187,8 +187,8 @@ $ bun ~/.agent/hooks/voice-server-health-check.ts
 
 ## 🚀 Next Steps (Optional)
 
-1. **Get Real ElevenLabs Voice IDs:** Look up actual voice IDs for Ava, Zoe, Serena, Isha, Oliver at https://elevenlabs.io/voice-library and update voices.json
-2. **Download Actual Voice Samples:** Once you have real voice IDs, download authentic voice samples as reference files
+1. **Get Real Voice Samples:** Download actual WAV samples for Ava, Zoe, Serena, Isha, Oliver voices and place them in `~/.claude/voice-server/voices/` for better Chatterbox cloning
+2. **Tune Voice Cloning:** Experiment with reference audio quality for better Chatterbox TTS matching
 3. **Test Multiple Scenarios:**
    - Voice server running → voice notifications
    - Voice server offline → system notifications

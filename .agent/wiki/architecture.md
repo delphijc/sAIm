@@ -108,7 +108,7 @@ The job orchestration engine with:
 Text-to-speech integration:
 
 - **Endpoint**: `http://localhost:8888/notify`
-- **Provider**: ElevenLabs (configurable)
+- **Provider**: ChatterboxTTS local (configurable via `VOICE_PROVIDER`)
 - **Trigger**: Automatic on response completion
 
 ---
@@ -219,7 +219,7 @@ Sam uses a 3-tier context loading system for token efficiency:
 | Backend | Bun HTTP Server |
 | Data Format | JSONL |
 | Testing | Vitest, BATS |
-| Voice | ElevenLabs API |
+| Voice | ChatterboxTTS (local HTTP) |
 
 **Mandatory Choices:**
 - Bun over Node.js
@@ -296,7 +296,8 @@ Sam integrates with MCP servers for extended capabilities:
 
 | Service | Purpose | Required Key |
 |---------|---------|--------------|
-| ElevenLabs | Voice synthesis | ELEVENLABS_API_KEY |
+| ChatterboxTTS (local) | Voice synthesis (default) | None (local) |
+| ElevenLabs | Voice synthesis (optional cloud) | `ELEVENLABS_API_KEY` (if `VOICE_PROVIDER=elevenlabs`) |
 | Perplexity | Web research | PERPLEXITY_API_KEY |
 | Google | Gemini research | GOOGLE_API_KEY |
 | Bright Data | Web scraping | BRIGHTDATA_API_KEY |

@@ -68,18 +68,19 @@ curl -X POST http://localhost:8888/notify \
 
 ---
 
-## 🎤 Available Voice IDs
+## 🎤 Available Voice Names
 
-Voice IDs are ElevenLabs identifiers configured in hook files:
+Voice names are ChatterboxTTS identifiers configured in hook files and `voices.json`:
 
-| Agent | Voice ID | Description |
-|-------|----------|-------------|
-| PAI (Main) | s3TPKV1kjDlVtZbl4Ksh | UK Male - Professional |
-| Researcher | AXdMgz6evoL7OPd7eU12 | US Female - Analytical |
-| Engineer | fATgBRI8wg5KkDFg8vBd | US Female - Steady |
-| Architect | muZKMsIDGYtIkjjiUS82 | UK Female - Strategic |
-| Designer | ZF6FPAbjXT4488VcRRnw | Indian Female - Creative |
-| Pentester | xvHLFjaUEpx4BOf7EiDd | UK Male - Technical |
+| Agent | Voice Name | Description |
+|-------|------------|-------------|
+| Main (Default) | Jessica | Default voice |
+| Researcher | Ava | US Female - Analytical |
+| Engineer | Zoe | US Female - Steady |
+| Architect | Serena | UK Female - Strategic |
+| Designer | Isha | Indian Female - Creative |
+| Pentester | Oliver | UK Male - Technical |
+| Writer | Serena | UK Female - Articulate |
 
 See `${PAI_DIR}/voice-server/README.md` for complete voice list.
 

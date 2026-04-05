@@ -163,7 +163,7 @@ Claude Code supports the following hook events (from `${PAI_DIR}/Hooks/lib/obser
 **What They Do:**
 - `stop-hook.ts` - THE CRITICAL HOOK for main agent completions
   - Extracts `🎯 COMPLETED:` line from response
-  - Sends to voice server with Sam's voice ID (`s3TPKV1kjDlVtZbl4Ksh`)
+  - Sends to voice server with Sam's voice name (`Jessica`)
   - Captures work summaries to `${PAI_DIR}/History/sessions/YYYY-MM/` or learnings to `${PAI_DIR}/History/learnings/YYYY-MM/`
   - Updates Kitty tab with `✅` prefix
   - Sends event to observability dashboard
@@ -393,7 +393,7 @@ const payload = {
   title: 'Sam',
   message: completionMessage,
   voice_enabled: true,
-  voice_id: 's3TPKV1kjDlVtZbl4Ksh'  // Sam's ElevenLabs voice
+  voice_id: 'Jessica'  // Sam's ChatterboxTTS voice name
 };
 
 await fetch('http://localhost:8888/notify', {
@@ -403,14 +403,14 @@ await fetch('http://localhost:8888/notify', {
 });
 ```
 
-**Agent-Specific Voices:**
-- Main agent (Sam): `s3TPKV1kjDlVtZbl4Ksh`
-- Engineer: `fATgBRI8wg5KkDFg8vBd`
-- Researcher: `AXdMgz6evoL7OPd7eU12`
-- Pentester: `xvHLFjaUEpx4BOf7EiDd`
-- Intern: `d3MFdIuCfbAIwiu7jC4a`
+**Agent-Specific Voices (ChatterboxTTS names):**
+- Main agent (Sam): `Jessica`
+- Engineer: `Zoe`
+- Researcher: `Ava`
+- Pentester: `Oliver`
+- Architect: `Serena`
 
-See `skills/CORE/SKILL.md` for complete voice ID mapping.
+See `skills/CORE/VOICE.md` for complete voice name mapping.
 
 ---
 
@@ -738,14 +738,14 @@ setTimeout(() => {
 1. Is voice server running? `curl http://localhost:8888/health`
 2. Is voice_id correct? See `skills/CORE/SKILL.md` for mappings
 3. Is message format correct? `{"message":"...", "voice_id":"...", "title":"..."}`
-4. Is ElevenLabs API key in `${PAI_DIR}/.env`?
+4. Is ChatterboxTTS voice server running on port 8888?
 
 **Debug:**
 ```bash
 # Test voice server directly
 curl -X POST http://localhost:8888/notify \
   -H "Content-Type: application/json" \
-  -d '{"message":"Test message","voice_id":"s3TPKV1kjDlVtZbl4Ksh","title":"Test"}'
+  -d '{"message":"Test message","voice_id":"Jessica","title":"Test"}'
 ```
 
 **Common Issues:**
@@ -1067,7 +1067,7 @@ capture-all-events.ts Universal event logger
 VOICE SERVER:
 URL: http://localhost:8888/notify
 Payload: {"message":"...", "voice_id":"...", "title":"..."}
-Main Voice: s3TPKV1kjDlVtZbl4Ksh (PAI)
+Main Voice: Jessica (ChatterboxTTS)
 
 OBSERVABILITY:
 Server: http://localhost:4000
@@ -1079,4 +1079,4 @@ Events: All hooks send to /events endpoint
 
 **Last Updated:** 2025-11-01
 **Status:** Production - All hooks active and tested
-**Maintainer:** Daniel Miessler (maintainer@example.com)
+**Maintainer:** sAIm contributors

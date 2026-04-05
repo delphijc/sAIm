@@ -38,9 +38,9 @@ API keys and secrets (NEVER commit):
 # Required
 ANTHROPIC_API_KEY=sk-ant-...
 
-# Voice Server
-ELEVENLABS_API_KEY=...
-ELEVENLABS_VOICE_ID=Jessica
+# Voice Server (ChatterboxTTS local - default)
+VOICE_PROVIDER=chatterbox
+CHATTERBOX_VOICE_ID=jessica
 
 # Research
 PERPLEXITY_API_KEY=pplx-...
@@ -85,8 +85,9 @@ MCP server configuration:
 | Variable | Purpose | Required For |
 |----------|---------|--------------|
 | `ANTHROPIC_API_KEY` | Claude API access | Core functionality |
-| `ELEVENLABS_API_KEY` | Voice synthesis | Voice server |
-| `ELEVENLABS_VOICE_ID` | Voice selection | Voice server |
+| `VOICE_PROVIDER` | TTS provider selection (`chatterbox`/`elevenlabs`/`none`) | Voice server |
+| `CHATTERBOX_VOICE_ID` | ChatterboxTTS voice name (local, default) | Voice server |
+| `ELEVENLABS_API_KEY` | ElevenLabs cloud TTS (optional alternative) | Voice server (if elevenlabs) |
 | `PERPLEXITY_API_KEY` | Web research | Perplexity researcher |
 | `GOOGLE_API_KEY` | Gemini access | Gemini researcher |
 | `BRIGHTDATA_API_KEY` | Web scraping | bright-data skill |
@@ -176,20 +177,18 @@ Available voices at `~/.claude/voice-server/voices.json`:
 
 ```json
 {
-  "voices": [
-    {
-      "id": "jessica",
-      "name": "Jessica",
-      "provider": "elevenlabs",
-      "voice_id": "flq6f7yk4E4fJM5XTYuZ"
+  "voices": {
+    "main": {
+      "voice_name": "Jessica",
+      "rate_wpm": 228,
+      "description": "Default ChatterboxTTS voice"
     },
-    {
-      "id": "tom",
-      "name": "Tom (Enhanced)",
-      "provider": "elevenlabs",
-      "voice_id": "..."
+    "engineer": {
+      "voice_name": "Zoe",
+      "rate_wpm": 236,
+      "description": "Engineer agent voice"
     }
-  ]
+  }
 }
 ```
 
@@ -197,8 +196,9 @@ Available voices at `~/.claude/voice-server/voices.json`:
 
 In `.env`:
 ```bash
-VOICE_SERVER_PORT=8888
-VOICE_ENABLED=true
+PORT=8888
+VOICE_PROVIDER=chatterbox
+CHATTERBOX_VOICE_ID=jessica
 ```
 
 ---

@@ -238,8 +238,9 @@ Variables configured interactively in `.env` (see `.agent/.env.example` for full
 | Variable | Purpose |
 |----------|---------|
 | `ANTHROPIC_API_KEY` | Required for Claude |
-| `ELEVENLABS_API_KEY` | ElevenLabs TTS |
-| `ELEVENLABS_VOICE_ID` | Voice ID (e.g. Jessica) |
+| `VOICE_PROVIDER` | TTS provider: `chatterbox` (default), `elevenlabs`, `none` |
+| `CHATTERBOX_VOICE_ID` | ChatterboxTTS voice name (e.g. `jessica`) |
+| `ELEVENLABS_API_KEY` | ElevenLabs cloud TTS (optional alternative) |
 | `PERPLEXITY_API_KEY` | Perplexity research agent |
 | `GOOGLE_API_KEY` | Gemini research agent |
 | `BRIGHTDATA_API_KEY` | Web scraping |

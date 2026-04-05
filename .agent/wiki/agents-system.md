@@ -134,8 +134,8 @@ Visual identification in dashboards:
 Each agent can have a unique voice:
 
 ```yaml
-voiceId: Jessica        # ElevenLabs voice ID
-voiceId: Tom (Enhanced) # Alternative voice
+voiceId: Jessica  # ChatterboxTTS voice name
+voiceId: Zoe      # Alternative voice name
 ```
 
 ---
