@@ -2,6 +2,7 @@
  * Voice Response Handler - Phase 7
  * Sends voice responses back to Discord (modality mirroring)
  * Phase 9: Integrated response chunking for long messages
+ * ENH-003: Enhanced sentence boundary protection
  */
 
 import { Message, AttachmentBuilder } from "discord.js";
@@ -13,6 +14,7 @@ import {
   validateTextLength,
 } from "../media/synthesize.ts";
 import { chunkResponse } from "./chunker.ts";
+import { truncateAtSentenceBoundary, endsAtSentenceBoundary } from "../utils/sentence-boundary.ts";
 
 /**
  * Determine if we should respond with voice
@@ -93,9 +95,12 @@ export async function sendVoiceResponse(
 
     // For voice responses, only synthesize first chunk to avoid long audio files
     const firstChunk = chunks[0];
+    // Truncate at sentence boundary for TTS so voice ends naturally, not mid-fragment (ENH-003)
+    const voiceText = truncateAtSentenceBoundary(firstChunk, Math.min(firstChunk.length, 1500));
+    const endsAtBoundary = endsAtSentenceBoundary(voiceText);
 
     // Validate first chunk for TTS
-    const validation = validateTextLength(firstChunk);
+    const validation = validateTextLength(voiceText);
     if (!validation.valid) {
       console.warn(`⚠️  First chunk too long for TTS: ${validation.error}`);
       // Send all chunks as text fallback
@@ -136,9 +141,9 @@ export async function sendVoiceResponse(
       };
     }
 
-    // Synthesize first chunk to speech
-    console.log(`🔊 Synthesizing first chunk to speech...`);
-    const synthesis = await synthesizeText(firstChunk, {
+    // Synthesize voice text (sentence-boundary trimmed) to speech
+    console.log(`🔊 Synthesizing voice text to speech (${voiceText.length} chars, ${endsAtBoundary ? '✅ ends at sentence boundary' : '⚠️  truncated mid-sentence'})...`);
+    const synthesis = await synthesizeText(voiceText, {
       voiceId: options?.voiceId || "Jessica",
     });
 
