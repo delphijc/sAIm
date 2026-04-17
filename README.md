@@ -58,7 +58,7 @@ sAIm (formerly PAI) is a platform-independent AI infrastructure system. It orche
 
 1.  **Clone the Repository**
     ```bash
-    git clone https://github.com/delphijc/sAIm.git ~/sAIm
+    git clone https://github.com/yourusername/sAIm.git ~/sAIm
     cd ~/sAIm
     ```
 

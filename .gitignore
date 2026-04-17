@@ -1,106 +1,125 @@
-# Dependencies
+# # Environment files
+.env
+.env.local
+.env.*.local
+*.env
+.env.discord
+
+# SQLite databases and WAL files (too large, machine-local)
+*.db
+*.db-shm
+*.db-wal
+*.db.backup*
+backups/memory
+.agent/backups/memory/*
+
+#logs
+logs/
+/logs/
+*.log
+*.jsonl
+*.err
+
+
+
+
+# API keys and secrets
+*.pem
+*.key
+*.cert
+*.p12
+*.pfx
+*_rsa
+*_rsa.pub
+*.crt
+*.cer
+
+# Node/Bun
 node_modules/
-__pycache__/
-.venv/
-venv/
-*.egg-info/
+.npm
+.yarn
+.pnp.*
 
-# Build outputs
-dist/
-build/
-.next/
-out/
-.cache/
-
-# IDE and editor
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+
+# Temporary files
 .DS_Store
+tmp/
+temp/
+temptests/
+*.tmp
 
-# Environment variables (CRITICAL - never commit secrets!)
-.env
-.env.local
-.env.*.local
-.env.discord
-.agent/.env
-.agent/.env.local
-.agent/.env.discord
+# Build outputs
+dist/
+build/
+out/
 
-# Credentials and auth
-.agent/.credentials.json
+# Python virtual environments (anywhere in tree)
+venv/
+**/venv/
+.venv/
+**/.venv/
+
+# Cache
+.cache/
+*.cache
+
+# Personal/Private data
+private/
+secrets/
+credentials/
+*.credentials.json
 .credentials.json
 
-# Runtime and logs
-*.log
-*.pid
-*.lock
-.frontmatter.log
-
-# SQLite databases (contain personal data)
-*.db
-*.db-shm
-*.db-wal
-
-# System and temporary files
-.DS_Store
-.AppleDouble
-.LSOverride
-Thumbs.db
-*.tmp
-*.bak
-
-# Session and debug data
-.agent/cache/
+# Claude Code session data (contains tool outputs with potential secrets)
+.agent/.credentials.json
 .agent/debug/
-.agent/session-env/
-.agent/shell-snapshots/
-.agent/todos/
-.agent/plans/
+.agent/history.jsonl
+.agent/mcp-needs-auth-cache.json
+.agent/history/
 .agent/file-history/
-.agent/paste-cache/
-.agent/hook-events/
-.agent/telemetry/
-.agent/sessions/
-.agent/backups/
+.agent/projects/
+.agent/tasks/
+.agent/-Users-*-Projects*
+.agent/-home-*
 
-# Runtime state
+# Claude Code workspace (IDE skills, agents, and agent-generated artifacts)
+.agent/plans/
+.agent/plugins
+
+
+# PAI Update System (sideloading)
+.claude/pai_updates/
+.claude/pai_backups/
+.claude/.pai-sync-history
 .agent/agent-sessions.json
 .agent/stats-cache.json
-.agent/history.jsonl
+projects/int-001
+projects/test_project
+projects/p1
+
+# Runtime data (transient, machine-local)
+.agent/shell-snapshots/
+.agent/sessions/
+.agent/paste-cache/
+.agent/telemetry/
+.agent/image-cache/
 .agent/.session-briefing-state.json
-.agent/.compact-reminder-state.json
-.agent/mcp-needs-auth-cache.json
+.agent/cache/changelog.md
+projects/
 
-# Recordings and personal data
-.agent/Recordings/
-.agent/history/
-.agent/History/Sessions/
-.agent/History/TranscribedAudio/
-.agent/reports/
+# Cleanup staging area
+deleteme/
 
-# Discord remote control runtime data
-.agent/discord-remote-control/history/
-.agent/discord-remote-control/sessions/
-.agent/discord-remote-control/raw-outputs/
-.agent/discord-remote-control/raw-transcripts/
-.agent/discord-remote-control/TranscribedAudio/
-.agent/discord-remote-control/wisdom/
+# Old backup artifacts
+.agent/backups/.claude.json.backup.*
+.agent/services/memory-system/
 
-# Project-specific session data
-.agent/projects/*/session.json
-.agent/projects/*/logs/
-
-# Testing
-.coverage
-coverage/
-.pytest_cache/
-.bun/
-
-# Keep these template files
-!.agent/.env.template
-!.agent/.env.example
-!.agent/config/.gitkeep
-!.agent/History/.gitkeep
+# Memory-system integration symlinks (cross-repo boundaries)
+.agent/hooks/capture-background-events.ts
+.agent/hooks/capture-cli-conversation.ts
