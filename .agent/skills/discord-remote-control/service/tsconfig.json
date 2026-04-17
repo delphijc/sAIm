@@ -7,7 +7,7 @@
     "strict": true,
     "baseUrl": ".",
     "paths": {
-      "@pai-tools/*": ["$HOME/.claude/tools/*"],
+      "@pai-tools/*": ["${HOME}/.claude/tools/*"],
       "@memory/*": ["../../../memory/*"]
     }
   },

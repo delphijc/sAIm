@@ -11,10 +11,12 @@ import {
   getOrCreateSession,
   getSessionKey,
   incrementMessageCount,
+  setLastAssistantMessage,
 } from "../claude/session.ts";
 import { logMessageReceived, logResponseSent, logSubprocessCall, logError } from "../observability.ts";
 import { sendVoiceResponse } from "../response/voice.ts";
-import { notifyVoiceServer } from "../response/notify.ts";
+import { enqueueVoiceNotification, getVoiceQueueStatus } from "../response/voice-queue.ts";
+import { captureDiscordConversation } from "../capture/discord-conversation.ts";
 
 interface DiscordConfig {
   botToken: string;
@@ -105,6 +107,9 @@ export async function handleTextMessage(
       ...(response.fileAttachments && { fileAttachments: response.fileAttachments }),
     });
 
+    // Store the assistant message in session for context on next user message
+    setLastAssistantMessage(sessionKey, formatted);
+
     // Log response sent
     await logResponseSent(
       message.author.id,
@@ -114,10 +119,29 @@ export async function handleTextMessage(
       sessionKey
     );
 
-    // Notify voice server for audible feedback (fire-and-forget)
-    // Previously the subprocess did this via curl, but --disallowedTools Bash blocks that
-    notifyVoiceServer(formatted).catch((err) =>
-      console.warn(`⚠️  Voice notification failed: ${err}`)
+    // Capture conversation for episodic memory (Phase 1)
+    // Non-blocking: log warning if capture fails, don't interrupt message handling
+    try {
+      await captureDiscordConversation(
+        message.content,
+        formatted,
+        {
+          sessionId: sessionKey,
+          userId: message.author.id,
+          channelId: message.channelId,
+          username: message.author.username,
+          messageId: message.id,
+          threadId: message.thread?.id,
+        }
+      );
+    } catch (captureError) {
+      console.warn(`⚠️  Failed to capture Discord conversation: ${captureError}`);
+    }
+
+    // Enqueue voice notification for sequential playback
+    // Uses voice queue to prevent messages from overlapping/squashing
+    enqueueVoiceNotification(formatted, sessionKey).catch((err) =>
+      console.warn(`⚠️  Voice notification queueing failed: ${err}`)
     );
 
     console.log(

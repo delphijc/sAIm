@@ -21,6 +21,7 @@ import {
   getOrCreateSession,
   getSessionKey,
   incrementMessageCount,
+  setLastAssistantMessage,
 } from "../claude/session.ts";
 import {
   logMessageReceived,
@@ -30,7 +31,8 @@ import {
   logError,
 } from "../observability.ts";
 import { sendVoiceResponse } from "../response/voice.ts";
-import { notifyVoiceServer } from "../response/notify.ts";
+import { enqueueVoiceNotification } from "../response/voice-queue.ts";
+import { captureDiscordConversation } from "../capture/discord-conversation.ts";
 
 interface DiscordConfig {
   botToken: string;
@@ -176,6 +178,9 @@ export async function handleVoiceMessage(
       }
     );
 
+    // Store the assistant message in session for context on next user message
+    setLastAssistantMessage(sessionKey, formatted);
+
     // Log response sent
     await logResponseSent(
       message.author.id,
@@ -185,10 +190,30 @@ export async function handleVoiceMessage(
       sessionKey
     );
 
-    // Notify voice server for audible feedback (fire-and-forget)
-    notifyVoiceServer(formatted).catch((err) =>
-      console.warn(`⚠️  Voice notification failed: ${err}`)
+    // Enqueue voice notification for sequential playback
+    // Uses voice queue to prevent messages from overlapping/squashing
+    enqueueVoiceNotification(formatted, sessionKey).catch((err) =>
+      console.warn(`⚠️  Voice notification queueing failed: ${err}`)
     );
+
+    // Capture conversation for episodic memory (Phase 1)
+    // Non-blocking: log warning if capture fails, don't interrupt message handling
+    try {
+      await captureDiscordConversation(
+        userPrompt,
+        formatted,
+        {
+          sessionId: sessionKey,
+          userId: message.author.id,
+          channelId: message.channelId,
+          username: message.author.username,
+          messageId: message.id,
+          threadId: message.thread?.id,
+        }
+      );
+    } catch (captureError) {
+      console.warn(`⚠️  Failed to capture Discord conversation: ${captureError}`);
+    }
 
     console.log(
       `Voice response sent (${response.tokens.output} output tokens, ${response.duration}ms)`

@@ -37,7 +37,16 @@ function getPAIDir(): string {
 
 const SAM_ROOT = getSAMRoot();
 const PAI_DIR = getPAIDir();
-const DB_PATH = path.join(PAI_DIR, "discord-remote-control", "memory.db");
+
+// After memory-system externalization, prefer project root location
+let DB_PATH: string;
+if (process.env.MEMORY_DB_PATH) {
+  DB_PATH = process.env.MEMORY_DB_PATH;
+} else {
+  // Check memory-system project first (after externalization)
+  const memorySystemProject = path.join(path.dirname(SAM_ROOT), "memory-system", "memory.db");
+  DB_PATH = memorySystemProject;
+}
 const SESSION_ID = "docs-import"; // Special session for imported docs
 const NOW = Date.now();
 
@@ -66,7 +75,12 @@ const INDIVIDUAL_FILES = [
   ".agent/ANTIGRAVITY_SKILLS.md",
   ".agent/state.md",
   ".agent/troubleshooting.md",
-  // Project memory files are dynamically discovered from projects/ directory
+  // Project memory files (current user: obsidium)
+  ".agent/projects/-home-obsidium-Projects-sam/memory/MEMORY.md",
+  ".agent/projects/-home-obsidium-Projects-voice-server/memory/MEMORY.md",
+  // .claude memory files (current user: obsidium)
+  ".claude/projects/-home-obsidium-Projects-sam/memory/MEMORY.md",
+  ".claude/projects/-home-obsidium-Projects-voice-server/memory/MEMORY.md",
 ];
 
 // Skip patterns

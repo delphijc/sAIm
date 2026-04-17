@@ -1,6 +1,6 @@
 ---
 name: discord-remote-control
-description: "Discord-based remote interface for Sam. Receive text, images, files, and voice notes; respond with Claude Code subprocess for full PAI skill access. Persistent memory via SQLite. USE WHEN interacting through Discord, managing the Discord bot, or troubleshooting the remote control interface."
+description: "Discord-based remote interface for Sam. Receive text, images, files, and voice notes; respond with Claude Code subprocess for full PAI skill access. Stores episodic memory (recent conversation history) in SQLite. Optional semantic memory retrieval from memory-system. USE WHEN interacting through Discord, managing the Discord bot, or troubleshooting the remote control interface."
 triggers:
   - "start discord"
   - "start discord remote"
@@ -20,26 +20,34 @@ tags:
 
 # discord-remote-control
 
-Bidirectional Discord interface for Sam (PAI). Send text, images, files, and voice notes to Discord; receive intelligent responses powered by Claude Code subprocess with full PAI skill access.
+Bidirectional Discord interface for Sam (PAI). Send text, images, files, and voice notes from Discord; receive intelligent responses powered by Claude Code subprocess with full PAI skill access.
+
+**Status:** Standalone Discord bot interface. Does NOT own semantic memory logic (memory-system is the authoritative backend). Stores only episodic memory (recent conversation history) in local SQLite.
 
 ## Quick Start
 
 ```bash
-# Start the Discord bot (via CLI)
-/discord-remote-control --start
+# Start the Discord bot service
+.agent/skills/discord-remote-control/scripts/start.sh
 
 # Check service status
-/discord-remote-control --status
+.agent/skills/discord-remote-control/scripts/status.sh
 
 # Stop the service
-/discord-remote-control --stop
+.agent/skills/discord-remote-control/scripts/stop.sh
 ```
 
-Or use scripts directly:
+macOS launchd integration:
 ```bash
-.agent/skills/discord-remote-control/scripts/start.sh
-.agent/skills/discord-remote-control/scripts/status.sh
-.agent/skills/discord-remote-control/scripts/stop.sh
+# Install service (optional)
+launchctl load ~/.claude/services/com.pai.discord-remote-control.plist
+
+# Start/stop
+launchctl start com.pai.discord-remote-control
+launchctl stop com.pai.discord-remote-control
+
+# Check status
+launchctl list | grep discord-remote-control
 ```
 
 ## Configuration
@@ -54,14 +62,24 @@ DISCORD_ALLOWED_USER_IDS=   # Comma-separated Discord user IDs (your account)
 GROQ_API_KEY=               # From console.groq.com (free tier is sufficient)
 ```
 
+## Network & Port Architecture
+
+Discord-remote-control **does NOT use a local HTTP port**. It communicates via:
+
+- **Discord WebSocket API** — discord.js maintains persistent connection to Discord servers
+- **Local SQLite database** — stores conversation history at `$PAI_DIR/discord-remote-control/memory.db`
+- **Claude Code subprocess** — spawns local claude CLI with full PAI skill access (no network required)
+
+The service is fully independent and requires no additional ports or services running.
+
 ## Capabilities
 
 - ✅ Text messages (DM or #general channel)
 - ✅ Image analysis and description
 - ✅ File handling and processing
 - ✅ Voice note transcription (Groq Whisper)
-- ✅ Voice response generation (TTS)
-- ✅ Persistent memory via SQLite
+- ✅ Voice response generation (TTS via voice-server on :8888)
+- ✅ Persistent SQLite memory
 - ✅ Full Claude Code subprocess access (all PAI skills)
 - ✅ Smart message chunking (respects 2000-char Discord limit)
 - ✅ Typing indicators for UX feedback
@@ -69,8 +87,25 @@ GROQ_API_KEY=               # From console.groq.com (free tier is sufficient)
 ## Architecture
 
 ```
-Discord → discord.js → Message Router → Handlers → Memory → Claude subprocess → Response Formatter → Discord
+Discord WebSocket
+    ↓
+discord.js Client
+    ↓
+Message Router (access control, media routing)
+    ↓
+Handlers (text, image, voice transcription)
+    ↓
+Claude Code subprocess (Anthropic Agent SDK)
+    ↓
+Response formatters (chunking, media upload)
+    ↓
+Discord API (send reply)
 ```
+
+**Independent Components:**
+- SQLite memory database (standalone, no external service needed)
+- All message processing happens locally
+- Claude subprocess has access to full PAI infrastructure
 
 See `Reference.md` for detailed architecture and implementation details.
 

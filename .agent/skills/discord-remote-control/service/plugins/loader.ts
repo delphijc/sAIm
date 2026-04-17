@@ -7,7 +7,7 @@
 
 import { pluginRegistry } from "./registry.ts";
 import wizardPlugin from "./wizard/index.ts";
-import exportPlugin from "./export/index.ts";
+// import exportPlugin from "./export/index.ts"; // Disabled: requires memory/db.ts (removed for standalone mode)
 import docGenPlugin from "./doc-gen/index.ts";
 import notebooklmPlugin from "./notebooklm/index.ts";
 
@@ -18,9 +18,9 @@ import notebooklmPlugin from "./notebooklm/index.ts";
 export async function loadPlugins(): Promise<void> {
   console.log("[PluginLoader] Loading plugins...");
 
-  // Register all plugins (priority order: wizard=10, export=15, doc-gen=20, notebooklm=30)
+  // Register all plugins (priority order: wizard=10, doc-gen=20, notebooklm=30)
   pluginRegistry.register(wizardPlugin);
-  pluginRegistry.register(exportPlugin);
+  // pluginRegistry.register(exportPlugin); // Disabled: requires memory/db.ts (removed for standalone mode)
   pluginRegistry.register(docGenPlugin);
   pluginRegistry.register(notebooklmPlugin);
 

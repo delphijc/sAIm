@@ -11,6 +11,8 @@ interface SessionState {
   lastAccessedAt: number;
   messageCount: number;
   isActive: boolean;
+  lastAssistantMessage: string | null;
+  lastAssistantMessageTime: number | null;
 }
 
 // In-memory session store (tracks active Discord sessions)
@@ -47,6 +49,8 @@ export function getOrCreateSession(
       lastAccessedAt: Date.now(),
       messageCount: 0,
       isActive: true,
+      lastAssistantMessage: null,
+      lastAssistantMessageTime: null,
     };
 
     sessionMap.set(sessionKey, session);
@@ -143,6 +147,27 @@ export function closeSession(sessionKey: string): boolean {
  */
 export function getActiveSessionCount(): number {
   return Array.from(sessionMap.values()).filter((s) => s.isActive).length;
+}
+
+/**
+ * Store the last assistant message in a session
+ * Called after sending a response to the user
+ */
+export function setLastAssistantMessage(sessionKey: string, message: string): void {
+  const session = sessionMap.get(sessionKey);
+  if (session) {
+    session.lastAssistantMessage = message;
+    session.lastAssistantMessageTime = Date.now();
+  }
+}
+
+/**
+ * Get the last assistant message from a session
+ * Returns the message or null if none exists
+ */
+export function getLastAssistantMessage(sessionKey: string): string | null {
+  const session = sessionMap.get(sessionKey);
+  return session ? session.lastAssistantMessage : null;
 }
 
 /**

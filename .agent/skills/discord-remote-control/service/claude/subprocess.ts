@@ -3,40 +3,25 @@
  * Spawns Claude subprocess with full SAM access for intelligent responses
  *
  * This module bridges Discord messages to Claude Code by:
- * 1. Building a prompt from user message + memory context
+ * 1. Building a prompt from user message + optional memory context (if enabled)
  * 2. Spawning a Claude subprocess with SAM environment
  * 3. Streaming response back to Discord
- * 4. Recording the conversation turn to memory
+ *
+ * Memory Integration:
+ * - If ENABLE_MEMORY_HOOKS=true: Calls memory-system API (localhost:4242) for context injection
+ * - If ENABLE_MEMORY_HOOKS=false: Runs standalone without memory context
+ * - If memory-system is unavailable: Logs warning, continues without context
  */
 
 import { spawn } from "bun";
 import path from "path";
+import { getLastAssistantMessage } from "./session.ts";
+import { retrieveConversationContext } from "./memory-retrieval.ts";
 
-// Dynamic imports using home directory
+// Configuration
 const HOME = process.env.HOME || "/home";
-const SKILLS_PATH = path.join(HOME, ".claude/skills/discord-remote-control/service");
-
-let buildContextInjection: any;
-let formatContextForPrompt: any;
-let recordTurn: any;
-let extractAndSaveMemories: any;
-
-// Lazy-load memory modules on first use
-async function loadMemoryModules() {
-  if (!buildContextInjection) {
-    const injection = await import(path.join(SKILLS_PATH, "memory/injection.ts"));
-    buildContextInjection = injection.buildContextInjection;
-    formatContextForPrompt = injection.formatContextForPrompt;
-  }
-  if (!recordTurn) {
-    const episodic = await import(path.join(SKILLS_PATH, "memory/episodic.ts"));
-    recordTurn = episodic.recordTurn;
-  }
-  if (!extractAndSaveMemories) {
-    const extraction = await import(path.join(SKILLS_PATH, "memory/extraction.ts"));
-    extractAndSaveMemories = extraction.extractAndSaveMemories;
-  }
-}
+const ENABLE_MEMORY_HOOKS = process.env.ENABLE_MEMORY_HOOKS === "true";
+const MEMORY_SERVICE_URL = process.env.MEMORY_SERVICE_URL || "http://localhost:4242";
 
 export interface SubprocessRequest {
   sessionId: string;
@@ -100,47 +85,182 @@ export function parseFileAttachments(output: string): {
  * - User message and attachments
  * - Returns streaming response
  */
+/**
+ * Call memory-system API to get context injection for a session.
+ * Combines:
+ * 1. Semantic memory context (facts, relationships)
+ * 2. Conversation history (last 2 user messages + all assistant responses)
+ *
+ * Returns the context prefix to prepend to the prompt.
+ * If memory-system is unavailable, returns empty string.
+ */
+async function getMemoryContext(sessionId: string, userMessage: string): Promise<string> {
+  if (!ENABLE_MEMORY_HOOKS) {
+    return ""; // Memory disabled
+  }
+
+  let combinedContext = "";
+
+  // Step 1: Get semantic memory context (facts, entities, relationships)
+  try {
+    const response = await fetch(`${MEMORY_SERVICE_URL}/memory/inject-context`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sessionId,
+        userMessage,
+        maxTotalTokens: 2500,
+      }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      combinedContext += data.contextPrefix || "";
+    } else {
+      console.warn(`⚠️  Memory service returned ${response.status}`);
+    }
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.warn(`⚠️  Semantic memory unavailable: ${msg}`);
+  }
+
+  // Step 2: Get conversation history (last 2 user messages + all assistant responses)
+  try {
+    const conversationContext = await retrieveConversationContext(sessionId);
+    if (conversationContext) {
+      combinedContext += "\n" + conversationContext;
+    }
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.warn(`⚠️  Conversation history unavailable: ${msg}`);
+  }
+
+  return combinedContext;
+}
+
+/**
+ * Record a turn to the memory-system API.
+ * Non-blocking; logs warnings if memory-system is unavailable.
+ */
+async function recordTurnToMemory(turnData: {
+  sessionId: string;
+  discordUserId: string;
+  discordChannelId: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: number;
+  metadata?: Record<string, any>;
+}): Promise<void> {
+  if (!ENABLE_MEMORY_HOOKS) {
+    return; // Memory disabled
+  }
+
+  try {
+    const payload = {
+      session_id: turnData.sessionId,
+      timestamp: turnData.timestamp,
+      source: 'discord',
+      role: turnData.role,
+      content: turnData.content,
+      grouping: 'active_user_conversation',
+      metadata: {
+        discord_user_id: turnData.discordUserId,
+        discord_channel_id: turnData.discordChannelId,
+        ...turnData.metadata,
+      },
+    };
+
+    const response = await fetch(`${MEMORY_SERVICE_URL}/memory/conversations/store`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      console.warn(`⚠️  Memory service returned ${response.status} when recording ${turnData.role} turn`);
+    } else {
+      const result = await response.json();
+      console.log(`[EPISODIC] ${turnData.role} message recorded: ${result.id}`);
+    }
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.warn(`⚠️  Failed to record turn to memory-system: ${msg}`);
+  }
+}
+
+/**
+ * Extract and save semantic memories via memory-system API.
+ * Non-blocking; logs warnings if memory-system is unavailable.
+ */
+async function extractMemoriesAsync(
+  userMessage: string,
+  assistantResponse: string,
+  sessionId: string
+): Promise<void> {
+  if (!ENABLE_MEMORY_HOOKS) {
+    return; // Memory disabled
+  }
+
+  try {
+    await fetch(`${MEMORY_SERVICE_URL}/memory/extract-and-save`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userMessage,
+        assistantResponse,
+        sessionId,
+        source: "discord-remote-control",
+      }),
+    });
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.warn(`⚠️  Memory extraction failed: ${msg}`);
+  }
+}
+
 export async function callClaudeSubprocess(
   request: SubprocessRequest
 ): Promise<SubprocessResponse> {
   const startTime = Date.now();
 
   try {
-    // Load memory modules dynamically
-    await loadMemoryModules();
-
     console.log(`🧠 Calling Claude subprocess for session ${request.sessionId}`);
     console.log(`   Message type: ${request.messageType}`);
+    if (ENABLE_MEMORY_HOOKS) {
+      console.log(`   Memory hooks: ENABLED`);
+    } else {
+      console.log(`   Memory hooks: DISABLED (standalone mode)`);
+    }
 
-    // Step 0: Record user turn IMMEDIATELY (before processing)
-    // This ensures the prompt is persisted even if the subprocess or service crashes.
-    // On recovery, an unanswered user message signals interrupted work.
-    console.log(`💾 Pre-recording user turn to memory...`);
-    await recordTurn({
-      sessionId: request.sessionId,
-      discordUserId: request.userId,
-      discordChannelId: request.channelId,
-      role: "user",
-      content: request.userMessage,
-      timestamp: Date.now(),
-      metadata: {
-        messageType: request.messageType,
-        attachmentCount: request.attachmentPaths?.length || 0,
-        tokens: estimateTokens(request.userMessage),
-      },
-    });
+    // Step 0: Record user turn IMMEDIATELY (before processing) — if memory enabled
+    if (ENABLE_MEMORY_HOOKS) {
+      console.log(`💾 Recording user turn to memory...`);
+      recordTurnToMemory({
+        sessionId: request.sessionId,
+        discordUserId: request.userId,
+        discordChannelId: request.channelId,
+        role: "user",
+        content: request.userMessage,
+        timestamp: Date.now(),
+        metadata: {
+          messageType: request.messageType,
+          attachmentCount: request.attachmentPaths?.length || 0,
+          tokens: estimateTokens(request.userMessage),
+        },
+      }).catch(() => {}); // Non-blocking
+    }
 
-    // Step 1: Build context from memory
-    console.log(`📚 Injecting memory context...`);
-    const contextInjection = await buildContextInjection(
-      request.sessionId,
-      request.userMessage,
-      {
-        maxTotalTokens: 2500, // Reserve 1500 tokens for response
+    // Step 1: Get memory context (if enabled)
+    let contextPrefix = "";
+    if (ENABLE_MEMORY_HOOKS) {
+      console.log(`📚 Fetching memory context...`);
+      contextPrefix = await getMemoryContext(request.sessionId, request.userMessage);
+      if (contextPrefix) {
+        console.log(`   Memory context retrieved (${estimateTokens(contextPrefix)} tokens)`);
+      } else {
+        console.log(`   No memory context available`);
       }
-    );
-
-    const contextPrefix = formatContextForPrompt(contextInjection);
+    }
 
     // Step 2: Build the full prompt
     let prompt = "";
@@ -150,8 +270,17 @@ export async function callClaudeSubprocess(
       prompt += `**Current User**: ${request.metadata.username}\n\n`;
     }
 
-    // Add memory context
+    // Add memory context (includes semantic memory + conversation history)
     prompt += contextPrefix;
+
+    // Fallback: add previous assistant message only if no conversation history from memory
+    // (If memory-system retrieved conversation, we don't need the session-level fallback)
+    if (!contextPrefix.includes("Previous Conversation")) {
+      const lastAssistantMsg = getLastAssistantMessage(request.sessionId);
+      if (lastAssistantMsg) {
+        prompt += `**Previous Context** (what Sam just said):\n${lastAssistantMsg}\n\n`;
+      }
+    }
 
     // Add message type marker
     if (request.messageType !== "text") {
@@ -201,7 +330,7 @@ export async function callClaudeSubprocess(
     // returns an empty result field even when assistant produces text. We use
     // --output-format stream-json --verbose to capture text from assistant messages directly.
     const settingsPath = path.join(HOME, ".claude/settings.json");
-    const proc = spawn([claudePath, "--print", "--model", "claude-opus-4-6", "--output-format", "stream-json", "--verbose", "--settings", settingsPath, "--append-system-prompt", discordContext], {
+    const proc = spawn([claudePath, "--print", "--model", "claude-haiku-4-5-20251001", "--output-format", "stream-json", "--verbose", "--settings", settingsPath, "--append-system-prompt", discordContext], {
       stdin: Buffer.from(prompt),
       stdout: "pipe",
       stderr: "pipe",
@@ -254,31 +383,27 @@ export async function callClaudeSubprocess(
       );
     }
 
-    // Step 4: Record the assistant response to memory
-    // (User turn was already recorded in Step 0 before processing)
-    console.log(`💾 Recording assistant response to memory...`);
+    // Step 4: Record the assistant response to memory (if enabled)
     const tokens = estimateTokens(output);
 
-    await recordTurn({
-      sessionId: request.sessionId,
-      discordUserId: request.userId,
-      discordChannelId: request.channelId,
-      role: "assistant",
-      content: output,
-      timestamp: Date.now(),
-      metadata: {
-        tokens,
-      },
-    });
+    if (ENABLE_MEMORY_HOOKS) {
+      console.log(`💾 Recording assistant response to memory...`);
+      recordTurnToMemory({
+        sessionId: request.sessionId,
+        discordUserId: request.userId,
+        discordChannelId: request.channelId,
+        role: "assistant",
+        content: output,
+        timestamp: Date.now(),
+        metadata: {
+          tokens,
+        },
+      }).catch(() => {}); // Non-blocking
 
-    // Step 5: Extract and save semantic memories from this exchange
-    // Runs async but doesn't block the response
-    extractAndSaveMemories(
-      request.userMessage,
-      output,
-      request.sessionId,
-      'discord'
-    ).catch((err) => console.error("Memory extraction failed:", err));
+      // Step 5: Extract and save semantic memories from this exchange
+      // Runs async but doesn't block the response
+      extractMemoriesAsync(request.userMessage, output, request.sessionId).catch(() => {});
+    }
 
     // Step 6: Parse file attachment markers from output
     const { cleanedText, attachments } = parseFileAttachments(output);
@@ -411,7 +536,7 @@ export function sanitizeUserInput(input: string): { sanitized: string; injection
     /system\s*:\s*/i,
     /\[INST\]/i,
     /<<\s*SYS\s*>>/i,
-    /\bact\s+as\s+(if\s+)?(you\s+)?(are|were)\s+/i,
+    /\bact\s+as\b/i,  // Catch broader "act as" variations
     /new\s+instructions?\s*:/i,
     /override\s+(all\s+)?safety/i,
     /bypass\s+(all\s+)?restrictions?/i,

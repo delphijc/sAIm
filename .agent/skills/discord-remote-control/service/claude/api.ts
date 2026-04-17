@@ -6,37 +6,19 @@
  *
  * Interface mirrors subprocess.ts so callers can swap backends without
  * changing their own code.
+ *
+ * Memory Integration:
+ * - If ENABLE_MEMORY_HOOKS=true: Calls memory-system API (localhost:4242) for context injection
+ * - If ENABLE_MEMORY_HOOKS=false: Runs standalone without memory context
+ * - If memory-system is unavailable: Logs warning, continues without context
  */
 
 import Anthropic from "@anthropic-ai/sdk";
-import path from "path";
 import type { SubprocessRequest, SubprocessResponse } from "./subprocess.ts";
 
-// Dynamic imports using home directory
-const HOME = process.env.HOME || "/home";
-const SKILLS_PATH = path.join(HOME, ".claude/skills/discord-remote-control/service");
-
-let buildContextInjection: any;
-let formatContextForPrompt: any;
-let recordTurn: any;
-let extractAndSaveMemories: any;
-
-// Lazy-load memory modules on first use
-async function loadMemoryModules() {
-  if (!buildContextInjection) {
-    const injection = await import(path.join(SKILLS_PATH, "memory/injection.ts"));
-    buildContextInjection = injection.buildContextInjection;
-    formatContextForPrompt = injection.formatContextForPrompt;
-  }
-  if (!recordTurn) {
-    const episodic = await import(path.join(SKILLS_PATH, "memory/episodic.ts"));
-    recordTurn = episodic.recordTurn;
-  }
-  if (!extractAndSaveMemories) {
-    const extraction = await import(path.join(SKILLS_PATH, "memory/extraction.ts"));
-    extractAndSaveMemories = extraction.extractAndSaveMemories;
-  }
-}
+// Configuration
+const ENABLE_MEMORY_HOOKS = process.env.ENABLE_MEMORY_HOOKS === "true";
+const MEMORY_SERVICE_URL = process.env.MEMORY_SERVICE_URL || "http://localhost:4242";
 
 // Discord context instruction injected as additional system content
 const DISCORD_SYSTEM_CONTEXT = [
@@ -56,18 +38,116 @@ function estimateTokens(text: string): number {
 }
 
 /**
+ * Call memory-system API to get context injection for a session.
+ * Returns the context prefix to prepend to the prompt.
+ * If memory-system is unavailable, returns empty string.
+ */
+async function getMemoryContext(sessionId: string, userMessage: string): Promise<string> {
+  if (!ENABLE_MEMORY_HOOKS) {
+    return ""; // Memory disabled
+  }
+
+  try {
+    const response = await fetch(`${MEMORY_SERVICE_URL}/memory/inject-context`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sessionId,
+        userMessage,
+        maxTotalTokens: 2500,
+      }),
+    });
+
+    if (!response.ok) {
+      console.warn(`⚠️  Memory service returned ${response.status}`);
+      return "";
+    }
+
+    const data = await response.json();
+    return data.contextPrefix || "";
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.warn(`⚠️  Memory-system unavailable: ${msg}`);
+    return "";
+  }
+}
+
+/**
+ * Record a turn to the memory-system API.
+ * Non-blocking; logs warnings if memory-system is unavailable.
+ */
+async function recordTurnToMemory(turnData: {
+  sessionId: string;
+  discordUserId: string;
+  discordChannelId: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: number;
+  metadata?: Record<string, any>;
+}): Promise<void> {
+  if (!ENABLE_MEMORY_HOOKS) {
+    return; // Memory disabled
+  }
+
+  try {
+    const response = await fetch(`${MEMORY_SERVICE_URL}/memory/record-turn`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(turnData),
+    });
+
+    if (!response.ok) {
+      console.warn(`⚠️  Memory service returned ${response.status} when recording turn`);
+    }
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.warn(`⚠️  Failed to record turn to memory-system: ${msg}`);
+  }
+}
+
+/**
+ * Extract and save semantic memories via memory-system API.
+ * Non-blocking; logs warnings if memory-system is unavailable.
+ */
+async function extractMemoriesAsync(
+  userMessage: string,
+  assistantResponse: string,
+  sessionId: string
+): Promise<void> {
+  if (!ENABLE_MEMORY_HOOKS) {
+    return; // Memory disabled
+  }
+
+  try {
+    await fetch(`${MEMORY_SERVICE_URL}/memory/extract-and-save`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userMessage,
+        assistantResponse,
+        sessionId,
+        source: "discord-remote-control",
+      }),
+    });
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.warn(`⚠️  Memory extraction failed: ${msg}`);
+  }
+}
+
+/**
  * Build the user prompt from the request, mirroring the logic in subprocess.ts
  */
 async function buildPrompt(request: SubprocessRequest): Promise<string> {
-  // Load memory modules dynamically
-  await loadMemoryModules();
-
-  const contextInjection = await buildContextInjection(
-    request.sessionId,
-    request.userMessage,
-    { maxTotalTokens: 2500 }
-  );
-  const contextPrefix = formatContextForPrompt(contextInjection);
+  // Get memory context (if enabled)
+  let contextPrefix = "";
+  if (ENABLE_MEMORY_HOOKS) {
+    console.log(`[Skills API] Fetching memory context...`);
+    contextPrefix = await getMemoryContext(request.sessionId, request.userMessage);
+    if (contextPrefix) {
+      console.log(`   Memory context retrieved (${estimateTokens(contextPrefix)} tokens)`);
+    }
+  }
 
   let prompt = "";
 
@@ -117,26 +197,29 @@ export async function callSkillsAPI(
 
   try {
     console.log(`[Skills API] Calling Anthropic API for session ${request.sessionId}`);
+    if (ENABLE_MEMORY_HOOKS) {
+      console.log(`   Memory hooks: ENABLED`);
+    } else {
+      console.log(`   Memory hooks: DISABLED (standalone mode)`);
+    }
 
-    // Load memory modules for recordTurn
-    await loadMemoryModules();
-
-    // Record user turn IMMEDIATELY (before processing)
-    // This ensures the prompt is persisted even if the API call or service crashes.
-    console.log(`[Skills API] Pre-recording user turn to memory...`);
-    await recordTurn({
-      sessionId: request.sessionId,
-      discordUserId: request.userId,
-      discordChannelId: request.channelId,
-      role: "user",
-      content: request.userMessage,
-      timestamp: Date.now(),
-      metadata: {
-        messageType: request.messageType,
-        attachmentCount: request.attachmentPaths?.length ?? 0,
-        tokens: estimateTokens(request.userMessage),
-      },
-    });
+    // Record user turn IMMEDIATELY (before processing) — if memory enabled
+    if (ENABLE_MEMORY_HOOKS) {
+      console.log(`[Skills API] Recording user turn to memory...`);
+      recordTurnToMemory({
+        sessionId: request.sessionId,
+        discordUserId: request.userId,
+        discordChannelId: request.channelId,
+        role: "user",
+        content: request.userMessage,
+        timestamp: Date.now(),
+        metadata: {
+          messageType: request.messageType,
+          attachmentCount: request.attachmentPaths?.length ?? 0,
+          tokens: estimateTokens(request.userMessage),
+        },
+      }).catch(() => {}); // Non-blocking
+    }
 
     const prompt = await buildPrompt(request);
     const inputTokenEstimate = estimateTokens(prompt);
@@ -148,7 +231,7 @@ export async function callSkillsAPI(
     });
 
     const response = await client.messages.create({
-      model: "claude-opus-4-6",
+      model: "claude-haiku-4-5-20251001",
       max_tokens: 4096,
       system: DISCORD_SYSTEM_CONTEXT,
       messages: [
@@ -166,25 +249,22 @@ export async function callSkillsAPI(
     const outputTokens = response.usage?.output_tokens ?? estimateTokens(output);
     const inputTokens = response.usage?.input_tokens ?? inputTokenEstimate;
 
-    // Record assistant response to memory
-    // (User turn was already recorded before processing)
-    await recordTurn({
-      sessionId: request.sessionId,
-      discordUserId: request.userId,
-      discordChannelId: request.channelId,
-      role: "assistant",
-      content: output,
-      timestamp: Date.now(),
-      metadata: { tokens: outputTokens },
-    });
+    // Record assistant response to memory (if enabled)
+    if (ENABLE_MEMORY_HOOKS) {
+      console.log(`[Skills API] Recording assistant response to memory...`);
+      recordTurnToMemory({
+        sessionId: request.sessionId,
+        discordUserId: request.userId,
+        discordChannelId: request.channelId,
+        role: "assistant",
+        content: output,
+        timestamp: Date.now(),
+        metadata: { tokens: outputTokens },
+      }).catch(() => {}); // Non-blocking
 
-    // Extract semantic memories asynchronously (non-blocking)
-    extractAndSaveMemories(
-      request.userMessage,
-      output,
-      request.sessionId,
-      "discord"
-    ).catch((err) => console.error("[Skills API] Memory extraction failed:", err));
+      // Extract semantic memories asynchronously (non-blocking)
+      extractMemoriesAsync(request.userMessage, output, request.sessionId).catch(() => {});
+    }
 
     const duration = Date.now() - startTime;
     console.log(`[Skills API] Response complete (${duration}ms, ${outputTokens} output tokens)`);

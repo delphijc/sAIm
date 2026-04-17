@@ -95,7 +95,7 @@ export async function sendVoiceResponse(
 
     // For voice responses, only synthesize first chunk to avoid long audio files
     const firstChunk = chunks[0];
-    // Truncate at sentence boundary for TTS so voice ends naturally, not mid-fragment (ENH-003)
+    // Truncate at sentence boundary for TTS so voice ends naturally, not mid-fragment
     const voiceText = truncateAtSentenceBoundary(firstChunk, Math.min(firstChunk.length, 1500));
     const endsAtBoundary = endsAtSentenceBoundary(voiceText);
 

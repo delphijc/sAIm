@@ -141,7 +141,7 @@ export function findNextSentenceBoundary(text: string, startPos: number = 0): nu
     /[.!?]\n/,
     /\.\.\.\n/,
     /[.!?]$/,
-  ];
+  ]; // Note: patterns don't need global flag for search()
 
   for (const pattern of patterns) {
     const match = remaining.search(pattern);

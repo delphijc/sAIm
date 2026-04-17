@@ -150,8 +150,7 @@ async function synthesizeViaAPI(
   try {
     console.log(`🔊 Using API fallback for TTS...`);
 
-    // TODO: Implement actual API TTS fallback (e.g., Google TTS, etc.)
-    // Primary TTS is ChatterboxTTS via voice server at localhost:8888
+    // TODO: Implement actual API TTS (e.g., Google TTS, etc.) or route to voice-server
     // For now, return a placeholder result
     console.warn(
       `⚠️  API TTS not yet implemented. Voice server required for Phase 7.`
