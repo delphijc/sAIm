@@ -75,7 +75,7 @@ After editing, restart Claude Code for the change to take effect.
 
 **Path substitution note:** If your MCP config contains absolute paths, run `fix_hardcoded_paths` after modifying:
 ```bash
-bash ~$HOME/Projects/sam/.agent/setup.sh --fix-paths
+bash ~/Projects/sam/.agent/setup.sh --fix-paths
 ```
 
 ---
@@ -114,7 +114,7 @@ bunx @playwright/mcp@latest --version
 
 **Config path issue after machine migration?**
 ```bash
-bash ~$HOME/Projects/sam/.agent/setup.sh --fix-paths
+bash ~/Projects/sam/.agent/setup.sh --fix-paths
 ```
 
 ---
@@ -140,7 +140,7 @@ During `setup.sh`, `fix_hardcoded_paths()` processes `.mcp.json` to ensure any a
 
 ```bash
 # Re-run path fixing if needed
-bash ~$HOME/Projects/sam/.agent/setup.sh --fix-paths
+bash ~/Projects/sam/.agent/setup.sh --fix-paths
 ```
 
 ---

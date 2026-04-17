@@ -314,7 +314,7 @@ Some skills require API keys in `.env`:
 
 ```bash
 PERPLEXITY_API_KEY=...    # For Research
-ELEVENLABS_API_KEY=...    # For read-aloud
+VOICE_PROVIDER=chatterbox  # For read-aloud (ChatterboxTTS, local)
 BRIGHTDATA_API_KEY=...    # For bright-data
 ```
 

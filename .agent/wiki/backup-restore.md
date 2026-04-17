@@ -71,7 +71,7 @@ backup-memory.sh export
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `PAI_DIR` | `~$HOME/Projects/sam` | PAI root directory |
+| `PAI_DIR` | `~/Projects/sam` | PAI root directory |
 | `SAM_BACKUP_DIR` | `$PAI_DIR/backups/memory` | Override backup storage location |
 
 ### restore-memory.sh
@@ -185,7 +185,7 @@ backup-memory.sh export
 scp sam-memory-export-*.tar.gz newhost:~/
 
 # On the target machine: restore
-PAI_DIR=~$HOME/Projects/sam restore-memory.sh ~/sam-memory-export-*.tar.gz
+PAI_DIR=~/Projects/sam restore-memory.sh ~/sam-memory-export-*.tar.gz
 ```
 
 The export tarball is self-contained: it includes the full backup, all related incrementals, and a copy of the restore script.

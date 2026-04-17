@@ -19,7 +19,7 @@ Phase 1 implementation includes **6 files** in `~/.claude/services/`:
 **What they do:**
 - Auto-restart services if they crash (restart delay: 10-20 seconds)
 - Limit restart attempts to prevent "restart loops" (max 5 per 5 minutes)
-- Run as your user with proper working directories
+- Run as obsidium user with proper working directories
 - Log to systemd journal (viewable with `journalctl`)
 
 ### Monitoring Scripts
@@ -111,8 +111,8 @@ tail /tmp/pai-watchdog.log
 sudo journalctl -u pai-voice-server -n 30
 
 # Verify paths exist
-ls -la $HOME/Projects/voice-server/start.sh
-ls -la /.claude/skills/discord-remote-control/scripts/start.sh
+ls -la /home/obsidium/Projects/voice-server/start.sh
+ls -la /home/obsidium/.claude/skills/discord-remote-control/scripts/start.sh
 ```
 
 ### Watchdog script not running
@@ -121,7 +121,7 @@ ls -la /.claude/skills/discord-remote-control/scripts/start.sh
 crontab -l | grep watchdog
 
 # Manually test watchdog
-/.claude/services/watchdog.sh
+/home/obsidium/.claude/services/watchdog.sh
 tail /tmp/pai-watchdog.log
 ```
 

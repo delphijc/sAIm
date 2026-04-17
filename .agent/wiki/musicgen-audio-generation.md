@@ -73,7 +73,7 @@ python3 -m venv venv
 
 ## Projects Using MusicGen
 
-- **[Realms of Tomorrow](~$HOME/Projects/realms-of-tomorrow/docs/audio-generation.md)** — 58 generated audio assets (ambient tracks, spatial effects, interaction SFX)
+- **[Realms of Tomorrow](~/Projects/realms-of-tomorrow/docs/audio-generation.md)** — 58 generated audio assets (ambient tracks, spatial effects, interaction SFX)
 
 ## Related
 

@@ -71,7 +71,7 @@ Sam is an open-source template for building AI-powered operating systems on top 
 | **38 Skills** | 10 domain clusters + utilities (research, coding, analysis, content creation) |
 | **17+ Agents** | Engineer, Architect, Researcher, Pentester, Brainstorming Coach, etc. |
 | **251 Patterns** | Fabric AI patterns for content processing |
-| **Voice Output** | Audible responses via ChatterboxTTS (local) |
+| **Voice Output** | Audible responses via ChatterboxTTS (local, via voice-server) |
 | **Task Queue** | JSONL-based job orchestration |
 | **Dashboard** | React UI for monitoring and control |
 | **Git Isolation** | Worktree-based sandboxing |
@@ -91,7 +91,7 @@ Sam follows three core principles:
 
 ## Origins
 
-Sam is a fork of the original [PAI 1.0 platform](https://github.com/danielmiessler/PAI) created by Daniel Miessler, now maintained under [delphijc/sam](https://github.com/delphijc/sam). It builds upon:
+Sam is a fork of the original [PAI 1.0 platform](https://github.com/danielmiessler/PAI) created by Daniel Miessler, now maintained under [yourusername/sAIm](https://github.com/yourusername/sam). It builds upon:
 
 - [Fabric](https://github.com/danielmiessler/fabric) - AI patterns project (patterns maintained locally with manual refreshes for LTS stability)
 - [Human 3.0](https://danielmiessler.com/blog/human-3-0-evolution-artificial-intelligence/) - Philosophy of AI augmentation

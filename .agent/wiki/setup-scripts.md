@@ -63,7 +63,7 @@ The full setup runs these steps in order:
 
 #### Step 3.5 — Companion Project Cloning
 
-Prompts to selectively clone PAI companion repos into `~$HOME/Projects/`. Each project is prompted individually with `[Y/n]`. Already-cloned repos (`.git` dir exists) are detected and skipped automatically.
+Prompts to selectively clone PAI companion repos into `~/Projects/`. Each project is prompted individually with `[Y/n]`. Already-cloned repos (`.git` dir exists) are detected and skipped automatically.
 
 | Project | Description |
 |---------|-------------|
@@ -130,7 +130,7 @@ Runs the per-variable `.env` wizard. Reads `.agent/.env.example` line by line:
 
 After the wizard completes, `propagate_env()` automatically copies `.env` to:
 - `.agent/.env.discord` — for the Discord remote control service
-- `~$HOME/Projects/awareness/.env` — if the awareness project exists
+- `~/Projects/awareness/.env` — if the awareness project exists
 
 #### Step 8 — Final Validation
 - Verifies hooks are executable
@@ -185,7 +185,7 @@ The per-variable `.env` wizard (Step 7). Reads `.env.example` as the template, c
 #### `propagate_env(env_file)`
 Copies the configured `.env` to linked locations:
 - `.agent/.env.discord` — always (chmod 600)
-- `~$HOME/Projects/awareness/.env` — if `~$HOME/Projects/awareness/` exists (chmod 600)
+- `~/Projects/awareness/.env` — if `~/Projects/awareness/` exists (chmod 600)
 
 Called automatically at the end of `configure_env()` and via `--configure-env`.
 
@@ -231,16 +231,14 @@ Variables set by setup in shell profile (`~/.bashrc` / `~/.zshrc`):
 | Variable | Purpose |
 |----------|---------|
 | `PAI_DIR` | Path to `~/.claude` (Claude Code config dir) |
-| `PAI_PROJECT_ROOT` | Path to `~$HOME/Projects/sam` |
+| `PAI_PROJECT_ROOT` | Path to `~/Projects/sam` |
 
 Variables configured interactively in `.env` (see `.agent/.env.example` for full list):
 
 | Variable | Purpose |
 |----------|---------|
 | `ANTHROPIC_API_KEY` | Required for Claude |
-| `VOICE_PROVIDER` | TTS provider: `chatterbox` (default), `elevenlabs`, `none` |
-| `CHATTERBOX_VOICE_ID` | ChatterboxTTS voice name (e.g. `jessica`) |
-| `ELEVENLABS_API_KEY` | ElevenLabs cloud TTS (optional alternative) |
+| `CHATTERBOX_VOICE_ID` | Voice ID for ChatterboxTTS (e.g. jessica) |
 | `PERPLEXITY_API_KEY` | Perplexity research agent |
 | `GOOGLE_API_KEY` | Gemini research agent |
 | `BRIGHTDATA_API_KEY` | Web scraping |
@@ -268,8 +266,8 @@ Variables configured interactively in `.env` (see `.agent/.env.example` for full
 ```bash
 # 1. Clone
 mkdir -p ~/Projects
-git clone https://github.com/delphijc/sam.git ~$HOME/Projects/sam
-cd ~$HOME/Projects/sam
+git clone https://github.com/yourusername/sam.git ~/Projects/sam
+cd ~/Projects/sam
 
 # 2. Run full setup
 bash .agent/setup.sh
@@ -286,8 +284,8 @@ claude
 ```bash
 # 1. Clone to new machine
 mkdir -p ~/Projects
-git clone https://github.com/delphijc/sam.git ~$HOME/Projects/sam
-cd ~$HOME/Projects/sam
+git clone https://github.com/yourusername/sam.git ~/Projects/sam
+cd ~/Projects/sam
 
 # 2. Run setup (will fix all paths, configure env, clone companions)
 bash .agent/setup.sh
@@ -320,7 +318,7 @@ bash .agent/setup.sh --install-security-tools
 bash .agent/setup.sh
 
 # 2. Install dev toolchain
-cd ~$HOME/Projects/sam/.agent
+cd ~/Projects/sam/.agent
 ./scripts/setup_dev_env.sh
 
 # 3. Run tests
@@ -361,7 +359,7 @@ bash .agent/setup.sh --configure-env
 Verify git is in PATH and you have network access:
 ```bash
 git --version
-git ls-remote https://github.com/delphijc/sam.git HEAD
+git ls-remote https://github.com/yourusername/sam.git HEAD
 ```
 
 ### Services Not Starting

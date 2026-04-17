@@ -347,7 +347,7 @@ projects/
 
 **Path Encoding**: Full paths with `/` replaced by `-`
 
-Example: `/Users/foo$HOME/Projects/bar` becomes `-Users-foo-Projects-bar`
+Example: `/Users/foo/Projects/bar` becomes `-Users-foo-Projects-bar`
 
 ---
 

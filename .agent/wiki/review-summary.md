@@ -103,12 +103,12 @@ sudo systemctl daemon-reload
 sudo systemctl enable pai-*
 
 # 2. Deploy watchdog
-/.claude/services/watchdog.sh
+/home/obsidium/.claude/services/watchdog.sh
 # Add to crontab
 
 # 3. Archive old projects
 mv ~/.claude/projects/Users ~/.claude/projects/_archive/
-mv ~/.claude/projects/<project> ~/.claude/projects/_archive/
+mv ~/.claude/projects/-home-obsidium ~/.claude/projects/_archive/
 ```
 
 ### Next 2-3 Weeks (Phase 2)
@@ -140,17 +140,17 @@ mv ~/.claude/projects/<project> ~/.claude/projects/_archive/
 ## Files to Review
 
 1. **Priority 1 (Review Today):**
-   - [ ] `/.claude/PAI_ECOSYSTEM_REVIEW_2026-03-12.md` - Full analysis
-   - [ ] `/.claude/RESILIENCE_PLAN.md` - Implementation details
+   - [ ] `/home/obsidium/.claude/PAI_ECOSYSTEM_REVIEW_2026-03-12.md` - Full analysis
+   - [ ] `/home/obsidium/.claude/RESILIENCE_PLAN.md` - Implementation details
 
 2. **Priority 2 (This Week):**
-   - [ ] `/.claude/SKILLS_INDEX.md` - Skills taxonomy
-   - [ ] `/.claude/CLAUDE.md` - Update with Linux notes
+   - [ ] `/home/obsidium/.claude/SKILLS_INDEX.md` - Skills taxonomy
+   - [ ] `/home/obsidium/.claude/CLAUDE.md` - Update with Linux notes
 
 3. **Reference:**
-   - Voice-server: `$HOME/Projects/voice-server/LINUX_INSTALLATION.md`
-   - Discord service: `/.claude/skills/discord-remote-control/`
-   - Observability: `/.claude/skills/observability/`
+   - Voice-server: `/home/obsidium/Projects/voice-server/LINUX_INSTALLATION.md`
+   - Discord service: `/home/obsidium/.claude/skills/discord-remote-control/`
+   - Observability: `/home/obsidium/.claude/skills/observability/`
 
 ---
 
@@ -160,7 +160,7 @@ mv ~/.claude/projects/<project> ~/.claude/projects/_archive/
 # 1. Archive old projects
 mkdir -p ~/.claude/projects/_archive
 mv ~/.claude/projects/Users ~/.claude/projects/_archive/ 2>/dev/null
-mv ~/.claude/projects/<project> ~/.claude/projects/_archive/ 2>/dev/null
+mv ~/.claude/projects/-home-obsidium ~/.claude/projects/_archive/ 2>/dev/null
 
 # 2. Create services directory
 mkdir -p ~/.claude/services

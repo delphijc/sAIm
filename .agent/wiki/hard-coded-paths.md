@@ -38,7 +38,7 @@ PAI uses `$HOME`-relative paths wherever possible. However, some files require a
 | `.agent/PHASE1_SETUP_GUIDE.md` | Service file paths | Setup guide examples |
 | `.agent/scripts/README-SYSTEMD-SETUP.md` | Service start paths | Documentation |
 | `.agent/OBSERVABILITY_INTEGRATION_FIX.md` | Event file paths | Fix documentation |
-| `.agent/PAI_ECOSYSTEM_REVIEW_2026-03-12.md` | Various paths including legacy `/` | Ecosystem review |
+| `.agent/PAI_ECOSYSTEM_REVIEW_2026-03-12.md` | Various paths including legacy `/home/jaysoncavendish/` | Ecosystem review |
 
 ### Source Code (uses generic examples)
 

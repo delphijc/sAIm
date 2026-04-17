@@ -116,8 +116,8 @@ Each dashboard-style service uses a `manage.sh` pattern:
 | Project | Script | Commands |
 |---------|--------|----------|
 | Observability | `~/.claude/skills/observability/manage.sh` | start, stop |
-| Awareness | `~$HOME/Projects/awareness/dashboard/manage.sh` | --start, --stop, --restart, --status |
-| CyberWatch | `~$HOME/Projects/cyber-alert-mgr/manage.sh` | --start, --stop, --restart, --status |
+| Awareness | `~/Projects/awareness/dashboard/manage.sh` | --start, --stop, --restart, --status |
+| CyberWatch | `~/Projects/cyber-alert-mgr/manage.sh` | --start, --stop, --restart, --status |
 
 ## Troubleshooting
 
@@ -155,15 +155,15 @@ Services are installed as LaunchAgent plist files in `~/Library/LaunchAgents/`. 
 
 | Label | Wrapper Script | Port(s) | Working Directory |
 |-------|---------------|---------|-------------------|
-| `com.pai.voice-server` | `pai-voice-server` | 8888 | `~$HOME/Projects/voice-server` |
+| `com.pai.voice-server` | `pai-voice-server` | 8888 | `~/Projects/voice-server` |
 | `com.pai.observability-server` | `pai-observability-server` | 4000 | `~/.claude/skills/observability/apps/server` |
 | `com.pai.observability-client` | `pai-observability-client` | 5172 | `~/.claude/skills/observability/apps/client` |
 | `com.pai.discord-remote-control` | `pai-discord-bot` | — | `~/.claude/skills/discord-remote-control/service` |
-| `com.pai.awareness-server` | `pai-awareness-server` | 4100 | `~$HOME/Projects/awareness/dashboard/apps/server` |
-| `com.pai.awareness-client` | `pai-awareness-client` | 5173 | `~$HOME/Projects/awareness/dashboard/apps/client` |
-| `com.pai.cyber-alert-server` | `pai-cyber-alert-server` | 4200 | `~$HOME/Projects/cyber-alert-mgr/server` |
-| `com.pai.cyber-alert-client` | `pai-cyber-alert-client` | 5174 | `~$HOME/Projects/cyber-alert-mgr` |
-| `com.pai.markdown-editor` | `pai-markdown-editor` | 4444 | `~$HOME/Projects/markdown-editor` |
+| `com.pai.awareness-server` | `pai-awareness-server` | 4100 | `~/Projects/awareness/dashboard/apps/server` |
+| `com.pai.awareness-client` | `pai-awareness-client` | 5173 | `~/Projects/awareness/dashboard/apps/client` |
+| `com.pai.cyber-alert-server` | `pai-cyber-alert-server` | 4200 | `~/Projects/cyber-alert-mgr/server` |
+| `com.pai.cyber-alert-client` | `pai-cyber-alert-client` | 5174 | `~/Projects/cyber-alert-mgr` |
+| `com.pai.markdown-editor` | `pai-markdown-editor` | 4444 | `~/Projects/markdown-editor` |
 | `com.sam.memory-backup-hourly` | `pai-memory-backup-hourly` | — | `~/.claude` (runs every hour) |
 | `com.sam.memory-backup-daily` | `pai-memory-backup-daily` | — | `~/.claude` (runs at 3am) |
 
@@ -192,21 +192,21 @@ tail -f ~/Library/Logs/pai-discord-bot.log
 
 ### Code Signing
 
-Wrapper scripts are signed with a self-signed "self-signed" certificate to improve the display name in System Settings. To re-sign after modifying a wrapper:
+Wrapper scripts are signed with a self-signed "yourusername" certificate to improve the display name in System Settings. To re-sign after modifying a wrapper:
 
 ```bash
 # List available signing identities
 security find-identity -v -p codesigning
 
-# Sign a wrapper script (use your certificate name from find-identity)
-codesign -f -s "your-username" ~/.claude/bin/pai-voice-server
+# Sign a wrapper script
+codesign -f -s "yourusername" ~/.claude/bin/pai-voice-server
 ```
 
 To create the certificate the first time:
 ```bash
 # Generate cert + key
 openssl req -x509 -newkey rsa:2048 -keyout /tmp/cs.key -out /tmp/cs.cer \
-  -days 3650 -nodes -subj "/CN=your-username" \
+  -days 3650 -nodes -subj "/CN=yourusername" \
   -extensions codesign_ext \
   -config <(cat /etc/ssl/openssl.cnf; echo "[codesign_ext]
 basicConstraints=CA:FALSE

@@ -156,7 +156,7 @@ const historyFile = join(PAI_DIR, 'history', 'sessions', 'log.txt');
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@pai-tools/*": ["/.claude/tools/*"],
+      "@pai-tools/*": ["/home/obsidium/.claude/tools/*"],
       "@memory/*": ["../../../memory/*"]
     }
   }
@@ -253,8 +253,8 @@ const filePath = `${PAI_DIR}/hooks/my-hook.ts`;          // String interpolation
 
 ```typescript
 // ❌ Bad - Not portable
-const path = '/.claude/hooks/my-hook.ts';
-const path = '/Users/username/.claude/hooks/my-hook.ts';
+const path = '/home/obsidium/.claude/hooks/my-hook.ts';
+const path = '/Users/obsidium/.claude/hooks/my-hook.ts';
 
 // ✅ Good - Portable
 const PAI_DIR = process.env.PAI_DIR || join(homedir(), '.claude');
@@ -296,7 +296,7 @@ const externalModule = '../../../../skills/other-skill/lib.ts';
 // Bad: Fragile, hard to debug
 const POSSIBLE_PATHS = [
   join(process.cwd(), '.claude/History/Reference/days'),
-  join(homedir(), '$HOME$HOME/Projects/sam/.claude/History/Reference/days'),
+  join(homedir(), 'Projects/sam/.claude/History/Reference/days'),
   join(PAI_DIR, '../History/Reference/days'),
 ];
 let PATH = POSSIBLE_PATHS.find(p => existsSync(p));
@@ -390,7 +390,7 @@ Your `.env` file:
 
 ```bash
 # .env (project root or ~/.env)
-PAI_DIR=/.claude
+PAI_DIR=/home/obsidium/.claude
 
 # Optional: Custom locations
 HISTORY_DIR=/mnt/data/history

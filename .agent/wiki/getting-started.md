@@ -21,12 +21,12 @@ Before installing Sam, ensure you have:
 
 ### Step 1: Create Projects Directory & Clone
 
-Sam is designed to live at `~$HOME/Projects/sam`. Create the directory if it doesn't exist, then clone:
+Sam is designed to live at `~/Projects/sam`. Create the directory if it doesn't exist, then clone:
 
 ```bash
 mkdir -p ~/Projects
-git clone https://github.com/delphijc/sam.git ~$HOME/Projects/sam
-cd ~$HOME/Projects/sam
+git clone https://github.com/yourusername/sam.git ~/Projects/sam
+cd ~/Projects/sam
 ```
 
 ### Step 2: Run the Setup Script
@@ -57,7 +57,7 @@ Installs `.agent/` as `~/.claude/` (the Claude Code config directory):
 - Substitutes your home directory path into all config files
 
 ### Step 3.5 — Companion Project Cloning
-Prompts you to selectively clone optional PAI companion projects into `~$HOME/Projects/`:
+Prompts you to selectively clone optional PAI companion projects into `~/Projects/`:
 
 | Project | Purpose |
 |---------|---------|
@@ -106,7 +106,7 @@ Runs the **per-variable `.env` wizard**:
 - Secret values (tokens, keys, passwords) are masked as `xxxx****`
 - After configuration, `.env` is propagated to:
   - `.agent/.env.discord`
-  - `~$HOME/Projects/awareness/.env` (if the project exists)
+  - `~/Projects/awareness/.env` (if the project exists)
 
 ### Step 8 — Final Validation
 Tests hooks, verifies service health, confirms install is complete.
@@ -122,11 +122,10 @@ The key variables to configure during setup:
 ANTHROPIC_API_KEY=sk-ant-...   # Required for Claude
 ```
 
-**Optional (voice - ChatterboxTTS local is the default):**
+**Optional (voice):**
 ```bash
-VOICE_PROVIDER=chatterbox      # chatterbox (local/free), elevenlabs, or none
-CHATTERBOX_VOICE_ID=jessica    # ChatterboxTTS voice name
-# ELEVENLABS_API_KEY=...       # Only if VOICE_PROVIDER=elevenlabs
+VOICE_PROVIDER=chatterbox      # ChatterboxTTS (local, free)
+CHATTERBOX_VOICE_ID=jessica    # Voice ID for ChatterboxTTS
 ```
 
 **Optional (research agents):**
@@ -148,7 +147,7 @@ DISCORD_BOT_TOKEN=...          # Discord remote control
 ### Start Claude Code
 
 ```bash
-cd ~$HOME/Projects/sam
+cd ~/Projects/sam
 claude
 ```
 
@@ -167,7 +166,7 @@ Try these in Claude Code:
 
 ```bash
 # Linux (systemd)
-systemctl --user status voice-server observability-dashboard python-sidecar discord-remote-control
+systemctl --user status voice-server observability-dashboard discord-remote-control
 
 # macOS (launchd)
 launchctl list | grep com.pai
@@ -222,7 +221,7 @@ See [Security Tools Reference](security-tools.md) for usage details.
 After installation, key locations:
 
 ```
-~$HOME/Projects/sam/
+~/Projects/sam/
 ├── .agent/               # PAI infrastructure (also installed to ~/.claude)
 │   ├── skills/           # Skill definitions
 │   ├── agents/           # Specialized agents
@@ -284,7 +283,7 @@ Re-run env configuration:
 bash .agent/setup.sh --configure-env
 ```
 
-This re-runs the wizard and propagates `.env` to `.agent/.env.discord` and `~$HOME/Projects/awareness/.env`.
+This re-runs the wizard and propagates `.env` to `.agent/.env.discord` and `~/Projects/awareness/.env`.
 
 ---
 

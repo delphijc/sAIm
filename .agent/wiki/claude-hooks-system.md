@@ -333,19 +333,19 @@ Offline:
 
 ### Files & Purposes
 
-Voice reference files are audio samples used by Chatterbox TTS for **voice cloning**. The system analyzes the voice characteristics and applies them to generated speech.
+Voice reference files are audio samples used by ChatterboxTTS for **voice cloning**. The system analyzes the voice characteristics and applies them to generated speech.
 
-| File | Size | Voice | Agent | Source |
-|------|------|-------|-------|--------|
-| `jessica_ref.wav` | 267KB | Jessica | Main/Default | Original ✅ |
-| `jamie_ref.wav` | 59KB | Jamie | Main agents | Reference sample ✅ |
+| File | Size | Voice | Agent | Notes |
+|------|------|-------|-------|-------|
+| `jessica_ref.wav` | 267KB | Jessica | Main/Default | Primary reference ✅ |
+| `jamie_ref.wav` | 59KB | Jamie | Main agents | ✅ |
 | `ava_ref.wav` | 59KB | Ava | Researcher | Fallback† |
 | `zoe_ref.wav` | 59KB | Zoe | Engineer | Fallback† |
 | `serena_ref.wav` | 59KB | Serena | Architect/Writer | Fallback† |
 | `isha_ref.wav` | 59KB | Isha | Designer | Fallback† |
 | `oliver_ref.wav` | 59KB | Oliver | Pentester | Fallback† |
 
-**† Fallback:** Currently using copies of jamie_ref.wav. For better Chatterbox voice cloning, replace with actual voice samples.
+**† Fallback:** Currently using copies of jamie_ref.wav. For better voice matching, provide your own reference WAV samples.
 
 ### How Voice Cloning Works
 
@@ -634,7 +634,7 @@ Response:
   "status": "healthy",
   "port": 8888,
   "primary_provider": "chatterbox",
-  "fallback_provider": "macos-say",
+  "fallback_provider": "system-notification",
   "default_voice_id": "jessica"
 }
 ```

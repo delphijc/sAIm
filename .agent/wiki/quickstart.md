@@ -52,7 +52,7 @@ cp ~/.claude/.env.example ~/.claude/.env
 nano ~/.claude/.env
 
 # Required: ANTHROPIC_API_KEY
-# Optional: ELEVENLABS_API_KEY for voice
+# Optional: VOICE_PROVIDER=chatterbox for voice
 ```
 
 ### 5. Reload Your Shell
@@ -107,7 +107,7 @@ cp ~/.claude/.env.example ~/.claude/.env
 nano ~/.claude/.env
 
 # Required: ANTHROPIC_API_KEY
-# Optional: ELEVENLABS_API_KEY for voice
+# Optional: VOICE_PROVIDER=chatterbox for voice
 ```
 
 ### 5. Reload Your Shell
@@ -161,7 +161,7 @@ Copy-Item "$env:USERPROFILE\.claude\.env.example" "$env:USERPROFILE\.claude\.env
 notepad "$env:USERPROFILE\.claude\.env"
 
 # Required: ANTHROPIC_API_KEY
-# Optional: ELEVENLABS_API_KEY for voice
+# Optional: VOICE_PROVIDER=chatterbox for voice
 ```
 
 ### 5. Reload Your Shell

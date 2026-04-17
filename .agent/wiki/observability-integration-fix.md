@@ -9,7 +9,7 @@
 
 ### Issue 1: Observability Dashboard Had No Activity
 - **Root Cause:** Event file was created but remained empty
-- **File Path:** `/.agent/history/raw-outputs/2026-03/2026-03-12_all-events.jsonl`
+- **File Path:** `/home/obsidium/.agent/history/raw-outputs/2026-03/2026-03-12_all-events.jsonl`
 - **Impact:** Dashboard appeared inactive with no events visible
 
 ### Issue 2: Discord Events Writing to Wrong Location
@@ -96,7 +96,7 @@ logMessageReceived(userId, channelId, messageType, preview)
 # Verified test event:
 {"source_app":"discord-remote-control","session_id":"discord-test-123","hook_event_type":"DiscordTestEvent","payload":{"test":true,"message":"Test event from discord-remote-control"},"summary":"Test event","timestamp":1710360682000}
 
-# Location: /.agent/history/raw-outputs/2026-03/2026-03-12_all-events.jsonl
+# Location: /home/obsidium/.agent/history/raw-outputs/2026-03/2026-03-12_all-events.jsonl
 # ✅ Event successfully detected by Observability file watcher
 ```
 
@@ -199,7 +199,7 @@ The Observability server will enrich events with `agent_name` for better display
 
 ## Files Modified
 
-- ✅ `/.claude/skills/discord-remote-control/service/observability.ts`
+- ✅ `/home/obsidium/.claude/skills/discord-remote-control/service/observability.ts`
   - Event format conversion (HookEvent compatible)
   - File path update to Observability location
   - Session ID management

@@ -6,7 +6,7 @@ This document chronicles how Sam was built, from initial concept to current impl
 
 ## Origins
 
-Sam is a fork of the original [PAI 1.0 platform](https://github.com/danielmiessler/PAI) created by Daniel Miessler, now maintained under [delphijc/sam](https://github.com/delphijc/sam). It embodies the philosophy of building AI infrastructure that serves the user, not the AI company.
+Sam is a fork of the original [PAI 1.0 platform](https://github.com/danielmiessler/PAI) created by Daniel Miessler, now maintained under [yourusername/sAIm](https://github.com/yourusername/sam). It embodies the philosophy of building AI infrastructure that serves the user, not the AI company.
 
 ### Foundational Ideas
 

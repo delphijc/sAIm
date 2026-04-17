@@ -108,7 +108,7 @@ The job orchestration engine with:
 Text-to-speech integration:
 
 - **Endpoint**: `http://localhost:8888/notify`
-- **Provider**: ChatterboxTTS local (configurable via `VOICE_PROVIDER`)
+- **Provider**: ChatterboxTTS (local, via Python sidecar managed internally)
 - **Trigger**: Automatic on response completion
 
 ---
@@ -219,7 +219,7 @@ Sam uses a 3-tier context loading system for token efficiency:
 | Backend | Bun HTTP Server |
 | Data Format | JSONL |
 | Testing | Vitest, BATS |
-| Voice | ChatterboxTTS (local HTTP) |
+| Voice | ChatterboxTTS (via voice-server) |
 
 **Mandatory Choices:**
 - Bun over Node.js
@@ -242,7 +242,7 @@ Sam Public (this repo)          Private Setup (~/.claude)
 ```
 
 ### Protected Files
-- `SAIM_CONTRACT.md`
+- `SAM_CONTRACT.md`
 - `README.md`
 - `.env.example`
 - `SECURITY.md`
@@ -296,8 +296,7 @@ Sam integrates with MCP servers for extended capabilities:
 
 | Service | Purpose | Required Key |
 |---------|---------|--------------|
-| ChatterboxTTS (local) | Voice synthesis (default) | None (local) |
-| ElevenLabs | Voice synthesis (optional cloud) | `ELEVENLABS_API_KEY` (if `VOICE_PROVIDER=elevenlabs`) |
+| voice-server (ChatterboxTTS) | Voice synthesis (local, no API key) | None |
 | Perplexity | Web research | PERPLEXITY_API_KEY |
 | Google | Gemini research | GOOGLE_API_KEY |
 | Bright Data | Web scraping | BRIGHTDATA_API_KEY |

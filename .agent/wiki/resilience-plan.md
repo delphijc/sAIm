@@ -18,9 +18,9 @@ Wants=pai-discord.service
 
 [Service]
 Type=simple
-User=%i
-WorkingDirectory=$HOME/Projects/voice-server
-ExecStart=$HOME/Projects/voice-server/start.sh
+User=obsidium
+WorkingDirectory=/home/obsidium/Projects/voice-server
+ExecStart=/home/obsidium/Projects/voice-server/start.sh
 Restart=on-failure
 RestartSec=10
 StartLimitInterval=300
@@ -41,9 +41,9 @@ After=network.target
 
 [Service]
 Type=simple
-User=%i
-WorkingDirectory=$HOME/Projects/voice-server
-ExecStart=$HOME/Projects/voice-server/start.sh
+User=obsidium
+WorkingDirectory=/home/obsidium/Projects/voice-server
+ExecStart=/home/obsidium/Projects/voice-server/start.sh
 Restart=on-failure
 RestartSec=10
 StartLimitInterval=300
@@ -68,9 +68,9 @@ After=network.target
 
 [Service]
 Type=simple
-User=%i
-WorkingDirectory=/.claude/skills/discord-remote-control
-ExecStart=/.claude/skills/discord-remote-control/scripts/start.sh
+User=obsidium
+WorkingDirectory=/home/obsidium/.claude/skills/discord-remote-control
+ExecStart=/home/obsidium/.claude/skills/discord-remote-control/scripts/start.sh
 Restart=on-failure
 RestartSec=15
 StartLimitInterval=300
@@ -90,9 +90,9 @@ After=network.target
 
 [Service]
 Type=simple
-User=%i
-WorkingDirectory=/.claude/skills/observability
-ExecStart=/bin/bash -c 'cd /.claude/skills/observability && bash manage.sh start'
+User=obsidium
+WorkingDirectory=/home/obsidium/.claude/skills/observability
+ExecStart=/bin/bash -c 'cd /home/obsidium/.claude/skills/observability && bash manage.sh start'
 Restart=on-failure
 RestartSec=20
 StartLimitInterval=300
@@ -106,13 +106,13 @@ WantedBy=multi-user.target
 
 ## Phase 2: Watchdog Script
 
-**File:** `/.claude/services/watchdog.sh`
+**File:** `/home/obsidium/.claude/services/watchdog.sh`
 
 ```bash
 #!/bin/bash
 
 # PAI Watchdog - Monitors and recovers failed services
-# Run via cron: */1 * * * * /.claude/services/watchdog.sh
+# Run via cron: */1 * * * * /home/obsidium/.claude/services/watchdog.sh
 
 LOG_FILE="/tmp/pai-watchdog.log"
 LOCK_FILE="/tmp/pai-watchdog.lock"
@@ -175,11 +175,11 @@ rm -f "$LOCK_FILE"
 
 **Install:**
 ```bash
-mkdir -p /.claude/services
-chmod +x /.claude/services/watchdog.sh
+mkdir -p /home/obsidium/.claude/services
+chmod +x /home/obsidium/.claude/services/watchdog.sh
 
 # Add to crontab
-(crontab -l 2>/dev/null; echo "*/5 * * * * /.claude/services/watchdog.sh") | crontab -
+(crontab -l 2>/dev/null; echo "*/5 * * * * /home/obsidium/.claude/services/watchdog.sh") | crontab -
 ```
 
 ---
@@ -210,7 +210,7 @@ async function sendNotification(message: string) {
 ```typescript
 // In Observability/apps/server/src/file-ingest.ts
 async function startFileIngestion() {
-  const eventPath = '/.agent/history/raw-outputs/2026-03/2026-03-12_all-events.jsonl';
+  const eventPath = '/home/obsidium/.agent/history/raw-outputs/2026-03/2026-03-12_all-events.jsonl';
 
   // Create file if missing
   if (!fs.existsSync(eventPath)) {
@@ -238,7 +238,7 @@ async function startFileIngestion() {
 
 ## Phase 4: Health Check Endpoint
 
-**File:** `/.claude/services/health-check.sh`
+**File:** `/home/obsidium/.claude/services/health-check.sh`
 
 ```bash
 #!/bin/bash
@@ -324,7 +324,7 @@ sudo systemctl status pai-voice-server
 # Should show: active (running)
 
 # Test watchdog
-/.claude/services/watchdog.sh
+/home/obsidium/.claude/services/watchdog.sh
 tail /tmp/pai-watchdog.log
 ```
 
