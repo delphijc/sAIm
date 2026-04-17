@@ -48,7 +48,7 @@ console.log('\nFull report saved to:', filePath);
 
 ## Output
 
-1. **Structured report** saved to `~/.claude/projects/<project>/memory/retrospective-YYYY-MM-DD-MODE.md`
+1. **Structured report** saved to `~/.claude/projects/-home-obsidium-Projects-sam/memory/retrospective-YYYY-MM-DD-MODE.md`
 2. **Top recommendations** saved back into semantic memory (tagged `recommendation`, `insight`)
 3. **Skill invocation** recorded for self-tracking
 4. **Summary** displayed inline
