@@ -18,7 +18,8 @@ import { existsSync, writeFileSync, readFileSync } from "fs";
 import { join } from "path";
 import { PAI_DIR } from "./lib/pai-paths";
 
-const DB_PATH = join(PAI_DIR, "discord-remote-control", "memory.db");
+// Support both new location (memory-system) and env var override
+const DB_PATH = process.env.MEMORY_DB_PATH || join(PAI_DIR, "memory-system", "memory.db");
 const BRIEFING_STATE_FILE = join(PAI_DIR, ".session-briefing-state.json");
 
 interface BriefingState {
@@ -54,7 +55,7 @@ function saveBriefingState(state: BriefingState): void {
 /**
  * Query memory.db directly for briefing data
  */
-function buildBriefing(): string | null {
+function buildBriefing(sessionId: string = ""): string | null {
   if (!existsSync(DB_PATH)) {
     console.error(`Session briefing: memory.db not found at ${DB_PATH}`);
     return null;
@@ -87,16 +88,30 @@ function buildBriefing(): string | null {
       return null; // No memories yet
     }
 
-    // 2. Top topics by frequency
+    // 2. Top topics by weighted score (recency, frequency, confidence)
+    const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
     const topTopics = db
       .prepare(
-        `SELECT topic, COUNT(*) as count
+        `SELECT
+           topic,
+           COUNT(*) as count,
+           SUM(CASE WHEN created_at > ? THEN 1 ELSE 0 END) as recent_count,
+           COALESCE(AVG(confidence), 0) as avg_confidence,
+           COALESCE(SUM(access_count), 0) as total_access_count
          FROM semantic
+         WHERE created_at > ?
          GROUP BY topic
          ORDER BY count DESC
-         LIMIT 8`
+         LIMIT 20`
       )
-      .all() as { topic: string; count: number }[];
+      .all(oneDayAgo, sevenDaysAgo) as {
+        topic: string;
+        count: number;
+        recent_count: number;
+        avg_confidence: number;
+        total_access_count: number;
+      }[];
 
     // 3. Highest confidence memories (most reliable facts)
     const highConfidence = db
@@ -130,32 +145,33 @@ function buildBriefing(): string | null {
       confidence: number;
     }[];
 
-    // 5. Recent memories (last 24 hours)
-    const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
-    const recentMemories = db
+    // 5. Recent memories (extended to 72 hours for better coverage)
+    const threeDaysAgo = Date.now() - 3 * 24 * 60 * 60 * 1000;
+    let recentMemories = db
       .prepare(
         `SELECT topic, summary, confidence, created_at
          FROM semantic
          WHERE created_at > ?
          ORDER BY created_at DESC
-         LIMIT 8`
+         LIMIT 20`
       )
-      .all(oneDayAgo) as {
+      .all(threeDaysAgo) as {
       topic: string;
       summary: string;
       confidence: number;
       created_at: number;
     }[];
 
-    // 6. Recent conversation snippets (last session context)
-    const recentConversations = db
+    // 6. Recent conversation snippets (last session context) - with session isolation
+    let recentConversations = db
       .prepare(
         `SELECT role, content, timestamp
          FROM conversations
+         WHERE session_id = ? OR ? = ''
          ORDER BY timestamp DESC
-         LIMIT 6`
+         LIMIT 20`
       )
-      .all() as { role: string; content: string; timestamp: number }[];
+      .all(sessionId, sessionId) as { role: string; content: string; timestamp: number }[];
 
     // 7. Check for skill invocation patterns (if table exists)
     let skillPatterns: { skill_name: string; count: number }[] = [];
@@ -236,11 +252,21 @@ function buildBriefing(): string | null {
       `*Generated: ${new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles" })} | ${semanticCount} facts | ${conversationCount} conversation turns | ${associationCount} associations*\n`
     );
 
-    // Top topics
+    // Top topics - sorted by weighted score
     if (topTopics.length > 0) {
+      // Calculate max access count for normalization
+      const maxAccess = Math.max(...topTopics.map(t => t.total_access_count), 1);
+
+      // Score and sort by composite weight
+      const scoredTopics = topTopics.map((t) => ({
+        ...t,
+        weight: scoreDomain(t.topic, t.count, t.recent_count, t.avg_confidence, t.total_access_count, maxAccess)
+      }));
+      scoredTopics.sort((a, b) => b.weight - a.weight);
+
       sections.push(`## Knowledge Domains`);
       sections.push(
-        topTopics.map((t) => `- **${t.topic}** (${t.count})`).join("\n")
+        scoredTopics.slice(0, 8).map((t) => `- **${t.topic}** (${t.count})`).join("\n")
       );
       sections.push("");
     }
@@ -268,10 +294,44 @@ function buildBriefing(): string | null {
       sections.push("");
     }
 
-    // Recent learnings
+    // Recent learnings - with composite scoring
     if (recentMemories.length > 0) {
-      sections.push(`## Recent Learnings (Last 24h)`);
-      for (const mem of recentMemories) {
+      // Score each learning with composite metric
+      const scoredLearnings = recentMemories.map(mem => {
+        // Actionability: 40%
+        const actionability = scoreActionability(mem.topic, mem.summary);
+
+        // Confidence: 30%
+        const confidenceScore = mem.confidence;
+
+        // Recency: 20% (exponential decay, 24h half-life)
+        const recencyScore = getRecencyScore(mem.created_at, 24 * 60 * 60 * 1000);
+
+        // Relevance: 10% (bonus if mentioned in recent conversations)
+        const conversationContent = recentConversations.map(c => c.content).join(" ").toLowerCase();
+        const topicKeywords = `${mem.topic} ${mem.summary}`.toLowerCase().split(/\s+/);
+        const mentionCount = topicKeywords.filter(k => conversationContent.includes(k)).length;
+        const relevanceScore = Math.min(mentionCount * 0.2, 1.0);
+
+        // Composite score
+        const compositeScore =
+          actionability * 0.4 +
+          confidenceScore * 0.3 +
+          recencyScore * 0.2 +
+          relevanceScore * 0.1;
+
+        return {
+          ...mem,
+          score: compositeScore
+        };
+      });
+
+      // Sort by score and take top 8
+      scoredLearnings.sort((a, b) => b.score - a.score);
+      const topLearnings = scoredLearnings.slice(0, 8);
+
+      sections.push(`## Recent Learnings (Last 72h)`);
+      for (const mem of topLearnings) {
         const timeAgo = formatTimeAgo(mem.created_at);
         sections.push(
           `- [${timeAgo}] **${mem.topic}**: ${mem.summary.substring(0, 120)}`
@@ -280,12 +340,25 @@ function buildBriefing(): string | null {
       sections.push("");
     }
 
-    // Recent conversation context
+    // Recent conversation context - scored for relevance
     if (recentConversations.length > 0) {
+      // Score conversations for relevance/importance
+      const scoredConversations = recentConversations.map(conv => ({
+        ...conv,
+        score: scoreConversationTurn(conv.role, conv.content, conv.timestamp, recentMemories.slice(0, 5))
+      }));
+
+      // Sort by score (relevance) but keep chronological for display
+      scoredConversations.sort((a, b) => b.score - a.score);
+
+      // Take top 8 by relevance
+      const topConversations = scoredConversations.slice(0, 8);
+
+      // Re-sort chronologically for display
+      topConversations.sort((a, b) => a.timestamp - b.timestamp);
+
       sections.push(`## Last Conversation Context`);
-      // Reverse to chronological order
-      const ordered = [...recentConversations].reverse();
-      for (const conv of ordered) {
+      for (const conv of topConversations) {
         const role = conv.role === "user" ? "You" : "Sam";
         const snippet = conv.content.substring(0, 200);
         sections.push(`**${role}**: ${snippet}${conv.content.length > 200 ? "..." : ""}`);
@@ -337,23 +410,34 @@ function buildBriefing(): string | null {
       }
     }
 
-    // Open threads
+    // Open threads - with enhanced scoring
     if (openThreadMessages.length > 0) {
       try {
-        const openThreadPatterns = /\b(tomorrow|next time|later|follow up|TODO|will do|need to|should we|let's try|going to)\b/i;
-        const threads: string[] = [];
+        const scoredThreads: { content: string; timestamp: number; score: number }[] = [];
 
         for (const msg of openThreadMessages) {
-          if (openThreadPatterns.test(msg.content)) {
-            const snippet = msg.content.substring(0, 100);
-            const timeAgo = formatTimeAgo(msg.timestamp);
-            threads.push(`- [${timeAgo}] "${snippet}${msg.content.length > 100 ? '...' : ''}"`);
+          const score = scoreOpenThread(msg.content);
+          if (score > 0) {
+            scoredThreads.push({
+              content: msg.content,
+              timestamp: msg.timestamp,
+              score
+            });
           }
         }
 
-        if (threads.length > 0) {
+        // Sort by score descending
+        scoredThreads.sort((a, b) => b.score - a.score);
+
+        if (scoredThreads.length > 0) {
           sections.push(`## Open Threads`);
-          sections.push(threads.slice(0, 5).join("\n"));
+          const displayThreads = scoredThreads.slice(0, 5); // Top 5 threads
+          for (const thread of displayThreads) {
+            const snippet = thread.content.substring(0, 100);
+            const timeAgo = formatTimeAgo(thread.timestamp);
+            const scoreLabel = thread.score > 0.6 ? "🔴" : thread.score > 0.3 ? "🟡" : "🟢";
+            sections.push(`- [${timeAgo}] ${scoreLabel} "${snippet}${thread.content.length > 100 ? '...' : ''}"`);
+          }
           sections.push("");
         }
       } catch {
@@ -413,6 +497,165 @@ function formatTimeAgo(timestamp: number): string {
   return `${Math.floor(diffHr / 24)}d ago`;
 }
 
+/**
+ * Enhanced Open Threads Detection
+ * Scores threads based on patterns indicating unfinished work
+ */
+function scoreOpenThread(content: string): number {
+  let score = 0;
+
+  // Question detection (high confidence indicator)
+  if (content.match(/\?$/m)) score += 0.3;
+
+  // Temporal anchors (things deferred to future)
+  if (content.match(/\b(tomorrow|next week|next time|eventually|someday|later|soon|next month|upcoming)\b/i)) {
+    score += 0.2;
+  }
+
+  // Action verbs (things that need doing)
+  if (content.match(/\b(debug|investigate|check|fix|build|implement|test|refactor|review|verify|validate|confirm|test)\b/i)) {
+    score += 0.15;
+  }
+
+  // Blocking patterns (clearly stuck or waiting)
+  if (content.match(/\b(blocked by|waiting for|stuck on|pending|hung|unable to|can't|cannot)\b/i)) {
+    score += 0.2;
+  }
+
+  // Negations (things still undone)
+  if (content.match(/\b(still need to|haven't|yet|not done|incomplete|unfinished)\b/i)) {
+    score += 0.15;
+  }
+
+  // TODO/FIXME markers
+  if (content.match(/\b(TODO|FIXME|BUG|ISSUE)\b/i)) {
+    score += 0.25;
+  }
+
+  // Follow-up indicators
+  if (content.match(/\b(follow up|come back to|revisit|circle back)\b/i)) {
+    score += 0.2;
+  }
+
+  return Math.min(score, 1.0); // Cap at 1.0
+}
+
+/**
+ * Calculate domain weight with composite scoring
+ * - Recency (30%): Recent activity weighted higher
+ * - Access Frequency (30%): Frequently referenced topics
+ * - Confidence (20%): High-confidence memories matter more
+ * - Project relevance (20%): Current context boost
+ */
+function scoreDomain(
+  topic: string,
+  count: number,
+  recentCount: number,
+  avgConfidence: number,
+  accessCount: number,
+  maxAccessInAnyDomain: number
+): number {
+  // Recency: topics with recent memories get boost
+  const recencyScore = recentCount / Math.max(count, 1); // 0-1
+
+  // Access frequency: normalized against max in any domain
+  const frequencyScore = accessCount / Math.max(maxAccessInAnyDomain, 1); // 0-1
+
+  // Confidence: average confidence of memories in this domain
+  const confidenceScore = avgConfidence; // already 0-1
+
+  // Composite
+  return (
+    recencyScore * 0.3 +
+    frequencyScore * 0.3 +
+    confidenceScore * 0.2
+  );
+}
+
+/**
+ * Calculate recency score with exponential decay over 7 days
+ */
+function getRecencyScore(timestamp: number, maxAgeMs: number = 7 * 24 * 60 * 60 * 1000): number {
+  const ageMs = Date.now() - timestamp;
+  if (ageMs < 0) return 1.0;
+  if (ageMs > maxAgeMs) return 0.0;
+  // Exponential decay: e^(-ageMs/halflife)
+  const halfLife = 3 * 24 * 60 * 60 * 1000; // 3 days
+  return Math.exp(-ageMs / halfLife);
+}
+
+/**
+ * Score actionability of a memory
+ * Keywords: blocking, bug, critical, urgent, high-priority, etc.
+ */
+function scoreActionability(topic: string, summary: string): number {
+  const combined = `${topic} ${summary}`.toLowerCase();
+
+  if (combined.match(/\b(blocking|blocked|critical|urgent|high.?priority|asap|immediate)\b/)) {
+    return 0.9;
+  }
+  if (combined.match(/\b(bug|error|crash|broken|fail|issue|fix)\b/)) {
+    return 0.75;
+  }
+  if (combined.match(/\b(todo|fixme|implement|build|feature)\b/)) {
+    return 0.6;
+  }
+  if (combined.match(/\b(question|unclear|unclear|need|want|should)\b/)) {
+    return 0.4;
+  }
+  return 0.1; // Low actionability by default
+}
+
+/**
+ * Score conversation turn for relevance and importance
+ * Factors:
+ * - Importance markers (TODO, code blocks, attachments, length)
+ * - Actionability keywords
+ * - Topic match with recent learnings
+ */
+function scoreConversationTurn(
+  role: string,
+  content: string,
+  timestamp: number,
+  recentLearnings: { topic: string; summary: string }[] = []
+): number {
+  let score = 0;
+
+  // User messages are more important than assistant responses
+  const roleMultiplier = role === 'user' ? 1.0 : 0.7;
+
+  // Importance markers
+  if (content.match(/```[\s\S]*?```/)) score += 0.2; // Code blocks
+  if (content.match(/TODO|FIXME|BUG|ISSUE/i)) score += 0.25; // Explicit markers
+  if (content.length > 500) score += 0.15; // Longer messages are more substantive
+  if (content.match(/\[.*?\]\(.*?\)/)) score += 0.1; // Links/attachments
+
+  // Actionability
+  const actionability = scoreActionability("", content);
+  score += actionability * 0.2;
+
+  // Topic match with recent learnings
+  if (recentLearnings.length > 0) {
+    const contentWords = content.toLowerCase().split(/\s+/);
+    for (const learning of recentLearnings) {
+      const learningWords = `${learning.topic} ${learning.summary}`.toLowerCase().split(/\s+/);
+      const matches = contentWords.filter(w => learningWords.includes(w)).length;
+      if (matches > 0) {
+        score += Math.min(matches * 0.05, 0.15); // Boost for keyword overlap
+      }
+    }
+  }
+
+  // Recency bonus (exponential decay, but within last 24h)
+  const ageMs = Date.now() - timestamp;
+  if (ageMs < 24 * 60 * 60 * 1000) {
+    const recencyBonus = Math.exp(-ageMs / (12 * 60 * 60 * 1000)); // Half-life 12h
+    score += recencyBonus * 0.1;
+  }
+
+  return Math.min(score * roleMultiplier, 1.0);
+}
+
 async function main() {
   // Read stdin for hook context
   let input = "";
@@ -438,7 +681,7 @@ async function main() {
   }
 
   // Build the briefing
-  const briefing = buildBriefing();
+  const briefing = buildBriefing(sessionId);
 
   if (!briefing) {
     console.error("Session briefing: no memories to brief on (empty DB)");

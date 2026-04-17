@@ -4,16 +4,16 @@ import { readFileSync, existsSync } from 'fs';
 import { sendNotification } from './lib/notification-handler';
 
 // Voice mappings for different agent types
-// Note: These are ChatterboxTTS voice names - configure your own in voices.json
+// Note: These are ChatterboxTTS voice IDs - configure your own in voices.json
 const AGENT_VOICE_IDS: Record<string, string> = {
-  researcher: 'Ava',
-  pentester: 'Oliver',
-  engineer: 'Zoe',
-  designer: 'Isha',
-  architect: 'Serena',
-  writer: 'Serena',
-  main: 'Jessica',
-  default: 'Jessica'
+  researcher: 'AXdMgz6evoL7OPd7eU12',
+  pentester: 'hmMWXCj9K7N5mCPcRkfC',
+  engineer: 'kmSVBPu7loj4ayNinwWM',
+  designer: 'ZF6FPAbjXT4488VcRRnw',
+  architect: 'muZKMsIDGYtIkjjiUS82',
+  writer: 'gfRt6Z3Z8aTbpLfexQ7N',
+  main: 'jqcCZkN6Knx8BJ5TBdYR',
+  default: 'jqcCZkN6Knx8BJ5TBdYR'
 };
 
 async function delay(ms: number): Promise<void> {

@@ -429,16 +429,9 @@ async function main() {
         const completedMatch = content.match(/🎯\s*COMPLETED:\s*(.+?)(?:\n|$)/im);
 
         if (completedMatch) {
-          // Get the raw text after the colon
           let completedText = completedMatch[1].trim();
-
-          // Generate intelligent response
           message = generateIntelligentResponse(lastUserQuery, content, completedText);
-
           console.error(`🎯 MAIN INTELLIGENT: ${message}`);
-        } else {
-          // No COMPLETED line found - don't send anything
-          console.error('⚠️ No COMPLETED line found');
         }
       }
     }
@@ -448,57 +441,59 @@ async function main() {
 
   // If Sam didn't provide a CUSTOM COMPLETED and an agent was used, check agent's response
   if (!message && isAgentTask && taskResult) {
-    // First, try to find CUSTOM COMPLETED line in agent response
     const customCompletedMatch = taskResult.match(/🗣️\s*CUSTOM\s+COMPLETED:\s*(.+?)(?:\n|$)/im);
 
     if (customCompletedMatch) {
-      // Get the custom voice response
       let customText = customCompletedMatch[1].trim()
-        .replace(/\[.*?\]/g, '') // Remove bracketed text
-        .replace(/\*+/g, '') // Remove asterisks
-        .replace(/\[AGENT:\w+\]\s*/i, '') // Remove agent tags
+        .replace(/\[.*?\]/g, '')
+        .replace(/\*+/g, '')
+        .replace(/\[AGENT:\w+\]\s*/i, '')
         .trim();
 
-      // Use custom completed if it's under 8 words
       const wordCount = customText.split(/\s+/).length;
       if (customText && wordCount <= 8) {
         message = customText;
         voiceConfig = VOICE_CONFIG.voices[agentType.toLowerCase()] || VOICE_CONFIG.voices.main;
-        console.error(`🗣️ AGENT CUSTOM VOICE (fallback): ${message}`);
+        console.error(`🗣️ AGENT CUSTOM VOICE: ${message}`);
       } else {
-        // Custom completed too long, fall back to regular COMPLETED
         const completedMatch = taskResult.match(/🎯\s*COMPLETED:\s*(.+?)$/im);
         if (completedMatch) {
-          let completedText = completedMatch[1].trim()
-            .replace(/\*+/g, '')
-            .replace(/\[AGENT:\w+\]\s*/i, '')
-            .trim();
+          let completedText = completedMatch[1].trim().replace(/\*+/g, '').replace(/\[AGENT:\w+\]\s*/i, '').trim();
           message = generateIntelligentResponse(lastUserQuery, taskResult, completedText);
           voiceConfig = VOICE_CONFIG.voices[agentType.toLowerCase()] || VOICE_CONFIG.voices.main;
-          console.error(`🎯 AGENT FALLBACK (custom too long): ${message}`);
         }
       }
     } else {
-      // No CUSTOM COMPLETED, look for regular COMPLETED line
       const completedMatch = taskResult.match(/🎯\s*COMPLETED:\s*(.+?)$/im);
-
       if (completedMatch) {
-        // Get exactly what the agent said after COMPLETED:
-        let completedText = completedMatch[1].trim();
-
-        // Remove markdown formatting
-        completedText = completedText
-          .replace(/\*+/g, '')  // Remove asterisks
-          .replace(/\[AGENT:\w+\]\s*/i, '') // Remove agent tags
-          .trim();
-
-        // Generate intelligent response for agent tasks
+        let completedText = completedMatch[1].trim().replace(/\*+/g, '').replace(/\[AGENT:\w+\]\s*/i, '').trim();
         message = generateIntelligentResponse(lastUserQuery, taskResult, completedText);
         voiceConfig = VOICE_CONFIG.voices[agentType.toLowerCase()] || VOICE_CONFIG.voices.main;
-
-        console.error(`🎯 AGENT INTELLIGENT (fallback): ${message}`);
+        console.error(`🎯 AGENT INTELLIGENT: ${message}`);
       }
     }
+  }
+
+  // Fallback: extract first 1-2 sentences from assistant response
+  if (!message && lastAssistantContent) {
+    const cleaned = lastAssistantContent
+      .replace(/```[\s\S]*?```/g, '')   // strip code blocks
+      .replace(/`[^`]+`/g, '')          // strip inline code
+      .replace(/🎯[^\n]*/g, '')         // strip COMPLETED lines
+      .replace(/🗣️[^\n]*/g, '')         // strip CUSTOM COMPLETED lines
+      .replace(/\n+/g, ' ')
+      .trim();
+    const sentences = cleaned.match(/[^.!?]+[.!?]+/g);
+    if (sentences && sentences.length > 0) {
+      message = sentences.slice(0, 2).join(' ').trim();
+      console.error(`📝 FALLBACK from response: ${message.slice(0, 80)}...`);
+    }
+  }
+
+  // Last resort: generate from user query
+  if (!message && lastUserQuery) {
+    message = generateTabTitle(lastUserQuery, '');
+    console.error(`🔖 LAST RESORT from query: ${message}`);
   }
 
   // FIRST: Send notification (voice or system fallback)

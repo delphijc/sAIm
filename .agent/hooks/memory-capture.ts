@@ -7,9 +7,15 @@
  *
  * Processes ALL user/assistant conversation pairs in the transcript,
  * enabling cross-modality memory building (CLI, headless, Discord).
+ *
+ * EXTERNALIZED DEPENDENCY:
+ * This hook optionally delegates memory extraction to the memory-system service.
+ * The actual API call logic lives in memory-system/hooks/externalized-memory-api.ts
+ * Enable/disable via ENABLE_MEMORY_HOOKS environment variable (default: false).
  */
 
-import { readFileSync } from 'fs';
+import { readFileSync, appendFileSync, mkdirSync } from 'fs';
+import path from 'path';
 
 // Helper to safely convert Claude content (string or array of blocks) into plain text
 function contentToText(content: any): string {
@@ -72,6 +78,23 @@ function extractConversationPairs(lines: string[]): ConversationPair[] {
 }
 
 async function main() {
+  // DEBUG: Log hook invocation
+  const debugLog = (msg: string) => {
+    const logDir = `${process.env.HOME}/.claude/logs`;
+    const logPath = path.join(logDir, `memory-capture-debug.log`);
+    try {
+      mkdirSync(logDir, { recursive: true });
+      appendFileSync(logPath, `[${new Date().toISOString()}] [sam] ${msg}\n`);
+    } catch (e) {
+      // Silently fail if logging doesn't work
+    }
+  };
+
+  debugLog(`🧠 memory-capture hook invoked`);
+  debugLog(`   cwd: ${process.cwd()}`);
+  debugLog(`   env.PAI_DIR: ${process.env.PAI_DIR}`);
+  debugLog(`   env.ENABLE_MEMORY_HOOKS: ${process.env.ENABLE_MEMORY_HOOKS}`);
+
   // Get input
   let input = '';
   const decoder = new TextDecoder();
@@ -84,11 +107,15 @@ async function main() {
       input += decoder.decode(value, { stream: true });
     }
   } catch (e) {
+    debugLog(`❌ Error reading input: ${e}`);
     console.error(`❌ Error reading input: ${e}`);
     process.exit(0);
   }
 
+  debugLog(`   input received: ${input ? `${input.length} bytes` : 'EMPTY'}`);
+
   if (!input) {
+    debugLog(`⚠️ No input received - exiting (this is the likely problem)`);
     console.error('❌ No input received');
     process.exit(0);
   }
@@ -150,46 +177,43 @@ async function main() {
 
   console.error(`📝 Found ${pairs.length} conversation pair(s) to process`);
 
-  // Send each pair to the memory server for extraction
+  // Conditionally process pairs through externalized memory system
+  const enableMemoryHooks = process.env.ENABLE_MEMORY_HOOKS === 'true';
   let totalSaved = 0;
 
-  for (let i = 0; i < pairs.length; i++) {
-    const pair = pairs[i];
+  if (enableMemoryHooks) {
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s per pair
+      // Import externalized memory API from memory-system
+      // Use fully qualified paths (import.meta.dir) to avoid cwd-dependent resolution
+      // This hook can be invoked from any working directory (normal, launchd, etc.)
+      const projectsRoot = path.join(import.meta.dir, "..", "..", "..");
+      const memoryApiPath = path.join(projectsRoot, "memory-system", "hooks", "externalized-memory-api.ts");
+      const memoryApi = await import(memoryApiPath);
 
-      const response = await fetch('http://localhost:4242/memory/extract', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userMessage: pair.userMessage,
-          assistantResponse: pair.assistantResponse,
-          sessionId,
-          source: 'claude-code-hook',
-          project,
-        }),
-        signal: controller.signal,
-      }).finally(() => clearTimeout(timeoutId));
-
-      const result = await response.json();
-      if (result.success && result.savedCount > 0) {
-        totalSaved += result.savedCount;
-        console.error(`  ✅ Pair ${i + 1}: extracted ${result.savedCount} fact(s)`);
-      }
+      // Batch process all pairs
+      totalSaved = await memoryApi.batchExtractMemories(
+        pairs,
+        sessionId,
+        'claude-code-hook',
+        project,
+        (index: number, result: any) => {
+          if (result.success && result.savedCount > 0) {
+            console.error(`  ✅ Pair ${index + 1}: extracted ${result.savedCount} fact(s)`);
+          } else if (result.error && index === 0) {
+            console.error(`⚠️ Memory server unavailable (non-critical): ${result.error}`);
+          }
+        }
+      );
     } catch (e) {
-      // Silent failure per-pair - memory server may be offline
-      if (i === 0) {
-        // Only log once if the server is down
-        console.error(`⚠️ Memory server unavailable (non-critical): ${e}`);
-        break; // Don't try remaining pairs if server is down
-      }
+      console.error(`⚠️ Failed to load memory API module: ${e}`);
     }
+  } else {
+    console.error(`⏭️  Memory hook integration disabled (ENABLE_MEMORY_HOOKS=false)`);
   }
 
   if (totalSaved > 0) {
     console.error(`✅ Memory capture complete: ${totalSaved} total facts extracted from ${pairs.length} pair(s)`);
-  } else {
+  } else if (enableMemoryHooks) {
     console.error(`ℹ️ Memory capture complete: no new facts extracted`);
   }
 }

@@ -15,7 +15,7 @@
  * Setup:
  * 1. Set environment variables in settings.json:
  *    - DA: Your AI's name (e.g., "Sam", "Nova", "Assistant")
- *    - DA_VOICE_ID: Your ChatterboxTTS voice name (if using voice system)
+ *    - DA_VOICE_ID: Your ChatterboxTTS voice ID (if using voice system)
  *    - PAI_DIR: Path to your PAI directory (defaults to $HOME/.claude)
  * 2. Ensure load-core-context.ts exists in hooks/ directory
  * 3. Add both hooks to SessionStart in settings.json

@@ -18,11 +18,8 @@
 import { existsSync, readFileSync, accessSync, constants, readdirSync, statSync } from 'fs';
 import { join, resolve, dirname } from 'path';
 
-// For self-test, always use the repo we're testing (not system PAI_DIR)
-// This allows testing the PAI repo independently of installed Sam system
-// Use cwd() since the user runs this from the PAI repo root: cd ~/Projects/PAI && bun .claude/hooks/self-test.ts
-const REPO_ROOT = process.cwd();
-const PAI_DIR = join(REPO_ROOT, '.claude');
+// Use PAI_DIR env var (set in settings.json), fallback to repo-relative .claude
+const PAI_DIR = process.env.PAI_DIR || join(process.cwd(), '.claude');
 const HOOKS_DIR = join(PAI_DIR, 'hooks');
 const SKILLS_DIR = join(PAI_DIR, 'skills');
 const AGENTS_DIR = join(PAI_DIR, 'agents');
@@ -125,10 +122,15 @@ test(
 test(
   'Agents',
   () => {
-    const agents = readdirSync(AGENTS_DIR).filter(f => f.endsWith('.md'));
-    return agents.length > 0;
+    const dirs = readdirSync(AGENTS_DIR);
+    const agentDirs = dirs.filter(d => {
+      const path = join(AGENTS_DIR, d);
+      const stat = statSync(path);
+      return stat.isDirectory();
+    });
+    return agentDirs.length > 0;
   },
-  `Found ${readdirSync(AGENTS_DIR).filter(f => f.endsWith('.md')).length} agent(s)`,
+  `Found ${readdirSync(AGENTS_DIR).filter(d => statSync(join(AGENTS_DIR, d)).isDirectory()).length} agent(s)`,
   'No agents found'
 );
 
@@ -174,7 +176,7 @@ test(
   'Voice Server',
   async () => {
     try {
-      const response = await fetch('http://localhost:3000/health', {
+      const response = await fetch('http://localhost:8888/health', {
         signal: AbortSignal.timeout(2000)
       });
       return response.ok;
@@ -198,16 +200,17 @@ test(
   'No .env.example or .env found'
 );
 
-// Test 10: PAI_CONTRACT exists
+// Test 10: SAM_CONTRACT exists (optional)
 test(
   'PAI Contract',
   () => {
-    // PAI_CONTRACT.md is in repo root
-    const contractPath = join(REPO_ROOT, 'SAIM_CONTRACT.md');
-    return existsSync(contractPath);
+    // SAM_CONTRACT.md is in repo root (parent of PAI_DIR)
+    const repoRoot = dirname(PAI_DIR);
+    const contractPath = join(repoRoot, 'SAM_CONTRACT.md');
+    return existsSync(contractPath) ? true : 'warn';
   },
   'PAI contract document present',
-  'PAI_CONTRACT.md missing'
+  'SAM_CONTRACT.md not found (optional documentation)'
 );
 
 // Print results
