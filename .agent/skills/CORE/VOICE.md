@@ -68,19 +68,19 @@ curl -X POST http://localhost:8888/notify \
 
 ---
 
-## 🎤 Available Voice Names
+## Available Voice IDs
 
-Voice names are ChatterboxTTS identifiers configured in hook files and `voices.json`:
+Voice IDs map to reference audio files used by ChatterboxTTS for voice cloning:
 
-| Agent | Voice Name | Description |
-|-------|------------|-------------|
-| Main (Default) | Jessica | Default voice |
-| Researcher | Ava | US Female - Analytical |
-| Engineer | Zoe | US Female - Steady |
-| Architect | Serena | UK Female - Strategic |
-| Designer | Isha | Indian Female - Creative |
-| Pentester | Oliver | UK Male - Technical |
-| Writer | Serena | UK Female - Articulate |
+| Agent | Voice ID | Reference File | Description |
+|-------|----------|----------------|-------------|
+| Sam (Main) | jessica | jessica_ref.wav | Primary default voice |
+| Main agents | jamie | jamie_ref.wav | UK Male - Professional |
+| Researcher | ava | ava_ref.wav | US Female - Analytical |
+| Engineer | zoe | zoe_ref.wav | US Female - Steady |
+| Architect | serena | serena_ref.wav | UK Female - Strategic |
+| Designer | isha | isha_ref.wav | Indian Female - Creative |
+| Pentester | oliver | oliver_ref.wav | UK Male - Technical |
 
 See `${PAI_DIR}/voice-server/README.md` for complete voice list.
 

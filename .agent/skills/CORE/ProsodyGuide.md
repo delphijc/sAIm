@@ -8,7 +8,7 @@
 
 ## Overview
 
-The voice server (ChatterboxTTS via HTTP on port 8888) processes text markers to control emotional delivery and pacing. Two systems work together:
+The voice server (ChatterboxTTS) processes text markers to control emotional delivery and pacing. Two systems work together:
 
 1. **Emotional Intelligence Markers**: `[emoji context]` for emotional delivery
 2. **Markdown Prosody**: `**bold**`, `...`, `--` for emphasis and pacing
@@ -361,17 +361,17 @@ Test your prosody with curl:
 # Test emotional marker
 curl -X POST http://localhost:8888/notify \
   -H "Content-Type: application/json" \
-  -d '{"message":"[💥 excited] Found the **actual** bug!","voice_id":"Jessica","title":"Sam"}'
+  -d '{"message":"[💥 excited] Found the **actual** bug!","voice_id":"s3TPKV1kjDlVtZbl4Ksh","title":"Sam"}'
 
 # Test markdown prosody
 curl -X POST http://localhost:8888/notify \
   -H "Content-Type: application/json" \
-  -d '{"message":"Wait... I found something **critical**!","voice_id":"Jessica","title":"Sam"}'
+  -d '{"message":"Wait... I found something **critical**!","voice_id":"s3TPKV1kjDlVtZbl4Ksh","title":"Sam"}'
 
 # Test combined
 curl -X POST http://localhost:8888/notify \
   -H "Content-Type: application/json" \
-  -d '{"message":"[✨ success] Deployment **complete** -- all systems operational!","voice_id":"Jessica","title":"Sam"}'
+  -d '{"message":"[✨ success] Deployment **complete** -- all systems operational!","voice_id":"s3TPKV1kjDlVtZbl4Ksh","title":"Sam"}'
 ```
 
 ---

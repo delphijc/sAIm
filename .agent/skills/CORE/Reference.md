@@ -292,7 +292,7 @@ If PAI_DIR is not detected correctly:
 **PRIVATE PAI (${PAI_DIR}/):**
 - Repository: github.com/YOUR_USERNAME/.pai (PRIVATE FOREVER)
 - Contains: ALL sensitive data, API keys, personal history
-- This is YOUR HOME - your actual working PAI infrastructure
+- This is YOUR HOME - obsidium's actual working PAI infrastructure
 - NEVER MAKE PUBLIC
 
 **PUBLIC PAI (~/Projects/PAI/):**

@@ -163,7 +163,7 @@ Claude Code supports the following hook events (from `${PAI_DIR}/Hooks/lib/obser
 **What They Do:**
 - `stop-hook.ts` - THE CRITICAL HOOK for main agent completions
   - Extracts `🎯 COMPLETED:` line from response
-  - Sends to voice server with Sam's voice name (`Jessica`)
+  - Sends to voice server with Sam's voice ID (`jessica`)
   - Captures work summaries to `${PAI_DIR}/History/sessions/YYYY-MM/` or learnings to `${PAI_DIR}/History/learnings/YYYY-MM/`
   - Updates Kitty tab with `✅` prefix
   - Sends event to observability dashboard
@@ -322,7 +322,7 @@ Hooks have access to all environment variables from `${PAI_DIR}/settings.json` `
 ```json
 {
   "env": {
-    "PAI_DIR": "/.claude",
+    "PAI_DIR": "/Users/daniel/.claude",
     "DA": "Sam",
     "MCP_API_KEY": "...",
     "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "64000"
@@ -331,7 +331,7 @@ Hooks have access to all environment variables from `${PAI_DIR}/settings.json` `
 ```
 
 **Key Variables:**
-- `PAI_DIR` - PAI installation directory (always `/.claude`)
+- `PAI_DIR` - PAI installation directory (always `/Users/daniel/.claude`)
 - `DA` - Digital Assistant name ("Sam")
 - Hook scripts reference `${PAI_DIR}` in command paths
 
@@ -393,7 +393,7 @@ const payload = {
   title: 'Sam',
   message: completionMessage,
   voice_enabled: true,
-  voice_id: 'Jessica'  // Sam's ChatterboxTTS voice name
+  voice_id: 'jessica'  // Sam's ChatterboxTTS voice ID
 };
 
 await fetch('http://localhost:8888/notify', {
@@ -403,14 +403,14 @@ await fetch('http://localhost:8888/notify', {
 });
 ```
 
-**Agent-Specific Voices (ChatterboxTTS names):**
-- Main agent (Sam): `Jessica`
-- Engineer: `Zoe`
-- Researcher: `Ava`
-- Pentester: `Oliver`
-- Architect: `Serena`
+**Agent-Specific Voices (ChatterboxTTS voice IDs):**
+- Main agent (Sam): `jessica`
+- Engineer: `zoe`
+- Researcher: `ava`
+- Pentester: `oliver`
+- Architect: `serena`
 
-See `skills/CORE/VOICE.md` for complete voice name mapping.
+See `skills/CORE/SKILL.md` for complete voice ID mapping.
 
 ---
 
@@ -738,14 +738,14 @@ setTimeout(() => {
 1. Is voice server running? `curl http://localhost:8888/health`
 2. Is voice_id correct? See `skills/CORE/SKILL.md` for mappings
 3. Is message format correct? `{"message":"...", "voice_id":"...", "title":"..."}`
-4. Is ChatterboxTTS voice server running on port 8888?
+4. Is `VOICE_PROVIDER=chatterbox` set in `${PAI_DIR}/.env`?
 
 **Debug:**
 ```bash
 # Test voice server directly
 curl -X POST http://localhost:8888/notify \
   -H "Content-Type: application/json" \
-  -d '{"message":"Test message","voice_id":"Jessica","title":"Test"}'
+  -d '{"message":"Test message","voice_id":"jessica","title":"Test"}'
 ```
 
 **Common Issues:**
@@ -1067,7 +1067,7 @@ capture-all-events.ts Universal event logger
 VOICE SERVER:
 URL: http://localhost:8888/notify
 Payload: {"message":"...", "voice_id":"...", "title":"..."}
-Main Voice: Jessica (ChatterboxTTS)
+Main Voice: jessica (ChatterboxTTS, via PAI voice-server)
 
 OBSERVABILITY:
 Server: http://localhost:4000
@@ -1079,4 +1079,4 @@ Events: All hooks send to /events endpoint
 
 **Last Updated:** 2025-11-01
 **Status:** Production - All hooks active and tested
-**Maintainer:** sAIm contributors
+**Maintainer:** Daniel Miessler (maintainer@example.com)
