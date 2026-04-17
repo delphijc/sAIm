@@ -168,4 +168,39 @@ else
     echo "Skipping path resolution validation (no task_runner changes)"
 fi
 
+# ============================================================
+# 6. File Size Guard (GitHub Push Protection)
+# ============================================================
+# GitHub hard limit: 100MB per file. Warning threshold: 50MB.
+# Catches oversized files BEFORE commit to prevent failed pushes.
+
+echo "Checking staged file sizes against GitHub limits..."
+
+MAX_FILE_SIZE_BYTES=$((100 * 1024 * 1024))  # 100MB hard limit
+WARN_FILE_SIZE_BYTES=$((50 * 1024 * 1024))  # 50MB warning threshold
+HAS_SIZE_ERROR=0
+
+while IFS= read -r file; do
+    [ -z "$file" ] && continue
+    [ ! -f "$REPO_ROOT/$file" ] && continue
+
+    FILE_SIZE=$(stat -f%z "$REPO_ROOT/$file" 2>/dev/null || stat -c%s "$REPO_ROOT/$file" 2>/dev/null || echo 0)
+
+    if [ "$FILE_SIZE" -ge "$MAX_FILE_SIZE_BYTES" ]; then
+        FILE_SIZE_MB=$(echo "scale=1; $FILE_SIZE / 1048576" | bc)
+        echo "ABORT: '$file' is ${FILE_SIZE_MB}MB — exceeds GitHub's 100MB limit."
+        echo "  Consider: git lfs, .gitignore, or splitting the file."
+        HAS_SIZE_ERROR=1
+    elif [ "$FILE_SIZE" -ge "$WARN_FILE_SIZE_BYTES" ]; then
+        FILE_SIZE_MB=$(echo "scale=1; $FILE_SIZE / 1048576" | bc)
+        echo "WARNING: '$file' is ${FILE_SIZE_MB}MB — approaching GitHub's 100MB limit."
+    fi
+done <<< "$STAGED_FILES_FULL"
+
+if [ "$HAS_SIZE_ERROR" -eq 1 ]; then
+    echo "One or more staged files exceed GitHub's file size limit."
+    echo "Remove or shrink them before committing."
+    exit 1
+fi
+
 echo "--- Local Workflow Verification Passed ---"

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.pai.discord-remote-control</string>
+
+    <key>Description</key>
+    <string>PAI Discord Remote Control - Bidirectional Discord interface for sAIm</string>
+
+    <key>Program</key>
+    <string>__HOME__/.claude/skills/discord-remote-control/scripts/start.sh</string>
+
+    <key>WorkingDirectory</key>
+    <string>__HOME__/.claude/skills/discord-remote-control</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+    </dict>
+
+    <key>ProcessType</key>
+    <string>Background</string>
+
+    <key>StandardOutPath</key>
+    <string>/tmp/com.pai.discord-remote-control.stdout.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/tmp/com.pai.discord-remote-control.stderr.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>PAI_DIR</key>
+        <string>__HOME__/.claude</string>
+    </dict>
+
+    <key>Restart</key>
+    <string>on-failure</string>
+
+    <key>ThrottleInterval</key>
+    <integer>15</integer>
+</dict>
+</plist>

@@ -20,6 +20,9 @@
 #   PAI_SIMPLE_COLORS - Set to "1" to use basic terminal colors
 #
 
+# Ensure tools like jq, bunx, gdate, gstat are found in non-interactive shells
+export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$HOME/.bun/bin:$PATH"
+
 # Source .env for API keys and custom configuration
 claude_env="${PAI_DIR:-$HOME/.claude}/.env"
 [ -f "$claude_env" ] && source "$claude_env"

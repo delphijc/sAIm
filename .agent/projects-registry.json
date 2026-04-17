@@ -1,23 +1,42 @@
 {
   "description": "PAI Project Registry - All managed projects under ~/Projects/",
-  "updated": "2026-03-15",
+  "updated": "2026-04-17",
+  "_note": "Customize this file with your own projects. Replace 'yourusername' with your GitHub username.",
   "projects": [
     {
-      "name": "sAIm",
-      "path": "~/Projects/sAIm",
-      "remote": "https://github.com/delphijc/sAIm.git",
+      "name": "awareness",
+      "path": "~/Projects/awareness",
+      "remote": "https://github.com/yourusername/awareness.git",
       "branch": "main",
-      "description": "Sam - smart AI manager agent orchestration, skills, memory",
-      "hookVariant": "full",
+      "description": "Awareness dashboard - backend API and frontend for PAI awareness system",
+      "hookVariant": "isolation-only",
       "status": "active"
     },
     {
       "name": "voice-server",
       "path": "~/Projects/voice-server",
-      "remote": "https://github.com/delphijc/voice-server.git",
+      "remote": "https://github.com/yourusername/voice-server.git",
       "branch": "main",
       "description": "Voice synthesis server for PAI TTS",
       "hookVariant": "isolation-only",
+      "status": "active"
+    },
+    {
+      "name": "memory-system",
+      "path": "~/Projects/memory-system",
+      "remote": "https://github.com/yourusername/memory-system.git",
+      "branch": "main",
+      "description": "Semantic memory database for persistent knowledge extraction and graph-based retrieval",
+      "hookVariant": "isolation-only",
+      "status": "active"
+    },
+    {
+      "name": "sAIm",
+      "path": "~/Projects/sAIm",
+      "remote": "https://github.com/yourusername/sAIm.git",
+      "branch": "main",
+      "description": "sAIm - open-source template for building AI personal assistants",
+      "hookVariant": "full",
       "status": "active"
     }
   ]

@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-const TRANSCRIPTIONS_DIR = path.join(process.env.HOME || '', '$HOME/Projects/sam/.claude/History/TranscribedAudio');
+const TRANSCRIPTIONS_DIR = path.join(process.env.HOME || '', 'Projects/sam/.claude/History/TranscribedAudio');
 const OUTPUT_FILE = path.join(TRANSCRIPTIONS_DIR, 'FollowUps.md'); // TitleCase output
 
 interface Insight {

@@ -20,7 +20,7 @@
 #   ./setup.sh --build-whisper       # Build whisper.cpp only
 #
 # Or download and run:
-#   git clone https://github.com/delphijc/sam.git && cd sam && bash .agent/setup.sh
+#   git clone https://github.com/yourusername/sAIm.git && cd sam && bash .agent/setup.sh
 #
 # ============================================
 
@@ -158,8 +158,12 @@ fix_hardcoded_paths() {
     )
 
     # Known home directory patterns to replace
-    # (auto-detected from settings.json, this is a fallback list)
-    local old_homes=()
+    local old_homes=(
+        "/home/obsidium"
+        "/home/jaysoncavendish"
+        "/Users/delphijc"
+        "/Users/daniel"
+    )
 
     # Auto-detect home paths in settings.json
     if [ -f "$pai_root/.agent/settings.json" ]; then
@@ -621,7 +625,7 @@ install_services() {
         fi
 
         print_step "Installing $installed_name..."
-        sed "s|__HOME__|$target_home|g" \
+        sed "s|__HOME__|$target_home|g; s|/home/obsidium|$target_home|g; s|/Users/delphijc|$target_home|g" \
             "$src" > "$systemd_user_dir/$installed_name"
         print_success "Installed $installed_name"
     done
@@ -1200,12 +1204,12 @@ clone_companion_projects() {
     # PAI companion repos: "name|url|description"
     # realms-of-tomorrow is intentionally excluded (not a PAI component)
     local companions=(
-        "awareness|https://github.com/delphijc/awareness.git|Alert monitoring dashboard — integrates with Sam's security feeds"
-        "voice-server|https://github.com/delphijc/voice-server.git|Voice server HTTP API — powers Sam's text-to-speech responses"
-        "chatterbox|https://github.com/delphijc/chatterbox.git|Local TTS model — free offline voice synthesis for voice-server"
-        "cyber-alert-mgr|https://github.com/delphijc/cyber-alert-mgr.git|Cyber alert management — security event tracking and triage"
-        "markdown-editor|https://github.com/delphijc/markdown-editor.git|Web-based markdown editor — integrated with Sam's file system"
-        "jay-gentic|https://github.com/delphijc/jay-gentic.git|Genetic algorithm experiments — AI research companion"
+        "awareness|https://github.com/yourusername/awareness.git|Alert monitoring dashboard — integrates with Sam's security feeds"
+        "voice-server|https://github.com/yourusername/voice-server.git|Voice server HTTP API — powers Sam's text-to-speech responses"
+        "chatterbox|https://github.com/yourusername/chatterbox.git|Local TTS model — free offline voice synthesis for voice-server"
+        "cyber-alert-mgr|https://github.com/yourusername/cyber-alert-mgr.git|Cyber alert management — security event tracking and triage"
+        "markdown-editor|https://github.com/yourusername/markdown-editor.git|Web-based markdown editor — integrated with Sam's file system"
+        "jay-gentic|https://github.com/yourusername/jay-gentic.git|Genetic algorithm experiments — AI research companion"
         "nlm|https://github.com/tmc/nlm.git|Node language model utilities — LLM tooling library (third-party)"
     )
 
@@ -1561,7 +1565,7 @@ else
     else
         print_step "Cloning PAI from GitHub..."
         mkdir -p "$(dirname "$PAI_DIR")"
-        git clone https://github.com/delphijc/sam.git "$PAI_DIR"
+        git clone https://github.com/yourusername/sAIm.git "$PAI_DIR"
         print_success "PAI downloaded!"
     fi
 fi
@@ -1867,7 +1871,7 @@ echo ""
 print_header "Resources"
 echo "  📖 Dependencies: $PAI_DIR/.agent/DEPENDENCIES.md"
 echo "  📖 README: $PAI_DIR/README.md"
-echo "  🌐 GitHub: https://github.com/delphijc/sam"
+echo "  🌐 GitHub: https://github.com/yourusername/sAIm"
 echo ""
 
 echo -e "${PURPLE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"

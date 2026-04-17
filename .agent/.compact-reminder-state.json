@@ -1,0 +1,10 @@
+{
+  "sessions": {
+    "default": {
+      "session_id": "default",
+      "turn_count": 838,
+      "last_compact_turn": 0,
+      "total_compacts": 0
+    }
+  }
+}

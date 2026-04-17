@@ -182,5 +182,5 @@ Always respect robots.txt and website terms of service.
 
 ## Related Resources
 
-- **Sam Repository**: [github.com/delphijc/sam](https://github.com/delphijc/sam)
+- **Sam Repository**: [github.com/yourusername/sAIm](https://github.com/yourusername/sAIm)
 - **Bright Data Documentation**: [docs.brightdata.com](https://docs.brightdata.com)

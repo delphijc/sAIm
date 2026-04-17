@@ -32,7 +32,7 @@ echo "📋 Installing systemd user service units..."
 for template in "${SERVICE_TEMPLATES[@]}"; do
     if [ -f "$SCRIPT_DIR/$template" ]; then
         installed_name="${SVC_MAP[$template]}"
-        sed "s|__HOME__|$TARGET_HOME|g" \
+        sed "s|/home/obsidium|$TARGET_HOME|g; s|/home/jaysoncavendish|$TARGET_HOME|g; s|/Users/delphijc|$TARGET_HOME|g" \
             "$SCRIPT_DIR/$template" > "$SYSTEMD_USER_DIR/$installed_name"
         echo "  ✅ Installed $installed_name (from $template)"
     else

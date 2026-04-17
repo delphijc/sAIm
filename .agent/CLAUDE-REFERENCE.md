@@ -31,7 +31,7 @@ bash .agent/setup.sh
 # Health check
 bun ${PAI_DIR}/hooks/self-test.ts
 
-# Voice server (optional, uses ChatterboxTTS local by default)
+# Voice server (optional, requires voice-server service running)
 ~/.claude/voice-server/manage.sh start|stop|status
 
 # Observability dashboard (optional)
@@ -54,9 +54,8 @@ Sam **optionally** includes four systemctl-managed services that auto-start on b
 
 | Service | Port | Type | Status | Purpose | Requirement |
 |---------|------|------|--------|---------|------------|
-| **voice-server** | 8888 | Node.js HTTP | ✅ Active | Text-to-speech API via ChatterboxTTS (local) | Optional |
+| **voice-server** | 8888 | Node.js HTTP | ✅ Active | Text-to-speech API via ChatterboxTTS (manages Python sidecar internally) | Optional |
 | **observability-dashboard** | 5172 | Node.js HTTP | ✅ Active | Real-time agent activity monitoring | Optional |
-| **python-sidecar** | 8889 | Python HTTP | ✅ Active | TTS model inference server | Optional |
 | **discord-remote-control** | — | Node.js | ✅ Active | Discord bot remote interface | Optional |
 
 ### Service Configuration
@@ -64,14 +63,13 @@ Sam **optionally** includes four systemctl-managed services that auto-start on b
 Service units are registered in `~/.config/systemd/user/`:
 - `voice-server.service`
 - `observability-dashboard.service`
-- `python-sidecar.service`
 - `discord-remote-control.service`
 
 ### Management
 
 ```bash
 # Check all services
-systemctl --user status voice-server observability-dashboard python-sidecar discord-remote-control
+systemctl --user status voice-server observability-dashboard discord-remote-control
 
 # Control individual service
 systemctl --user start|stop|restart|status SERVICE.service
@@ -89,7 +87,7 @@ systemctl --user disable SERVICE.service
 All services are completely optional. Core functionality operates independently:
 - **Without voice-server:** No text-to-speech feedback (but full CLI operation)
 - **Without observability-dashboard:** No real-time agent monitoring (but all agents function normally)
-- **Without python-sidecar:** No local TTS inference (but external TTS still works)
+- **Without python-sidecar:** No ChatterboxTTS synthesis (python-sidecar is managed internally by voice-server)
 - **Without discord-remote-control:** No Discord interface (but all CLI interfaces work)
 
 ---
@@ -321,14 +319,14 @@ YYYY-MM-DD-HHMMSS_[PROJECT]_[TYPE]_[HIERARCHY]_[DESCRIPTION].md
 
 **Protected files** (must never contain secrets):
 
-- `SAIM_CONTRACT.md`
+- `SAM_CONTRACT.md`
 - `README.md`
 - `.env.example` (template only, no actual keys)
 - `SECURITY.md`
 
 **Security features:**
 
-- `.saim-protected.json` - Manifest of protected files
+- `.sam-protected.json` - Manifest of protected files
 - `validate-protected.ts` - Pre-commit validation
 - Prompt injection defense - External content is READ-ONLY
 
@@ -352,9 +350,9 @@ YYYY-MM-DD-HHMMSS_[PROJECT]_[TYPE]_[HIERARCHY]_[DESCRIPTION].md
 ```bash
 PERPLEXITY_API_KEY=...
 GOOGLE_API_KEY=...
+BRIGHTDATA_API_KEY=...
 VOICE_PROVIDER=chatterbox
 CHATTERBOX_VOICE_ID=jessica
-BRIGHTDATA_API_KEY=...
 ```
 
 ## File Organization (CRITICAL)
@@ -382,7 +380,7 @@ BRIGHTDATA_API_KEY=...
 
 **Configured Functionality (needs setup):**
 
-- Voice server (ChatterboxTTS local by default; requires `ELEVENLABS_API_KEY` only if `VOICE_PROVIDER=elevenlabs`)
+- Voice server (requires voice-server service running; uses ChatterboxTTS locally)
 - Research skills (requires various API keys)
 - MCP integrations (requires provider keys)
 
@@ -452,8 +450,8 @@ bash ~/.claude/setup.sh
 # Check if server is running
 curl http://localhost:8888/health
 
-# Check .env has voice config
-grep -E "VOICE_PROVIDER|CHATTERBOX_VOICE_ID" ~/.claude/.env
+# Check voice provider config
+grep VOICE ~/.claude/.env
 ```
 
 **Skill not activating:**
