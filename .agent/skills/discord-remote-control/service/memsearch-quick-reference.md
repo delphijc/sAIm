@@ -345,10 +345,10 @@ memory_write "
 ## Additional Resources
 
 **Full Documentation:**
-- `/Projects/sam/.agent/skills/discord-remote-control/service/MEMSEARCH_RESEARCH_REPORT.md`
+- `/home/obsidium/Projects/sam/.agent/skills/discord-remote-control/service/MEMSEARCH_RESEARCH_REPORT.md`
 
 **Implementation:**
-- `/Projects/sam/.agent/skills/discord-remote-control/service/MEMSEARCH_BASH_IMPLEMENTATION.sh`
+- `/home/obsidium/Projects/sam/.agent/skills/discord-remote-control/service/MEMSEARCH_BASH_IMPLEMENTATION.sh`
 
 **Official Sources:**
 - [MemSearch GitHub](https://github.com/zilliztech/memsearch)
