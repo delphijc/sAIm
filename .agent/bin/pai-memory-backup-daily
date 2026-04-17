@@ -1,2 +1,31 @@
-#!/bin/sh
-exec "$HOME/.claude/skills/discord-remote-control/scripts/backup-memory.sh" full "$@"
+#!/usr/bin/env bash
+#
+# Memory System Daily Backup Wrapper
+# Checks ENABLE_MEMORY_HOOKS flag before running backups
+#
+
+set -euo pipefail
+
+# Source environment
+ENV_FILE="${PAI_DIR:=$HOME/.claude}/.env"
+if [[ ! -f "$ENV_FILE" ]]; then
+  echo "ERROR: $ENV_FILE not found"
+  exit 1
+fi
+source "$ENV_FILE"
+
+# Check if memory hooks are enabled
+if [[ "${ENABLE_MEMORY_HOOKS:-false}" != "true" ]]; then
+  echo "ℹ️  Memory hooks disabled (ENABLE_MEMORY_HOOKS=${ENABLE_MEMORY_HOOKS})"
+  exit 0
+fi
+
+# Run daily full backup
+MEMORY_SYSTEM_DIR="$HOME/Projects/memory-system"
+if [[ ! -f "$MEMORY_SYSTEM_DIR/scripts/backup-memory.sh" ]]; then
+  echo "ERROR: Memory system scripts not found at $MEMORY_SYSTEM_DIR"
+  exit 1
+fi
+
+echo "🧠 Running daily memory backup..."
+bash "$MEMORY_SYSTEM_DIR/scripts/backup-memory.sh" full

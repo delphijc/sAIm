@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+SKILL_DIR="$HOME/.claude/skills/service-monitor-dashboard"
+cd "$SKILL_DIR/apps/server" && exec bun start

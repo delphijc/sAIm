@@ -1,0 +1,2 @@
+#!/bin/sh
+exec $HOME/Projects/voice-server/python-sidecar/venv/bin/python3 $HOME/Projects/voice-server/python-sidecar/server.py "$@"

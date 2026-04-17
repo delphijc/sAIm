@@ -1,2 +1,2 @@
 #!/bin/sh
-exec bun run index.js "$@"
+exec $HOME/.bun/bin/bun run server/index.js "$@"

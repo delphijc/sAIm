@@ -7,7 +7,7 @@
 #   - Progress & velocity analysis (what shipped, what's stalled)
 #   - Strategic recommendations (top 3 priorities, quick wins, risks)
 #
-# Output: ~/.claude/projects/<project-path>/memory/strategy/YYYY-MM-DD-weekly-strategy.md
+# Output: ~/.claude/projects/<encoded-project-path>/memory/strategy/YYYY-MM-DD-weekly-strategy.md
 # Logs:   ~/Library/Logs/pai-weekly-strategy.log
 #
 # Usage:
@@ -22,9 +22,11 @@ set -euo pipefail
 # ---------------------------------------------------------------------------
 PAI_DIR="${PAI_DIR:-$HOME/.claude}"
 PROJECTS_ROOT="$HOME/Projects"
-MEMORY_BASE="$PAI_DIR/projects/$(echo "$PWD" | sed 's|/|-|g')/memory"
+# Compute the project directory key by encoding the PAI_DIR path (Claude Code convention)
+PAI_PROJECT_KEY="$(echo "$PAI_DIR" | sed 's|/|-|g')"
+MEMORY_BASE="$PAI_DIR/projects/${PAI_PROJECT_KEY}/memory"
 STRATEGY_DIR="$MEMORY_BASE/strategy"
-JOURNALS_DIR="$HOME/Projects/sam/.agent/History/journals"
+JOURNALS_DIR="$PAI_DIR/History/journals"
 HEARTBEATS_DIR="$MEMORY_BASE/heartbeats"
 LOG_DIR="$HOME/Library/Logs"
 LOG_FILE="$LOG_DIR/pai-weekly-strategy.log"
@@ -653,10 +655,13 @@ for project in project_names:
     # 3. Save per-project strategy file
     # ------------------------------------------------------------------
     safe_name = project.replace('/', '-').replace(' ', '-').lower()
+    home = os.environ.get('HOME', '')
+    projects_root = os.environ.get('PROJECTS_ROOT', os.path.join(home, 'Projects'))
+    project_path = os.path.join(projects_root, safe_name)
+    project_key = project_path.replace('/', '-')
     project_memory_dir = os.path.join(
         pai_dir,
-        'projects',
-        safe_name,
+        project_key,
         'memory', 'strategy'
     )
     os.makedirs(project_memory_dir, exist_ok=True)

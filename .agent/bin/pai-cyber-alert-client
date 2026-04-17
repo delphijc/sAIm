@@ -1,2 +1,2 @@
 #!/bin/sh
-exec bun run dev "$@"
+exec $HOME/.bun/bin/bun run dev "$@"

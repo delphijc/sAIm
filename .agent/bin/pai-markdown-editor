@@ -1,2 +1,2 @@
 #!/bin/sh
-exec bun run server.ts "$@"
+exec $HOME/.bun/bin/bun run server.ts "$@"

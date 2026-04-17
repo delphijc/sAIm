@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+#
+# Memory System Daily Journal Generator
+# Generates a daily narrative journal from semantic memories and conversations
+# Checks ENABLE_MEMORY_HOOKS flag before running
+#
+# Usage: pai-memory-journal
+#
+
+set -euo pipefail
+
+# Source environment
+ENV_FILE="${PAI_DIR:=$HOME/.claude}/.env"
+if [[ ! -f "$ENV_FILE" ]]; then
+  echo "ERROR: $ENV_FILE not found"
+  exit 1
+fi
+source "$ENV_FILE"
+
+# Check if memory hooks are enabled
+if [[ "${ENABLE_MEMORY_HOOKS:-false}" != "true" ]]; then
+  echo "ℹ️  Memory hooks disabled (ENABLE_MEMORY_HOOKS=${ENABLE_MEMORY_HOOKS})"
+  exit 0
+fi
+
+MEMORY_SYSTEM_DIR="$HOME/Projects/memory-system"
+
+if [[ ! -f "$MEMORY_SYSTEM_DIR/src/memory/daily-journal.ts" ]]; then
+  echo "ERROR: Memory system daily journal module not found at $MEMORY_SYSTEM_DIR"
+  exit 1
+fi
+
+echo "📖 Generating daily memory journal..."
+
+# Run the daily journal generator using bun
+JOURNAL_PATH=$(cd "$MEMORY_SYSTEM_DIR" && bun run src/memory/daily-journal.ts 2>&1)
+
+if [[ $? -eq 0 ]]; then
+  echo "✅ Daily journal generated: $JOURNAL_PATH"
+else
+  echo "⚠️  Journal generation encountered an issue, but continuing..."
+  exit 0
+fi

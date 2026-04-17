@@ -336,6 +336,13 @@ generate_report() {
   printf '## Recommendations\n\n'
   printf '%b' "$recommendations"
   printf '\n'
+  # Enhancement backlog summary (if available)
+  local backlog_summary
+  backlog_summary=$(get_backlog_summary)
+  if [[ -n "$backlog_summary" ]]; then
+    printf '\n%s\n' "$backlog_summary"
+  fi
+
   echo "---"
   printf '*Run at: %s | Next run: ~6 hours*\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')"
 
@@ -351,9 +358,9 @@ save_report() {
   local report="${1}"
   local ts_safe="${2}"
 
-  # Derive the memory directory from the current working directory
-  local safe_pwd=$(echo "$PWD" | sed 's|/|-|g')
-  local heartbeat_dir="${PAI_DIR}/projects/${safe_pwd}/memory/heartbeats"
+  local pai_dir_key
+  pai_dir_key="$(echo "${PAI_DIR}" | sed 's|/|-|g')"
+  local heartbeat_dir="${PAI_DIR}/projects/${pai_dir_key}/memory/heartbeats"
   mkdir -p "$heartbeat_dir"
 
   local report_path="${heartbeat_dir}/${ts_safe}-heartbeat.md"
@@ -490,7 +497,7 @@ post_per_project_memory() {
 }
 
 # Save a small focused markdown file per project that has attention items.
-# Files are written to $PAI_DIR/projects/<safe-project-path>/memory/heartbeats/
+# Files are written to $PAI_DIR/projects/<encoded-project-path>/memory/heartbeats/
 save_per_project_reports() {
   local report="${1}"
   local ts_safe="${2}"
@@ -554,9 +561,9 @@ save_per_project_reports() {
     fi
 
     # Write the per-project report file
-    # Derive the memory directory from the project path
-    local proj_path=$(find "$PROJECTS_DIR/$pname" -maxdepth 0 2>/dev/null | sed 's|/|-|g' | head -1)
-    local proj_heartbeat_dir="${PAI_DIR}/projects/${proj_path}/memory/heartbeats"
+    local proj_key
+    proj_key="$(echo "${HOME}/Projects/${pname}" | sed 's|/|-|g')"
+    local proj_heartbeat_dir="${PAI_DIR}/projects/${proj_key}/memory/heartbeats"
     mkdir -p "$proj_heartbeat_dir"
 
     local proj_report_path="${proj_heartbeat_dir}/${ts_safe}-heartbeat.md"
@@ -574,6 +581,201 @@ save_per_project_reports() {
 
     log "Per-project report saved: ${proj_report_path}"
   done
+}
+
+# ---------------------------------------------------------------------------
+# Enhancement Backlog Processing
+# Picks up the next pending enhancement when no interactive session is active.
+# ---------------------------------------------------------------------------
+
+MANAGE_BACKLOG="${PAI_DIR}/scripts/manage-backlog.sh"
+
+# Check if any interactive AI engine session is active.
+# Returns 0 (true) if a session is active, 1 (false) if idle.
+has_active_session() {
+  # Check for Claude Code processes (interactive sessions)
+  if pgrep -f "claude" | grep -v "heartbeat\|launchd\|grep" &>/dev/null; then
+    # Verify it's an interactive session, not a background service
+    local claude_procs
+    claude_procs=$(pgrep -f "claude" 2>/dev/null | head -5)
+    for pid in $claude_procs; do
+      local cmdline
+      cmdline=$(ps -p "$pid" -o command= 2>/dev/null || echo "")
+      # Skip our own heartbeat, discord bot, and launchd-managed services
+      if echo "$cmdline" | grep -qE "heartbeat|discord|launchd|pai-"; then
+        continue
+      fi
+      # Found an interactive Claude session
+      if echo "$cmdline" | grep -qE "claude|anthropic"; then
+        log "Active Claude session detected (PID: ${pid})"
+        return 0
+      fi
+    done
+  fi
+
+  # Check for jay-gentic processes
+  if pgrep -f "jay-gentic" &>/dev/null; then
+    log "Active jay-gentic session detected"
+    return 0
+  fi
+
+  # Check for gemini-cli processes
+  if pgrep -f "gemini-cli" &>/dev/null; then
+    log "Active gemini-cli session detected"
+    return 0
+  fi
+
+  # Check for codex processes
+  if pgrep -f "codex" &>/dev/null; then
+    log "Active codex session detected"
+    return 0
+  fi
+
+  # Check for cursor AI processes (Cursor IDE with AI active)
+  if pgrep -f "cursor.*ai\|cursor.*agent" &>/dev/null; then
+    log "Active Cursor AI session detected"
+    return 0
+  fi
+
+  # No active sessions found
+  return 1
+}
+
+# Process the next enhancement backlog item if conditions are met.
+# Guards: no active session, backlog script exists, pending items available.
+process_enhancement_backlog() {
+  if [[ ! -x "$MANAGE_BACKLOG" ]]; then
+    log "Enhancement backlog manager not found at ${MANAGE_BACKLOG} — skipping"
+    return
+  fi
+
+  # Guard: check for active sessions
+  if has_active_session; then
+    log "Active session detected — skipping enhancement backlog processing"
+    local pending_count
+    pending_count=$("$MANAGE_BACKLOG" count --status pending 2>/dev/null || echo "0")
+    log "Enhancement backlog: ${pending_count} item(s) pending (deferred)"
+    return
+  fi
+
+  # Get the next pending item
+  local next_item
+  next_item=$("$MANAGE_BACKLOG" next 2>/dev/null || echo "")
+
+  if [[ -z "$next_item" ]]; then
+    log "Enhancement backlog: no pending items"
+    return
+  fi
+
+  local item_id item_title item_effort item_engine
+  item_id=$(printf '%s' "$next_item" | jq -r '.id')
+  item_title=$(printf '%s' "$next_item" | jq -r '.title')
+  item_effort=$(printf '%s' "$next_item" | jq -r '.effort')
+  item_engine=$(printf '%s' "$next_item" | jq -r '.engine_compat')
+
+  log "Enhancement backlog: next item is ${item_id} — ${item_title} (effort: ${item_effort}, engine: ${item_engine})"
+
+  # Only auto-execute S (small) effort items unattended
+  # M/L/XL items get flagged for the next interactive session
+  if [[ "$item_effort" != "S" ]]; then
+    log "Enhancement ${item_id} is effort ${item_effort} — flagging for next interactive session (auto-exec limited to S)"
+    return
+  fi
+
+  # Mark as in_progress
+  "$MANAGE_BACKLOG" update --id "$item_id" --status "in_progress" &>/dev/null || true
+
+  log "Enhancement ${item_id} marked in_progress — will be picked up by next interactive session"
+
+  # Note: Actual execution of enhancements requires an AI engine session.
+  # The heartbeat flags items as in_progress so the next session start hook
+  # can detect and offer to work on them. Full autonomous execution would
+  # require spawning a Claude Code subprocess, which is a future enhancement.
+}
+
+# Build a backlog status summary for inclusion in the heartbeat report.
+get_backlog_summary() {
+  if [[ ! -x "$MANAGE_BACKLOG" ]]; then
+    echo ""
+    return
+  fi
+
+  local pending completed in_progress total
+  pending=$("$MANAGE_BACKLOG" count --status pending 2>/dev/null || echo "0")
+  in_progress=$("$MANAGE_BACKLOG" count --status in_progress 2>/dev/null || echo "0")
+  completed=$("$MANAGE_BACKLOG" count --status completed 2>/dev/null || echo "0")
+  total=$(( pending + in_progress + completed ))
+
+  if [[ "$total" -eq 0 ]]; then
+    echo ""
+    return
+  fi
+
+  local next_item next_summary=""
+  next_item=$("$MANAGE_BACKLOG" next 2>/dev/null || echo "")
+  if [[ -n "$next_item" ]]; then
+    local nid ntitle npri
+    nid=$(printf '%s' "$next_item" | jq -r '.id')
+    ntitle=$(printf '%s' "$next_item" | jq -r '.title')
+    npri=$(printf '%s' "$next_item" | jq -r '.priority')
+    next_summary="Next up: ${nid} (${npri}) — ${ntitle}"
+  fi
+
+  printf '## Enhancement Backlog\n\n'
+  printf '| Status | Count |\n'
+  printf '|--------|-------|\n'
+  printf '| Pending | %s |\n' "$pending"
+  printf '| In Progress | %s |\n' "$in_progress"
+  printf '| Completed | %s |\n' "$completed"
+  if [[ -n "$next_summary" ]]; then
+    printf '\n%s\n' "$next_summary"
+  fi
+}
+
+backfill_invocations() {
+  # Incrementally populate agent and skill invocation tables from observability JSONL
+  # Only runs if ENABLE_MEMORY_HOOKS=true in ~/.claude/.env
+
+  # Check if memory hooks are enabled
+  local env_file="${PAI_DIR}/.env"
+  local memory_hooks_enabled=false
+
+  if [[ -f "$env_file" ]]; then
+    memory_hooks_enabled=$(grep -E '^ENABLE_MEMORY_HOOKS=' "$env_file" 2>/dev/null \
+      | head -1 | cut -d'=' -f2- | tr -d '"' | tr -d "'" | tr -d '[:space:]' || echo "false")
+  fi
+
+  # Skip if not enabled
+  if [[ "$memory_hooks_enabled" != "true" ]]; then
+    log "Memory hooks disabled (ENABLE_MEMORY_HOOKS != true) — skipping incremental invocation load"
+    return 0
+  fi
+
+  # Use memory-system project location
+  local memory_system_dir="${HOME}/Projects/memory-system"
+  local backfill_script="${memory_system_dir}/src/memory/backfill-invocations.ts"
+
+  if [[ ! -f "$backfill_script" ]]; then
+    log "WARNING: backfill-invocations.ts not found at ${backfill_script} — memory-system may not be installed"
+    return 1
+  fi
+
+  # Run incremental (default mode) with timeout to prevent blocking heartbeat
+  timeout 60 bun "$backfill_script" > /tmp/backfill-output.txt 2>&1
+  local exit_code=$?
+
+  if [[ $exit_code -eq 0 ]]; then
+    # Extract summary from output
+    local summary
+    summary=$(grep -E "^✅|^📊" /tmp/backfill-output.txt | tail -3 | tr '\n' ' ')
+    log "Agent/skill incremental load complete: ${summary}"
+  elif [[ $exit_code -eq 124 ]]; then
+    log "WARNING: Agent/skill incremental load timed out after 60s"
+    return 1
+  else
+    log "WARNING: Agent/skill incremental load failed (exit code ${exit_code})"
+    return 1
+  fi
 }
 
 post_to_observability() {
@@ -712,6 +914,12 @@ All ${#PROJECTS[@]} projects are healthy."
 
   # Save focused per-project report files for projects with attention items
   save_per_project_reports "$report" "$ts_safe" || log "WARNING: Per-project report save encountered an error"
+
+  # Backfill agent and skill invocations from observability data
+  backfill_invocations || log "WARNING: Agent/skill invocation backfill encountered an error"
+
+  # Process enhancement backlog (only when idle — no active sessions)
+  process_enhancement_backlog || log "WARNING: Enhancement backlog processing encountered an error"
 
   log "=== PAI Heartbeat complete: ${saved_path} ==="
   echo "$saved_path"

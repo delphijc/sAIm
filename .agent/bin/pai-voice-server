@@ -1,2 +1,2 @@
 #!/bin/sh
-exec bun run "$HOME/Projects/voice-server/server.ts" "$@"
+exec $HOME/.bun/bin/bun run $HOME/Projects/voice-server/server.ts "$@"

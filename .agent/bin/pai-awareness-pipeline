@@ -4,8 +4,8 @@
 # 2. Generate the daily digest from scored items
 # 3. Generate the Intelligence Brief + Goal-Aligned Brief
 
-AWARENESS_DIR="/Projects/awareness"
-BUN="bun"
+AWARENESS_DIR="$HOME/Projects/awareness"
+BUN="$HOME/.bun/bin/bun"
 CLI="src/cli/index.ts"
 
 cd "$AWARENESS_DIR" || exit 1

@@ -1,2 +1,2 @@
 #!/bin/sh
-exec bun run src/index.ts "$@"
+exec $HOME/.bun/bin/bun run dashboard/apps/server/src/index.ts "$@"
