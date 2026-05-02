@@ -1,0 +1,24 @@
+#!/bin/bash
+# Discord Remote Control Service Wrapper
+# Ensures required environment variables are set before starting the service
+
+PAI_DIR="${PAI_DIR:-/Users/delphijc/.claude}"
+
+# Check if .env exists
+if [ ! -f "$PAI_DIR/.env" ]; then
+    echo "❌ Error: $PAI_DIR/.env not found" >&2
+    echo "   Please create .env file with required Discord configuration" >&2
+    exit 1
+fi
+
+# Load environment variables using eval with export
+while IFS='=' read -r key value; do
+    # Skip empty lines and comments
+    [[ -z "$key" || "$key" =~ ^# ]] && continue
+    # Remove any whitespace and quotes
+    value=$(echo "$value" | xargs)
+    export "$key=$value"
+done < "$PAI_DIR/.env"
+
+# Start the Discord service
+exec /Users/delphijc/.bun/bin/bun run /Users/delphijc/Projects/discord-remote-control/service/index.ts "$@"

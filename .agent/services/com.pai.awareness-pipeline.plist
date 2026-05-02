@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.pai.awareness-pipeline</string>
+
+    <key>Description</key>
+    <string>PAI Awareness Pipeline - Scheduled data processing job</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/delphijc/.claude/bin/pai-awareness-pipeline</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/delphijc/Projects/awareness</string>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>6</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>/Users/delphijc/Library/Logs/pai-awareness-pipeline.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/delphijc/Library/Logs/pai-awareness-pipeline.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>HOME</key>
+        <string>/Users/delphijc</string>
+        <key>PATH</key>
+        <string>/Users/delphijc/.bun/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+</dict>
+</plist>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.pai.awareness-server</string>
+
+    <key>Description</key>
+    <string>PAI Awareness Server - Backend API (port 4100)</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/delphijc/.claude/bin/pai-awareness-server</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/delphijc/Projects/awareness</string>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>/Users/delphijc/Library/Logs/pai-awareness-server.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/delphijc/Library/Logs/pai-awareness-server.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>HOME</key>
+        <string>/Users/delphijc</string>
+        <key>PATH</key>
+        <string>/Users/delphijc/.bun/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>PORT</key>
+        <string>4100</string>
+    </dict>
+</dict>
+</plist>

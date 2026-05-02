@@ -1,0 +1,63 @@
+{
+  "name": "Bash Kanban Orchestrator",
+  "version": "1.0.0",
+  "description": "Agent-first manager for parallel task execution and TDD enforcement.",
+  "runtime": {
+    "workflow_engine": "v2",
+    "state_file": "./.agent/state.md",
+    "active_workflows": [".agent/workflows/development_workflow.md"]
+  },
+  "rules": {
+    "directory": ".agent/rules/",
+    "enforcement": "strict"
+  },
+  "skills": [
+    {
+      "name": "architecture",
+      "directory": ".agent/skills/architecture",
+      "description": "Analyzes product.md and product-guidelines.md to generate hierarchical Epics, Stories, and master plan.",
+      "context": ["product.md", "product-guidelines.md"]
+    },
+    {
+      "name": "tdd-manager",
+      "directory": ".agent/skills/tdd-manager",
+      "description": "Enforces Red-Green-Refactor TDD cycle for every task and updates plan.md accordingly."
+    },
+    {
+      "name": "audit-committer",
+      "directory": ".agent/skills/audit-committer",
+      "description": "Executes git commits with TDD validation gates and attaches detailed task summary via git notes."
+    },
+    {
+      "name": "phase-checkpoint",
+      "directory": ".agent/skills/phase-checkpoint",
+      "description": "Verifies all changes since last checkpoint, ensures 80%+ code coverage, and generates verification report."
+    },
+    {
+      "name": "stack-broker",
+      "directory": ".agent/skills/stack-broker",
+      "description": "Brokers all data operations through shell scripts to ensure reliability and file locking."
+    }
+  ],
+  "policies": {
+    "state_transition_enforcement": "strict",
+    "require_approval_on": ["VERIFYING -> COMPLETED"]
+  },
+  "settings": {
+     "git": {
+       "hooks_enabled": true,
+       "allow_no_verify": false
+     },
+     "workflow": {
+      "pre_commit_script": ".git/hooks/pre-commit",
+      "source_of_truth": ".agent/docs/plan.md",
+      "enforce_tdd": true,
+      "require_git_notes": true
+    },
+    "stack": {
+      "backend": "Bun",
+      "logic": "Bash",
+      "broker_required": true
+    }
+  }
+}

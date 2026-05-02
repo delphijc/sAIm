@@ -1,0 +1,37 @@
+- generic [ref=e3]:
+  - navigation [ref=e4]:
+    - generic [ref=e6]:
+      - generic [ref=e7]: Awareness
+      - generic [ref=e8]:
+        - link "Feed" [ref=e9] [cursor=pointer]:
+          - /url: /
+        - link "Digest" [ref=e10] [cursor=pointer]:
+          - /url: /digest
+        - link "Interests" [ref=e11] [cursor=pointer]:
+          - /url: /interests
+        - link "Goals" [ref=e12] [cursor=pointer]:
+          - /url: /goals
+        - link "Status" [ref=e13] [cursor=pointer]:
+          - /url: /status
+        - link "Operations" [ref=e14] [cursor=pointer]:
+          - /url: /operations
+        - link "Maintenance" [ref=e15] [cursor=pointer]:
+          - /url: /maintenance
+      - generic [ref=e16]: Live
+  - main [ref=e17]:
+    - generic [ref=e18]:
+      - generic [ref=e19]:
+        - heading "Feed" [level=1] [ref=e20]
+        - text: 0 items
+      - generic [ref=e21]:
+        - textbox "Search items..." [ref=e23]
+        - combobox [ref=e24]:
+          - option "All Areas" [selected]
+        - combobox [ref=e25]:
+          - option "Score" [selected]
+          - option "Date"
+          - option "Title"
+        - button "↓" [ref=e26]
+        - generic [ref=e27]:
+          - checkbox "Serendipity" [ref=e28]
+          - text: Serendipity

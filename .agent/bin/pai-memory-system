@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /Users/delphijc/.bun/bin/bun run /Users/delphijc/Projects/memory-system/services/memory-system/src/index.ts "$@"

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.pai.memory-journal-daily</string>
+
+    <key>Description</key>
+    <string>PAI Memory Journal - Daily narrative generation from memories</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/delphijc/.claude/bin/pai-memory-journal</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/delphijc</string>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>23</integer>
+        <key>Minute</key>
+        <integer>30</integer>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>/Users/delphijc/.claude/logs/pai-memory-journal.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/delphijc/.claude/logs/pai-memory-journal-error.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>HOME</key>
+        <string>/Users/delphijc</string>
+        <key>PATH</key>
+        <string>/Users/delphijc/.bun/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>PAI_DIR</key>
+        <string>/Users/delphijc/.claude</string>
+    </dict>
+</dict>
+</plist>

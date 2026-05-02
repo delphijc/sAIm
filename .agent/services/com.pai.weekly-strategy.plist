@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.pai.weekly-strategy</string>
+
+    <key>Description</key>
+    <string>PAI Weekly Strategy - Sunday morning strategy session</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/delphijc/.claude/bin/pai-weekly-strategy</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/delphijc</string>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>0</integer>
+        <key>Hour</key>
+        <integer>8</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>/Users/delphijc/Library/Logs/pai-weekly-strategy.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/delphijc/Library/Logs/pai-weekly-strategy.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>HOME</key>
+        <string>/Users/delphijc</string>
+        <key>PATH</key>
+        <string>/Users/delphijc/.bun/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>PAI_DIR</key>
+        <string>/Users/delphijc/.claude</string>
+    </dict>
+</dict>
+</plist>

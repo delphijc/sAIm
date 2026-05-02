@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.pai.memory-backup-hourly</string>
+
+    <key>Description</key>
+    <string>PAI Memory Backup - Incremental backup every hour</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/delphijc/.claude/bin/pai-memory-backup-hourly</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/delphijc</string>
+
+    <key>StartCalendarInterval</key>
+    <array>
+        <dict>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+    </array>
+
+    <key>StandardOutPath</key>
+    <string>/Users/delphijc/Library/Logs/pai-memory-backup-hourly.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/delphijc/Library/Logs/pai-memory-backup-hourly.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>HOME</key>
+        <string>/Users/delphijc</string>
+        <key>PATH</key>
+        <string>/Users/delphijc/.bun/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>PAI_DIR</key>
+        <string>/Users/delphijc/.claude</string>
+        <key>ENABLE_MEMORY_HOOKS</key>
+        <string>true</string>
+    </dict>
+</dict>
+</plist>

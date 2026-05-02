@@ -1,0 +1,32 @@
+#!/bin/bash
+# Git pre-commit hook: Validate hardcoded paths before commit
+# Installed via: git config core.hooksPath ~/.claude/git-hooks
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+echo -e "${YELLOW}▶ Validating staged files...${NC}"
+
+# Run hardcoded path validator
+PAI_DIR="${PAI_DIR:=$HOME/.claude}"
+if [ -f "$PAI_DIR/hooks/validate-hardcoded-paths.ts" ]; then
+  bun "$PAI_DIR/hooks/validate-hardcoded-paths.ts"
+else
+  echo -e "${YELLOW}⚠️  Path validator not found at $PAI_DIR/hooks/validate-hardcoded-paths.ts${NC}"
+fi
+
+# Run existing security validator
+if [ -f "$PAI_DIR/hooks/security-validator.ts" ]; then
+  bun "$PAI_DIR/hooks/security-validator.ts" || {
+    echo -e "${RED}❌ Security validation failed${NC}"
+    exit 1
+  }
+fi
+
+echo -e "${GREEN}✅ Pre-commit validation passed${NC}"
+exit 0

@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "description": "Sam Protected Files - Files that must NOT be overwritten with private content",
+  "version": "1.0",
+  "protected": {
+    "core_documents": {
+      "description": "Core Sam documentation that differs from private setups",
+      "files": [
+        "README.md",
+        "SAM_CONTRACT.md",
+        "SECURITY.md"
+      ],
+      "validation": "Must contain 'Sam' or 'Personal AI Infrastructure' in content"
+    },
+    "sam_infrastructure": {
+      "description": "Sam-specific infrastructure code",
+      "files": [
+        ".claude/hooks/lib/pai-paths.ts",
+        ".claude/hooks/self-test.ts",
+        ".sam-protected.json"
+      ],
+      "validation": "Must not contain references to private data"
+    },
+    "sanitized_config": {
+      "description": "Configuration files that must remain sanitized",
+      "files": [
+        ".claude/.env.example",
+        ".claude/settings.json"
+      ],
+      "validation": "Must not contain API keys, personal emails, or secrets"
+    },
+    "protected_patterns": {
+      "description": "String patterns that should never appear in Sam Public",
+      "patterns": [
+        "daniel@danielmiessler\\.com",
+        "susan@danielmiessler\\.com",
+        "ANTHROPIC_API_KEY=sk-",
+        "PERPLEXITY_API_KEY=[^E]",
+        "ELEVENLABS_API_KEY=[^y]",
+        "/Users/daniel/\\.claude/skills/personal",
+        "daemon\\.plist"
+      ],
+      "exception_files": [
+        "SECURITY.md",
+        ".sam-protected.json",
+        "SAM_SYNC_GUIDE.md",
+        ".claude/.env.example"
+      ]
+    }
+  },
+  "private_to_public_workflow": {
+    "description": "How to safely sync private improvements to Sam Public",
+    "steps": [
+      "1. Make changes in private setup (${PAI_DIR}/)",
+      "2. Test thoroughly in private environment",
+      "3. Identify which changes should go to public Sam",
+      "4. Copy changes to Sam repo (${SAM_REPO}/)",
+      "5. SKIP protected files (they stay Sam-specific)",
+      "6. Sanitize any personal data or API keys",
+      "7. Run: bun ${SAM_REPO}/.claude/hooks/self-test.ts",
+      "8. Run: bun ${SAM_REPO}/.claude/hooks/validate-protected.ts",
+      "9. If validation passes, commit to Sam",
+      "10. If validation fails, check which protected files changed"
+    ]
+  }
+}

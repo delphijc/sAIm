@@ -1,0 +1,69 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - img "CyberWatch" [ref=e8]
+        - generic [ref=e9]:
+          - heading "CyberWatch" [level=1] [ref=e10]
+          - paragraph [ref=e11]: Government Cybersecurity Alert Monitor
+      - button "Update Alerts" [ref=e12]:
+        - img [ref=e13]
+        - text: Update Alerts
+      - generic [ref=e18]:
+        - button "Deduplicate" [ref=e19]:
+          - img [ref=e20]
+          - text: Deduplicate
+        - button "Reprocess" [ref=e23]:
+          - img [ref=e24]
+          - text: Reprocess
+  - generic [ref=e27]:
+    - generic [ref=e28]:
+      - generic [ref=e30]:
+        - generic [ref=e31]:
+          - paragraph [ref=e32]: Total Alerts
+          - paragraph [ref=e33]: "0"
+        - img [ref=e35]
+      - generic [ref=e38]:
+        - generic [ref=e39]:
+          - paragraph [ref=e40]: Critical Alerts
+          - paragraph [ref=e41]: "0"
+        - img [ref=e43]
+      - generic [ref=e46]:
+        - generic [ref=e47]:
+          - paragraph [ref=e48]: MITRE Techniques
+          - paragraph [ref=e49]: "0"
+        - img [ref=e51]
+      - generic [ref=e56]:
+        - generic [ref=e57]:
+          - paragraph [ref=e58]: YARA Rules
+          - paragraph [ref=e59]: "0"
+        - img [ref=e61]
+    - generic [ref=e66]:
+      - navigation [ref=e68]:
+        - button "Alerts Monitor" [ref=e69]:
+          - img [ref=e70]
+          - text: Alerts Monitor
+        - button "Trends" [ref=e72]:
+          - img [ref=e73]
+          - text: Trends
+        - button "MITRE ATT&CK" [ref=e76]:
+          - img [ref=e77]
+          - text: MITRE ATT&CK
+        - button "YARA Rules" [ref=e81]:
+          - img [ref=e82]
+          - text: YARA Rules
+      - generic [ref=e88]:
+        - generic [ref=e89]:
+          - generic [ref=e90]:
+            - img [ref=e91]
+            - heading "Live Monitor" [level=2] [ref=e97]
+          - generic [ref=e98]:
+            - combobox [ref=e99]:
+              - option "All Severities" [selected]
+              - option "Critical"
+              - option "High"
+              - option "Medium"
+              - option "Low"
+            - combobox [ref=e100]:
+              - option "All Sources" [selected]
+        - paragraph [ref=e102]: Loading alerts...

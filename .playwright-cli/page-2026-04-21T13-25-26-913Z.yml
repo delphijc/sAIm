@@ -1,0 +1,10 @@
+- generic [ref=e3]:
+  - generic [ref=e6]:
+    - heading "⚙️ Service Monitor" [level=1] [ref=e7]
+    - paragraph [ref=e8]: PAI Infrastructure Services
+  - generic [ref=e11]:
+    - generic [ref=e12]: ⟳
+    - paragraph [ref=e13]: Loading services...
+  - generic [ref=e15]:
+    - generic [ref=e16]: "Last updated: 9:25:26 AM"
+    - generic [ref=e17]: Disconnected

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.pai.memory-system</string>
+
+    <key>Description</key>
+    <string>PAI Memory System - Semantic memory backend server</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/delphijc/.claude/bin/pai-memory-system</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/delphijc/Projects/memory-system/services/memory-system</string>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
+
+    <key>StandardOutPath</key>
+    <string>/Users/delphijc/.claude/memory-system/logs/memory-system.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/delphijc/.claude/memory-system/logs/memory-system.err</string>
+
+    <key>StandardInPath</key>
+    <string>/dev/null</string>
+
+    <key>ExitTimeOut</key>
+    <integer>5</integer>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PAI_DIR</key>
+        <string>/Users/delphijc/.claude</string>
+        <key>ENABLE_MEMORY_HOOKS</key>
+        <string>true</string>
+        <key>MEMORY_HTTP_PORT</key>
+        <string>4242</string>
+        <key>MEMORY_HTTP_HOST</key>
+        <string>0.0.0.0</string>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+</dict>
+</plist>

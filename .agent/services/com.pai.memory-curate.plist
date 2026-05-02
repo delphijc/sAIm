@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.pai.memory-curate</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/delphijc/Projects/sam/.agent/bin/pai-memory-curate</string>
+  </array>
+
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>0</integer>
+    <key>Minute</key>
+    <integer>30</integer>
+  </dict>
+
+  <key>StandardOutPath</key>
+  <string>/Users/delphijc/Library/Logs/pai-memory-curate.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>/Users/delphijc/Library/Logs/pai-memory-curate-error.log</string>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>KeepAlive</key>
+  <false/>
+
+  <key>ProcessType</key>
+  <string>Background</string>
+
+  <key>TimeOut</key>
+  <integer>300</integer>
+</dict>
+</plist>

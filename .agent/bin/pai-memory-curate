@@ -1,0 +1,205 @@
+#!/usr/bin/env bash
+#
+# Memory-Driven Backlog Curator
+# Reads retrospective output and weekly strategy, populates enhancement backlog
+# with curated items from memory intelligence (A1-A6 complete)
+#
+# Usage: pai-memory-curate [--dry-run]
+#
+# Scheduled: Daily at 00:30 via launchd (com.pai.memory-curate.plist)
+
+set -euo pipefail
+
+PAI_DIR="${PAI_DIR:-${HOME}/.claude}"
+LOG_FILE="${HOME}/Library/Logs/pai-memory-curate.log"
+MEMORY_SYSTEM_DIR="${HOME}/Projects/memory-system"
+MANAGE_BACKLOG="${HOME}/Projects/sam/.agent/scripts/manage-backlog.sh"
+MEMORY_SERVICE_PORT=4242
+DRY_RUN=${1:---dry-run}
+
+# ---------------------------------------------------------------------------
+# Logging
+# ---------------------------------------------------------------------------
+
+log() {
+  local level="$1"
+  shift
+  local msg="$*"
+  local timestamp
+  timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+  echo "[${timestamp}] [${level}] ${msg}" | tee -a "$LOG_FILE"
+}
+
+# ---------------------------------------------------------------------------
+# Health Checks
+# ---------------------------------------------------------------------------
+
+check_memory_server() {
+  if nc -z localhost "$MEMORY_SERVICE_PORT" 2>/dev/null; then
+    return 0
+  else
+    log "WARN" "Memory server not available on port $MEMORY_SERVICE_PORT (soft fail)"
+    return 1
+  fi
+}
+
+check_manage_backlog() {
+  if [[ ! -x "$MANAGE_BACKLOG" ]]; then
+    log "ERROR" "manage-backlog.sh not found at $MANAGE_BACKLOG"
+    exit 1
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# Core Curation Functions
+# ---------------------------------------------------------------------------
+
+curate_from_retrospective() {
+  log "INFO" "Reading latest retrospective..."
+
+  if [[ ! -f "${MEMORY_SYSTEM_DIR}/memory.db" ]]; then
+    log "WARN" "Memory database not found — skipping retrospective curation"
+    return
+  fi
+
+  # Query for latest retrospective with recommendations
+  local retrospective_json
+  retrospective_json=$(cd "$MEMORY_SYSTEM_DIR" && \
+    bun -e "
+      import { getRawDb } from './src/memory/db.ts';
+      const db = new (await import('bun:sqlite')).Database('${MEMORY_SYSTEM_DIR}/memory.db');
+      const row = db.query('SELECT recommendations, pain_points FROM retrospectives ORDER BY timestamp DESC LIMIT 1').get();
+      console.log(JSON.stringify(row || {}));
+    " 2>/dev/null || echo '{}')
+
+  if [[ "$retrospective_json" == "{}" ]]; then
+    log "INFO" "No retrospectives found"
+    return
+  fi
+
+  # Parse recommendations
+  local recommendations
+  recommendations=$(echo "$retrospective_json" | jq -r '.recommendations // []' 2>/dev/null || echo "[]")
+
+  if [[ "$recommendations" != "[]" ]]; then
+    log "INFO" "Processing recommendations..."
+    echo "$recommendations" | jq -r '.[] | select((.priority == "HIGH" or .priority == "MEDIUM")) | .title' | while read -r title; do
+      curate_item "retrospective" "P1" "M" "$title" "From retrospective analysis"
+    done
+  fi
+
+  # Parse pain points
+  local pain_points
+  pain_points=$(echo "$retrospective_json" | jq -r '.pain_points // []' 2>/dev/null || echo "[]")
+
+  if [[ "$pain_points" != "[]" ]]; then
+    log "INFO" "Processing pain points..."
+    echo "$pain_points" | jq -r '.[] | select(.severity == "high" or .severity == "medium") | .topic' | while read -r topic; do
+      curate_item "retrospective" "P1" "M" "Recurring: $topic" "Pain point from sessions"
+    done
+  fi
+}
+
+curate_from_strategy() {
+  log "INFO" "Reading latest weekly strategy..."
+
+  local strategy_dir="${PAI_DIR}/projects/-Users-delphijc-Projects-sam/memory/strategy"
+  if [[ ! -d "$strategy_dir" ]]; then
+    log "WARN" "Strategy directory not found"
+    return
+  fi
+
+  # Find latest strategy file
+  local latest_strategy
+  latest_strategy=$(find "$strategy_dir" -name "*.md" -type f | sort -r | head -1)
+
+  if [[ -z "$latest_strategy" || ! -f "$latest_strategy" ]]; then
+    log "WARN" "No strategy file found"
+    return
+  fi
+
+  # Extract "Top 3 Priorities" section
+  log "INFO" "Extracting priorities from $latest_strategy"
+
+  local in_priorities=false
+  local priority_num=1
+
+  while IFS= read -r line; do
+    if [[ "$line" =~ "Top 3 Priorities" ]] || [[ "$line" =~ "Top priorities" ]]; then
+      in_priorities=true
+      continue
+    fi
+
+    if [[ "$in_priorities" == true ]]; then
+      # Stop at next section
+      if [[ "$line" =~ ^## ]] && [[ ! "$line" =~ "Top" ]]; then
+        break
+      fi
+
+      # Extract numbered items
+      if [[ "$line" =~ ^[[:space:]]*[0-9]+\. ]]; then
+        local item="${line##*[0-9].}"
+        item="${item#[[:space:]]}"
+        if [[ -n "$item" ]]; then
+          curate_item "strategy" "P1" "M" "$item" "From weekly strategy"
+          priority_num=$((priority_num + 1))
+        fi
+      fi
+    fi
+  done < "$latest_strategy"
+}
+
+curate_item() {
+  local source="$1"
+  local priority="$2"
+  local effort="$3"
+  local title="$4"
+  local description="$5"
+
+  # Deduplication: check if similar item exists
+  local existing
+  existing=$("$MANAGE_BACKLOG" list --status pending 2>/dev/null | \
+    jq -r ".[] | select(.title | startswith(\"${title:0:60}\")) | .id" | head -1)
+
+  if [[ -n "$existing" ]]; then
+    log "INFO" "Item already exists (prefix match): $existing — skipping"
+    return
+  fi
+
+  # Add to backlog
+  if [[ "$DRY_RUN" == "--dry-run" ]]; then
+    log "INFO" "[DRY-RUN] Would add: $title (source: $source, priority: $priority)"
+  else
+    log "INFO" "Adding: $title (source: $source)"
+    "$MANAGE_BACKLOG" add \
+      --title "$title" \
+      --priority "$priority" \
+      --effort "$effort" \
+      --description "$description" \
+      --source "$source" >/dev/null
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+main() {
+  log "INFO" "=== Memory-driven backlog curation starting ==="
+
+  # Check dependencies
+  check_manage_backlog
+
+  # Soft-fail if memory server unavailable (still curate from strategy)
+  check_memory_server || log "WARN" "Continuing without memory server..."
+
+  # Curate from retrospectives
+  curate_from_retrospective
+
+  # Curate from weekly strategy
+  curate_from_strategy
+
+  log "INFO" "=== Backlog curation complete ==="
+}
+
+main "$@"
