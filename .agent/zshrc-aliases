@@ -3,9 +3,9 @@
 if [ -z "$PAI_DIR" ]; then
   GIT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
   if [ -n "$GIT_ROOT" ] && [ -d "$GIT_ROOT/.claude" ]; then
-    export PAI_DIR="$GIT_ROOT/.claude"
+    export PAI_DIR="$GIT_ROOT/.agent"
   else
-    export PAI_DIR="$HOME/Projects/sam/.claude"
+    export PAI_DIR="$HOME/Projects/sam/.agent"
   fi
 fi
 
