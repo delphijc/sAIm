@@ -1,0 +1,1749 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="sAIm - Personal AI Operating System" id="id-2a8f7c9e-3d5e-4f2b-a1c8-7b9e5d4c3a2f">
+  <folder name="Business" id="id-business-folder" type="business">
+    <element xsi:type="archimate:BusinessActor" name="Claude Code User" id="id-claude-user">
+
+      <documentation>End user operating Claude Code IDE with AI assistance</documentation>
+
+    </element>
+    <element xsi:type="archimate:BusinessRole" name="System Operator" id="id-sys-operator">
+
+      <documentation>Role managing PAI services and infrastructure</documentation>
+
+    </element>
+    <element xsi:type="archimate:BusinessFunction" name="Code Assistance" id="id-code-assist">
+
+      <documentation>Primary function: provide intelligent code support, automation, and AI orchestration</documentation>
+
+    </element>
+    <element xsi:type="archimate:BusinessFunction" name="System Automation" id="id-sys-automation">
+
+      <documentation>Background service automation, monitoring, and observability</documentation>
+
+    </element>
+    <element xsi:type="archimate:BusinessProcess" name="PAI Workflow" id="id-pai-workflow">
+
+      <documentation>Complete personal AI operating system workflow</documentation>
+
+    </element>
+  </folder>
+
+  <folder name="Application" id="id-app-folder" type="application">
+    <!-- CORE RUNTIME LAYER -->
+    <element xsi:type="archimate:ApplicationComponent" name="Claude Code Harness" id="id-cc-harness">
+
+      <documentation>Core Claude Code IDE harness managing session lifecycle</documentation>
+
+    </element>
+    <element xsi:type="archimate:ApplicationComponent" name="Hook System" id="id-hook-system">
+
+      <documentation>Event-driven TypeScript hooks triggered by Claude Code lifecycle</documentation>
+
+    </element>
+    <element xsi:type="archimate:ApplicationComponent" name="Skills Framework" id="id-skills-framework">
+
+      <documentation>28+ composable skill packages with progressive disclosure</documentation>
+
+    </element>
+    <element xsi:type="archimate:ApplicationComponent" name="Agent System" id="id-agent-system">
+
+      <documentation>27 specialized AI personas with delegation patterns</documentation>
+
+    </element>
+    <element xsi:type="archimate:ApplicationComponent" name="History System (UOCS)" id="id-history-system">
+
+      <documentation>Universal Output Capture System for work tracking and memory</documentation>
+
+    </element>
+
+    <!-- HOOK DETAILS -->
+    <element xsi:type="archimate:ApplicationComponent" name="SessionStart Hook" id="id-hook-sessionstart">
+
+      <documentation>PORT: EVENT | Loads CORE context at session start | Routes to skill activation</documentation>
+
+    </element>
+    <element xsi:type="archimate:ApplicationComponent" name="PreToolUse Hook" id="id-hook-pretool">
+
+      <documentation>PORT: EVENT | Validates tool permissions before execution</documentation>
+
+    </element>
+    <element xsi:type="archimate:ApplicationComponent" name="PostToolUse Hook" id="id-hook-posttool">
+
+      <documentation>PORT: EVENT | Captures tool output for history and memory</documentation>
+
+    </element>
+    <element xsi:type="archimate:ApplicationComponent" name="Stop Hook" id="id-hook-stop">
+
+      <documentation>PORT: EVENT | Triggers voice notification on response completion</documentation>
+
+    </element>
+    <element xsi:type="archimate:ApplicationComponent" name="UserPromptSubmit Hook" id="id-hook-submit">
+
+      <documentation>PORT: EVENT | Logs prompt submission and updates memory</documentation>
+
+    </element>
+    <element xsi:type="archimate:ApplicationComponent" name="Security Validator Hook" id="id-hook-security">
+
+      <documentation>PORT: EVENT | Enforces protected files validation before commits</documentation>
+
+    </element>
+
+    <!-- INTEGRATION LAYER (OPTIONAL) -->
+    <element xsi:type="archimate:ApplicationComponent" name="Memory System Client" id="id-memory-client">
+
+      <documentation>HTTP client for semantic memory extraction (optional, port 4242)</documentation>
+
+    </element>
+    <element xsi:type="archimate:ApplicationComponent" name="Voice Server Client" id="id-voice-client">
+
+      <documentation>HTTP client for text-to-speech (optional, port 8888)</documentation>
+
+    </element>
+    <element xsi:type="archimate:ApplicationComponent" name="Awareness Dashboard Client" id="id-awareness-client">
+
+      <documentation>HTTP client for operations briefings (optional, port 4100)</documentation>
+
+    </element>
+
+    <!-- DASHBOARDS (OPTIONAL) -->
+    <element xsi:type="archimate:ApplicationComponent" name="Observability Dashboard" id="id-obs-dashboard">
+
+      <documentation>Real-time agent activity monitoring (port 5172)</documentation>
+
+    </element>
+    <element xsi:type="archimate:ApplicationComponent" name="Service Monitor Dashboard" id="id-svc-monitor">
+
+      <documentation>PAI service health and metrics (port 6000 server, 5175 client)</documentation>
+
+    </element>
+    <element xsi:type="archimate:ApplicationComponent" name="Discord Remote Control" id="id-discord-rc">
+
+      <documentation>Discord bot interface with memory dashboard (optional client)</documentation>
+
+    </element>
+
+    <!-- DATA & STATE MANAGEMENT -->
+    <element xsi:type="archimate:ApplicationComponent" name="Memory Cache" id="id-mem-cache">
+
+      <documentation>In-memory cache for session context and agent state</documentation>
+
+    </element>
+    <element xsi:type="archimate:ApplicationComponent" name="Configuration Loader" id="id-config-loader">
+
+      <documentation>Loads settings.json, settings.local.json, and environment variables</documentation>
+
+    </element>
+    <element xsi:type="archimate:ApplicationComponent" name="Path Resolver (PAI_DIR)" id="id-path-resolver">
+
+      <documentation>Four-tier PAI_DIR resolution: Explicit → HOME → Service → os.homedir()</documentation>
+
+    </element>
+  </folder>
+
+  <folder name="Technology" id="id-tech-folder" type="technology">
+    <element xsi:type="archimate:Artifact" name="Bun Runtime" id="id-tech-bun">
+
+      <documentation>TypeScript runtime for all services and tools (not Node.js)</documentation>
+
+    </element>
+    <element xsi:type="archimate:Artifact" name="Bash Scripting" id="id-tech-bash">
+
+      <documentation>Shell automation, CLI hooks, service management</documentation>
+
+    </element>
+    <element xsi:type="archimate:Artifact" name="Go Backend" id="id-tech-go">
+
+      <documentation>High-performance compiled services (where applicable)</documentation>
+
+    </element>
+    <element xsi:type="archimate:Artifact" name="TypeScript Strict" id="id-tech-ts">
+
+      <documentation>All TypeScript files compiled with strict mode (tsconfig.json strict: true)</documentation>
+
+    </element>
+    <element xsi:type="archimate:Artifact" name="SQLite Database" id="id-tech-sqlite">
+
+      <documentation>Lightweight database for local state and memory</documentation>
+
+    </element>
+    <element xsi:type="archimate:Artifact" name="HTTP/REST API" id="id-tech-http">
+
+      <documentation>Standard HTTP RESTful interfaces for service communication</documentation>
+
+    </element>
+    <element xsi:type="archimate:Artifact" name="Webhook System" id="id-tech-webhooks">
+
+      <documentation>Event-driven webhooks for inter-service communication</documentation>
+
+    </element>
+    <element xsi:type="archimate:Artifact" name="launchd (macOS)" id="id-tech-launchd">
+
+      <documentation>Service management and auto-start on macOS</documentation>
+
+    </element>
+    <element xsi:type="archimate:Artifact" name="systemd (Linux)" id="id-tech-systemd">
+
+      <documentation>Service management via pai-infrastructure.target on Linux</documentation>
+
+    </element>
+  </folder>
+
+  <!-- CONNECTIONS (Relationships) -->
+  <folder name="Relationships" id="id-relationships-folder" type="relations">
+    <!-- User to System -->
+    <element xsi:type="archimate:ServingRelationship" name="Uses" id="id-rel-user-cc" source="id-claude-user" target="id-cc-harness">
+
+      <documentation>User operates Claude Code through the harness</documentation>
+
+    </element>
+
+    <!-- Core Flow -->
+    <element xsi:type="archimate:FlowRelationship" name="Triggers" id="id-rel-cc-hooks" source="id-cc-harness" target="id-hook-system">
+
+      <documentation>Claude Code lifecycle triggers hooks</documentation>
+
+    </element>
+    <element xsi:type="archimate:FlowRelationship" name="Activates" id="id-rel-hooks-skills" source="id-hook-system" target="id-skills-framework">
+
+      <documentation>Hooks route to appropriate skills</documentation>
+
+    </element>
+    <element xsi:type="archimate:FlowRelationship" name="Delegates" id="id-rel-skills-agents" source="id-skills-framework" target="id-agent-system">
+
+      <documentation>Skills delegate complex work to agents</documentation>
+
+    </element>
+    <element xsi:type="archimate:FlowRelationship" name="Records" id="id-rel-agents-history" source="id-agent-system" target="id-history-system">
+
+      <documentation>Agent work is captured in history</documentation>
+
+    </element>
+
+    <!-- Hook Connections -->
+    <element xsi:type="archimate:FlowRelationship" name="Sequence 1" id="id-rel-hook-sessionstart" source="id-hook-sessionstart" target="id-config-loader">
+
+      <documentation>SessionStart → Load Config</documentation>
+
+    </element>
+    <element xsi:type="archimate:FlowRelationship" name="Sequence 2" id="id-rel-hook-pretool" source="id-hook-pretool" target="id-hook-security">
+
+      <documentation>PreToolUse → Validate Security</documentation>
+
+    </element>
+    <element xsi:type="archimate:FlowRelationship" name="Sequence 3" id="id-rel-hook-posttool" source="id-hook-posttool" target="id-memory-client">
+
+      <documentation>PostToolUse → Capture Memory (optional)</documentation>
+
+    </element>
+    <element xsi:type="archimate:FlowRelationship" name="Sequence 4" id="id-rel-hook-stop" source="id-hook-stop" target="id-voice-client">
+
+      <documentation>Stop → Voice Notification (optional)</documentation>
+
+    </element>
+
+    <!-- Optional Integrations -->
+    <element xsi:type="archimate:ServingRelationship" name="Integrates" id="id-rel-memory-integration" source="id-memory-client" target="id-mem-cache">
+
+      <documentation>Memory client feeds extracted facts to cache</documentation>
+
+    </element>
+    <element xsi:type="archimate:ServingRelationship" name="Notifies" id="id-rel-voice-integration" source="id-voice-client" target="id-cc-harness">
+
+      <documentation>Voice notifications sent back to harness</documentation>
+
+    </element>
+    <element xsi:type="archimate:ServingRelationship" name="Provides Context" id="id-rel-awareness-integration" source="id-awareness-client" target="id-skills-framework">
+
+      <documentation>Awareness data enriches skill context</documentation>
+
+    </element>
+  </folder>
+
+  <folder name="Infrastructure" id="id-infra-folder" type="infrastructure">
+    <!-- SERVICE DEFINITIONS WITH PORTS -->
+    <element xsi:type="archimate:ApplicationComponent" name="Voice Server Service" id="id-svc-voice">
+
+      <documentation>HTTP Server | PORT: 8888 | Text-to-speech service with Python sidecar | Status: Optional</documentation>
+
+    </element>
+    <element xsi:type="archimate:ApplicationComponent" name="Memory System Service" id="id-svc-memory">
+
+      <documentation>HTTP Server | PORT: 4242 | Semantic memory database with extraction | Status: Optional</documentation>
+
+    </element>
+    <element xsi:type="archimate:ApplicationComponent" name="Awareness Dashboard Backend" id="id-svc-awareness-be">
+
+      <documentation>HTTP Server | PORT: 4100 | Operations briefing backend API</documentation>
+
+    </element>
+    <element xsi:type="archimate:ApplicationComponent" name="Awareness Dashboard Frontend" id="id-svc-awareness-fe">
+
+      <documentation>Vue/Bun | PORT: 5173 | Operations briefing UI</documentation>
+
+    </element>
+    <element xsi:type="archimate:ApplicationComponent" name="Observability Dashboard" id="id-svc-obs-dash">
+
+      <documentation>HTTP Server | PORT: 5172 | Real-time agent monitoring UI</documentation>
+
+    </element>
+    <element xsi:type="archimate:ApplicationComponent" name="Service Monitor Server" id="id-svc-mon-server">
+
+      <documentation>HTTP Server | PORT: 6000 | Service health and metrics</documentation>
+
+    </element>
+    <element xsi:type="archimate:ApplicationComponent" name="Service Monitor Client" id="id-svc-mon-client">
+
+      <documentation>Vue/Bun | PORT: 5175 | Service dashboard UI</documentation>
+
+    </element>
+    <element xsi:type="archimate:ApplicationComponent" name="Discord Remote Control" id="id-svc-discord">
+
+      <documentation>Discord Bot | API: discord.js | Remote agent interface</documentation>
+
+    </element>
+    <element xsi:type="archimate:ApplicationComponent" name="Markdown Editor" id="id-svc-markdown">
+
+      <documentation>HTTP Server | PORT: 4444 | Web-based PAI markdown viewer</documentation>
+
+    </element>
+
+    <!-- FILE SYSTEM STRUCTURE -->
+    <element xsi:type="archimate:ApplicationComponent" name="Project Directory" id="id-fs-project">
+
+      <documentation>ROOT: ~/Projects/sam/ | Symlinked to ~/.claude for auto-load</documentation>
+
+    </element>
+    <element xsi:type="archimate:ApplicationComponent" name="Hooks Directory" id="id-fs-hooks">
+
+      <documentation>PATH: .agent/hooks/ | TypeScript lifecycle event handlers</documentation>
+
+    </element>
+    <element xsi:type="archimate:ApplicationComponent" name="Skills Directory" id="id-fs-skills">
+
+      <documentation>PATH: .agent/skills/ | 28+ composable capability packages</documentation>
+
+    </element>
+    <element xsi:type="archimate:ApplicationComponent" name="Agents Directory" id="id-fs-agents">
+
+      <documentation>PATH: .agent/agents/ | 27 specialized AI personas (YAML)</documentation>
+
+    </element>
+    <element xsi:type="archimate:ApplicationComponent" name="History Directory" id="id-fs-history">
+
+      <documentation>PATH: .agent/History/ | UOCS output capture (structured filenames)</documentation>
+
+    </element>
+    <element xsi:type="archimate:ApplicationComponent" name="Settings Config" id="id-fs-settings">
+
+      <documentation>FILE: .agent/settings.json | Hook definitions and global config</documentation>
+
+    </element>
+    <element xsi:type="archimate:ApplicationComponent" name="Protected Files Manifest" id="id-fs-protected">
+
+      <documentation>FILE: .sam-protected.json | Forbidden patterns list (API keys, emails, paths)</documentation>
+
+    </element>
+  </folder>
+
+  <!-- DETAILED API DOCUMENTATION SECTION -->
+  <folder name="API Interfaces" id="id-api-folder" type="other">
+    <element xsi:type="archimate:ApplicationInterface" name="Voice Server API" id="id-api-voice">
+
+      <documentation>
+Endpoint: POST /api/speak
+Description: Convert text to speech
+Request: { text: string, voiceId?: string, rate?: number }
+Response: { audioUrl: string, duration: number, format: 'wav'|'mp3' }
+Webhook: POST /webhooks/speech-complete (on finish)
+Error Codes: 400 (invalid text), 413 (text too long), 503 (service unavailable)
+Auth: Optional (env: VOICE_API_KEY)
+
+Endpoint: POST /api/notify
+Description: Send audible notification
+Request: { message: string, type: 'success'|'warning'|'error', voiceId?: string }
+Response: { notificationId: string, scheduled: number }
+Webhook: POST /webhooks/notify-sent (on delivery)
+
+Status Endpoint: GET /health
+Response: { status: 'ok'|'degraded', uptime: number, python_sidecar: boolean }
+</documentation>
+
+    </element>
+
+    <element xsi:type="archimate:ApplicationInterface" name="Memory System API" id="id-api-memory">
+
+
+      <documentation>
+Endpoint: POST /memory/extract
+Description: Extract semantic facts from conversation
+Request: { transcript: string, sessionId: string, timestamp: ISO8601 }
+Response: { facts: Fact[], associations: Association[], confidence: number[] }
+Webhook: POST /webhooks/extraction-complete (on analysis done)
+Error Codes: 400 (invalid transcript), 422 (extraction failed)
+
+Endpoint: POST /memory/consolidation/run
+Description: Weekly consolidation cycle (dedup, prune, surface insights)
+Request: { mode: 'aggressive'|'conservative' }
+Response: { merged: number, removed: number, insights: string[] }
+Webhook: POST /webhooks/consolidation-done
+
+Endpoint: GET /memory/search
+Description: Hybrid semantic + keyword search
+Query: q=string, type=user|project|feedback|reference, limit=50
+Response: { results: Fact[], totalCount: number, executionMs: number }
+
+Endpoint: GET /api/graph
+Description: Graph visualization (neighbors, paths, communities)
+Query: nodeId=string, depth=1-3, algorithm=neighbor|path|community
+Response: { nodes: GraphNode[], edges: GraphEdge[], layout: 'hierarchical'|'force' }
+
+Status Endpoint: GET /health
+Response: { status: 'ok', db: 'healthy', facts: number, associations: number }
+</documentation>
+
+
+    </element>
+
+    <element xsi:type="archimate:ApplicationInterface" name="Awareness Dashboard API" id="id-api-awareness">
+
+
+      <documentation>
+Endpoint: GET /api/briefing
+Description: Generate daily/weekly AI operations briefing
+Query: period=daily|weekly, format=json|markdown
+Response: { briefing: string, insights: string[], recommendations: string[], timestamp: ISO8601 }
+Webhook: POST /webhooks/briefing-generated
+
+Endpoint: GET /api/operations/status
+Description: Current operations status and active services
+Response: { services: Service[], activeAgents: Agent[], queuedTasks: number }
+
+Endpoint: POST /api/operations/task
+Description: Create new operation task
+Request: { title: string, description: string, priority: 'high'|'medium'|'low' }
+Response: { taskId: string, created: ISO8601, status: 'pending' }
+Webhook: POST /webhooks/task-created, task-status-changed
+
+Endpoint: GET /api/timeline
+Description: Historical timeline of operations
+Query: startDate=ISO8601, endDate=ISO8601, limit=100
+Response: { events: TimelineEvent[], total: number }
+
+Status Endpoint: GET /health
+Response: { status: 'ok', frontend: 'ready', backend: 'ready', db: 'healthy' }
+</documentation>
+
+
+    </element>
+
+    <element xsi:type="archimate:ApplicationInterface" name="Observability Dashboard API" id="id-api-obs">
+
+
+      <documentation>
+Endpoint: WebSocket /ws/agents
+Description: Real-time agent activity stream
+Events: agent-started, agent-completed, agent-error, message-sent, task-updated
+Response: { type: string, agentId: string, timestamp: ISO8601, payload: object }
+
+Endpoint: GET /api/agents
+Description: List active and recent agents
+Query: status=active|completed|failed, limit=50
+Response: { agents: Agent[], totalActive: number, totalCompleted: number }
+
+Endpoint: GET /api/agents/:agentId
+Description: Get detailed agent information
+Response: { agent: Agent, messages: Message[], startTime: ISO8601, endTime?: ISO8601, status: string }
+
+Endpoint: POST /api/agents/:agentId/stop
+Description: Stop a running agent
+Response: { stopped: boolean, reason: string }
+
+Endpoint: GET /api/metrics
+Description: System-wide metrics (CPU, memory, requests/sec)
+Query: window=1h|24h|7d
+Response: { metrics: Metric[], timestamp: ISO8601 }
+
+Status Endpoint: GET /health
+Response: { status: 'ok', uptime: number, connectedClients: number }
+</documentation>
+
+
+    </element>
+
+    <element xsi:type="archimate:ApplicationInterface" name="Service Monitor API" id="id-api-svc-mon">
+
+
+      <documentation>
+Endpoint: GET /api/services
+Description: List all PAI services and their status
+Response: { services: Service[], systemStatus: 'healthy'|'degraded'|'critical', timestamp: ISO8601 }
+
+Endpoint: GET /api/services/:serviceName
+Description: Detailed service information
+Response: {
+  service: Service,
+  status: 'running'|'stopped'|'error',
+  uptime: number,
+  port: number,
+  pid: number,
+  memory: number,
+  logs: string[]
+}
+
+Endpoint: POST /api/services/:serviceName/start
+Description: Start a service
+Response: { success: boolean, startTime: ISO8601 }
+Webhook: POST /webhooks/service-started
+
+Endpoint: POST /api/services/:serviceName/stop
+Description: Stop a service
+Response: { success: boolean, stoppedAt: ISO8601 }
+Webhook: POST /webhooks/service-stopped
+
+Endpoint: POST /api/services/:serviceName/restart
+Description: Restart a service
+Response: { success: boolean, restartTime: ISO8601 }
+
+Endpoint: GET /api/logs/:serviceName
+Description: Service logs (tail last N lines)
+Query: lines=50, follow=false
+Response: { logs: string[], serviceName: string }
+
+Status Endpoint: GET /health
+Response: { status: 'ok', monitoredServices: number, failingServices: number }
+</documentation>
+
+
+    </element>
+
+    <element xsi:type="archimate:ApplicationInterface" name="Discord Remote Control API" id="id-api-discord">
+
+
+      <documentation>
+Command: !sam help
+Description: Display available commands and usage
+Response: Embedded message with command list
+
+Command: !sam agent list
+Description: List active agents
+Response: Embed with agent status, runtime, task
+
+Command: !sam agent stop :agentId
+Description: Stop a running agent
+Response: Confirmation message with stop time
+
+Command: !sam memory search :query
+Description: Search semantic memory
+Response: Embed with search results and confidence scores
+
+Command: !sam service status
+Description: Check PAI service health
+Response: Embed with service table (name, status, uptime)
+
+Command: !sam service restart :serviceName
+Description: Restart a service
+Response: Confirmation with restart details
+
+Command: !sam briefing daily|weekly
+Description: Get operations briefing
+Response: Full briefing in thread (long messages)
+
+Command: !sam logs :serviceName
+Description: Tail service logs
+Response: Code block with last N lines
+
+WebSocket: Bot presence status
+Status: 'Do !sam help' (idle), 'Running agents: N' (active), 'Service Monitor' (monitoring)
+</documentation>
+
+
+    </element>
+
+    <element xsi:type="archimate:ApplicationInterface" name="Claude Code Hooks API" id="id-api-hooks">
+
+
+      <documentation>
+Hook: SessionStart
+Trigger: Each new Claude Code session
+Callback: load-core-context.ts
+Actions: Load CORE skill, resolve PAI_DIR, check protected files
+Return: context object merged into session
+
+Hook: PreToolUse
+Trigger: Before any tool is executed
+Callback: security-validator.ts
+Actions: Validate tool permissions, check for restricted operations
+Return: approve/deny signal with reason
+
+Hook: PostToolUse
+Trigger: After tool execution completes
+Callback: capture-all-events.ts, memory-capture.ts (if enabled)
+Actions: Save tool output to history, extract facts for memory
+Return: none (side effects only)
+
+Hook: UserPromptSubmit
+Trigger: User submits a prompt
+Callback: capture-all-events.ts
+Actions: Log prompt, update episodic memory
+Return: none
+
+Hook: Stop
+Trigger: Response generation completes
+Callback: stop-hook.ts
+Actions: Send voice notification (if enabled), update status
+Return: none
+
+Hook: SubagentStop
+Trigger: Subagent/delegated agent completes
+Callback: capture-all-events.ts
+Actions: Log agent completion, update task status
+Return: none
+</documentation>
+
+
+    </element>
+  </folder>
+
+  <!-- WEBHOOK DEFINITIONS -->
+  <folder name="Webhooks" id="id-webhooks-folder" type="other">
+    <element xsi:type="archimate:ApplicationInterface" name="Extraction Complete Webhook" id="id-wh-extract">
+
+      <documentation>
+Event: memory.extraction.complete
+Payload: {
+  sessionId: string,
+  timestamp: ISO8601,
+  facts: { id: string, text: string, type: string, confidence: number }[],
+  associations: { source: string, target: string, weight: number }[],
+  totalExtracted: number
+}
+Retry: Exponential backoff (3.5s, 7.5s, 15s)
+Timeout: 30s
+Expected Consumers: Sam session logger, awareness dashboard
+</documentation>
+
+    </element>
+
+    <element xsi:type="archimate:ApplicationInterface" name="Consolidation Done Webhook" id="id-wh-consolidate">
+
+
+      <documentation>
+Event: memory.consolidation.complete
+Payload: {
+  timestamp: ISO8601,
+  mode: 'aggressive'|'conservative',
+  results: {
+    factsProcessed: number,
+    factsMerged: number,
+    factsRemoved: number,
+    insightsGenerated: string[]
+  }
+}
+Retry: Single attempt (scheduled job)
+Timeout: N/A (async)
+Expected Consumers: Discord bot (announces results), observability dashboard
+</documentation>
+
+
+    </element>
+
+    <element xsi:type="archimate:ApplicationInterface" name="Task Status Changed Webhook" id="id-wh-task-status">
+
+
+      <documentation>
+Event: operations.task.status_changed
+Payload: {
+  taskId: string,
+  oldStatus: string,
+  newStatus: string,
+  timestamp: ISO8601,
+  updatedBy: string,
+  metadata: object
+}
+Retry: Exponential backoff
+Timeout: 30s
+Expected Consumers: Awareness UI, Discord bot, audit log
+</documentation>
+
+
+    </element>
+
+    <element xsi:type="archimate:ApplicationInterface" name="Service Status Changed Webhook" id="id-wh-service">
+
+
+      <documentation>
+Event: infrastructure.service.status_changed
+Payload: {
+  serviceName: string,
+  oldStatus: 'running'|'stopped'|'error',
+  newStatus: 'running'|'stopped'|'error',
+  timestamp: ISO8601,
+  details: string
+}
+Retry: Exponential backoff
+Timeout: 30s
+Expected Consumers: Service monitor, Discord bot, alerting system
+</documentation>
+
+
+    </element>
+
+    <element xsi:type="archimate:ApplicationInterface" name="Agent Completed Webhook" id="id-wh-agent-complete">
+
+
+      <documentation>
+Event: orchestration.agent.completed
+Payload: {
+  agentId: string,
+  taskId: string,
+  status: 'success'|'error'|'cancelled',
+  startTime: ISO8601,
+  endTime: ISO8601,
+  outputSize: number,
+  tokensUsed: { input: number, output: number }
+}
+Retry: Exponential backoff
+Timeout: 30s
+Expected Consumers: Task runner, observability dashboard, history system
+</documentation>
+
+
+    </element>
+
+    <element xsi:type="archimate:ApplicationInterface" name="Speech Complete Webhook" id="id-wh-speech">
+
+
+      <documentation>
+Event: voice.speech.complete
+Payload: {
+  taskId: string,
+  text: string,
+  voiceId: string,
+  duration: number,
+  format: string,
+  timestamp: ISO8601,
+  success: boolean
+}
+Retry: Single attempt
+Timeout: N/A
+Expected Consumers: Harness (acknowledgement), history system
+</documentation>
+
+
+    </element>
+
+    <element xsi:type="archimate:ApplicationInterface" name="Briefing Generated Webhook" id="id-wh-briefing">
+
+
+      <documentation>
+Event: awareness.briefing.generated
+Payload: {
+  period: 'daily'|'weekly',
+  briefing: string,
+  insights: string[],
+  recommendations: string[],
+  timestamp: ISO8601,
+  generatedBy: 'schedule'|'manual'
+}
+Retry: None (informational)
+Timeout: N/A
+Expected Consumers: Discord bot, email notifier, awareness dashboard
+</documentation>
+
+
+    </element>
+  </folder>
+
+  <!-- DATABASE DEFINITIONS -->
+  <folder name="Databases" id="id-db-folder" type="other">
+    <element xsi:type="archimate:DataObject" name="Memory System DB" id="id-db-memory">
+
+      <documentation>
+Database: SQLite (~/Projects/memory-system/data/memory.db)
+Type: Semantic memory store
+Purpose: Persistent facts, associations, insights, and graph metadata
+
+Tables:
+- facts (id, text, type, confidence, source_file, created_at, updated_at, activation_score)
+  Indexes: type, created_at, activation_score (ACT-R model)
+
+- associations (id, source_fact_id, target_fact_id, type, weight, created_at, last_accessed)
+  Indexes: (source_fact_id, target_fact_id), weight
+  Purpose: Temporal + topic-based linking (Hebbian learning)
+
+- sessions (id, session_start, session_end, summary, fact_count)
+  Indexes: session_start
+
+- insights (id, title, description, generated_at, confidence)
+  Indexes: generated_at
+
+- graph_cache (nodeId, neighbors, paths, communities, updated_at)
+  Indexes: nodeId
+  Purpose: Cached graph queries for performance
+
+Write Pattern: Async extraction (PostToolUse hook → HTTP POST /memory/extract)
+Read Pattern: Synchronous search via GET /memory/search
+Consolidation: Weekly cycle via POST /memory/consolidation/run
+Backup: Daily snapshot to .agent/backups/memory-*.db
+</documentation>
+
+    </element>
+
+    <element xsi:type="archimate:DataObject" name="Discord Remote Control DB" id="id-db-discord">
+
+
+      <documentation>
+Database: SQLite (optional, location: .agent/skills/discord-remote-control/service/data/discord.db)
+Type: Episodic memory store
+Purpose: Recent conversation history, command state, user preferences
+
+Tables:
+- conversations (id, user_id, message_id, content, timestamp, reaction_count)
+  Indexes: user_id, timestamp
+  TTL: 7 days (rotated weekly)
+
+- commands (id, user_id, command, args, result, status, timestamp)
+  Indexes: user_id, timestamp, status
+  Purpose: Command audit trail
+
+- user_preferences (user_id, setting_key, value, updated_at)
+  Indexes: user_id
+
+- agent_tasks (task_id, user_id, agent_id, status, created_at, completed_at)
+  Indexes: user_id, status
+  Purpose: Track delegated work from Discord
+
+Write Pattern: Synchronous (on message receive)
+Read Pattern: Synchronous (command processing, history display)
+Retention: 7 days auto-purge
+Backup: On-demand via Discord command
+</documentation>
+
+
+    </element>
+
+    <element xsi:type="archimate:DataObject" name="Observability Dashboard DB" id="id-db-obs">
+
+
+      <documentation>
+Database: SQLite (location: .agent/services/observability-dashboard/data/obs.db)
+Type: Session and agent activity log
+Purpose: Historical tracking of agent runs, messages, and performance
+
+Tables:
+- sessions (id, start_time, end_time, user, status, token_count)
+  Indexes: start_time, status
+
+- agents (id, session_id, agent_type, start_time, end_time, status, output_size)
+  Indexes: session_id, agent_type, status
+
+- messages (id, agent_id, role, content, timestamp, token_count)
+  Indexes: agent_id, role
+
+- events (id, type, agent_id, timestamp, data)
+  Indexes: type, timestamp
+  Event Types: 'agent_started', 'agent_completed', 'message_sent', 'error', 'warning'
+
+Write Pattern: Real-time (WebSocket listener + batch writes)
+Read Pattern: REST API + WebSocket subscriptions
+Retention: 90 days (older entries archived)
+Indexes: Optimize for time-range queries
+</documentation>
+
+
+    </element>
+
+    <element xsi:type="archimate:DataObject" name="Awareness Dashboard DB" id="id-db-awareness">
+
+
+      <documentation>
+Database: SQLite (location: ~/Projects/awareness/data/awareness.db)
+Type: Operations state and briefing history
+Purpose: Task management, briefing generation, and operational metrics
+
+Tables:
+- tasks (id, title, description, status, priority, created_at, updated_at, owner)
+  Indexes: status, priority, created_at
+
+- briefings (id, period, content, generated_at, insights_count)
+  Indexes: period, generated_at
+
+- operations (id, timestamp, event_type, description, status)
+  Indexes: timestamp, event_type
+
+- recommendations (id, briefing_id, title, priority, action_items)
+  Indexes: briefing_id, priority
+
+Write Pattern: On task update, briefing generation
+Read Pattern: REST API (web frontend)
+Retention: Unlimited (historical archive)
+</documentation>
+
+
+    </element>
+
+    <element xsi:type="archimate:DataObject" name="History System (UOCS)" id="id-db-history">
+
+
+      <documentation>
+Storage: File-based (directory: .agent/History/)
+Type: Universal Output Capture System
+Purpose: Structured naming of all valuable work artifacts
+
+Filename Pattern: YYYY-MM-DD-HHMMSS_[PROJECT]_[TYPE]_[HIERARCHY]_[DESCRIPTION].md
+Examples:
+- 2026-05-01-143022_sam_feat_hookSystem_sessionStart-handler.md
+- 2026-05-01-142500_sam_refactor_skillsFramework_deprecation-cleanup.md
+- 2026-05-01-141800_pai_security_validation_protected-files-check.md
+
+Content: Full markdown with front matter
+- Title, date, author
+- Task ID / Epic reference
+- Changes, rationale, testing notes
+- Git commit hash
+
+Write Pattern: Automatic via PostToolUse hook (when tool succeeds)
+Purge: Manual (no auto-cleanup, archive by hand)
+Discovery: Search via .agent/scripts/find-history.sh
+</documentation>
+
+
+    </element>
+
+    <element xsi:type="archimate:DataObject" name="Settings Configuration" id="id-db-settings">
+
+
+      <documentation>
+File: .agent/settings.json (global), .agent/settings.local.json (local override)
+Type: JSON configuration
+Purpose: Hook definitions, permissions, environment variables
+
+Schema:
+{
+  'Claude Code': {
+    'hooks': [
+      { 'event': 'SessionStart', 'script': 'load-core-context.ts' },
+      { 'event': 'PreToolUse', 'script': 'security-validator.ts' },
+      ...
+    ]
+  },
+  'environment': {
+    'PAI_DIR': '~/.claude',
+    'ENABLE_MEMORY_HOOKS': false,
+    'MEMORY_SERVICE_URL': 'http://localhost:4242',
+    'VOICE_API_KEY': '***'
+  },
+  'permissions': {
+    'global': ['Bash', 'Read', 'Write', ...],
+    'user': [additional overrides]
+  }
+}
+
+Write Pattern: Manual edit or via update-config skill
+Load Pattern: On session start (resolved via PAI_DIR)
+Validation: TypeScript strict mode check
+</documentation>
+
+
+    </element>
+  </folder>
+
+  <!-- SERVICE DEPENDENCIES -->
+  <folder name="Dependencies" id="id-deps-folder" type="other">
+    <element xsi:type="archimate:Artifact" name="Voice Server Dependencies" id="id-dep-voice">
+
+      <documentation>
+Runtime: Bun + Python sidecar
+Node Modules: (none — Bun native)
+System: ffmpeg (optional, for audio encoding)
+Config: PORT 8888, VOICE_API_KEY (optional)
+Health Check: GET /health → { status, python_sidecar }
+Sidecar Managed by: voice-server startup script (auto-spawns)
+</documentation>
+
+    </element>
+
+    <element xsi:type="archimate:Artifact" name="Memory System Dependencies" id="id-dep-memory">
+
+
+      <documentation>
+Runtime: Bun
+Node Modules: (none — Bun native)
+Database: SQLite (bundled)
+Config: PORT 4242, MEMORY_DB_PATH
+Health Check: GET /health → { status, db, facts, associations }
+Integration: Sam session via memory-capture.ts hook
+Optional: Can run standalone, graceful degradation in Sam if unavailable
+</documentation>
+
+
+    </element>
+
+    <element xsi:type="archimate:Artifact" name="Discord Remote Control Dependencies" id="id-dep-discord">
+
+
+      <documentation>
+Runtime: Bun
+Libraries: discord.js (npm via Bun)
+Database: SQLite (optional, episodic memory)
+Config: DISCORD_TOKEN, DISCORD_GUILD_ID
+Health Check: Bot presence, command responsiveness
+Webhook Consumer: Receives agent-completed, service-status-changed, briefing-generated
+Start: systemctl --user start discord-remote-control (if installed)
+</documentation>
+
+
+    </element>
+
+    <element xsi:type="archimate:Artifact" name="Awareness Dashboard Dependencies" id="id-dep-awareness">
+
+
+      <documentation>
+Backend Runtime: Bun
+Frontend Runtime: Vue + Bun (Vite via bun node_modules/vite/bin/vite.js)
+Database: SQLite (location: ~/Projects/awareness/data/awareness.db)
+Ports: 4100 (backend), 5173 (frontend)
+Health Check: GET http://localhost:4100/health, http://localhost:5173/ (ping)
+Note: Vite runs under Bun, NOT Node.js — never replace with custom server.ts
+</documentation>
+
+
+    </element>
+
+    <element xsi:type="archimate:Artifact" name="Observability Dashboard Dependencies" id="id-dep-obs">
+
+
+      <documentation>
+Runtime: Bun
+Database: SQLite
+WebSocket: Real-time agent stream
+Port: 5172
+Health Check: GET /health, WebSocket /ws/agents
+Build: bun run build (bunfig.toml configured)
+Metrics: CPU, memory, request/sec via /api/metrics
+</documentation>
+
+
+    </element>
+
+    <element xsi:type="archimate:Artifact" name="Service Monitor Dependencies" id="id-dep-svc-mon">
+
+
+      <documentation>
+Backend Runtime: Bun
+Frontend Runtime: Vue + Bun
+Ports: 6000 (server), 5175 (client)
+System Access: systemctl/launchctl (to query service status)
+Database: Optional (aggregates system state)
+Health Check: GET /health
+Managed Services: Monitored via pai-infrastructure.target (Linux) or launchd (macOS)
+</documentation>
+
+
+    </element>
+
+    <element xsi:type="archimate:Artifact" name="Sam Hook System Dependencies" id="id-dep-hooks">
+
+
+      <documentation>
+Runtime: Bun (TypeScript execution)
+Environment: PAI_DIR resolution (4-tier fallback)
+Config: .agent/settings.json (hook definitions)
+Protected Files: .sam-protected.json validation
+Imports: Standard library (fs, path, fetch)
+Execution Context: Runs within Claude Code process (lifecycle events)
+</documentation>
+
+
+    </element>
+  </folder>
+
+  <!-- PROCESS FLOWS -->
+  <folder name="Process Flows" id="id-flows-folder" type="other">
+    <element xsi:type="archimate:ApplicationInterface" name="New Session Flow" id="id-flow-session">
+
+      <documentation>
+1. Claude Code starts new session
+2. SessionStart hook triggered
+3. load-core-context.ts executes:
+   a. Resolve PAI_DIR (Explicit → HOME → Service → os.homedir())
+   b. Load .agent/settings.json
+   c. Validate protected files config
+   d. Load CORE skill context
+4. Configuration Loader merges settings.local.json overrides
+5. Memory Cache initialized with session context
+6. Path Resolver ready for dynamic path lookups
+7. User can start working; skills route inbound requests
+Timeline: ~500ms total
+</documentation>
+
+    </element>
+
+    <element xsi:type="archimate:ApplicationInterface" name="Tool Execution Flow" id="id-flow-tool">
+
+
+      <documentation>
+1. User requests tool execution
+2. Claude Code route request to PreToolUse hook
+3. security-validator.ts:
+   a. Check tool in allowed list
+   b. Validate protected files won't be committed
+   c. Approve or block with reason
+4. If approved, execute tool
+5. Tool completes
+6. Claude Code triggers PostToolUse hook
+7. capture-all-events.ts saves to history
+8. memory-capture.ts (if enabled):
+   a. Extract facts from output
+   b. HTTP POST to /memory/extract
+   c. Build associations
+9. History entry created: YYYY-MM-DD-HHMMSS_[PROJECT]_[TYPE]_[DESCRIPTION].md
+Timeline: Tool execution + ~200ms overhead
+</documentation>
+
+
+    </element>
+
+    <element xsi:type="archimate:ApplicationInterface" name="Memory Extraction Flow" id="id-flow-memory">
+
+
+      <documentation>
+Triggered by: PostToolUse hook (if ENABLE_MEMORY_HOOKS=true)
+1. memory-capture.ts extracts facts from tool output
+2. HTTP POST /memory/extract with transcript
+3. Memory System:
+   a. Run 12 fact extraction patterns
+   b. Compute confidence scores
+   c. Build temporal/topic associations
+   d. Store in SQLite
+4. Webhook: POST memory.extraction.complete
+5. Consumers:
+   a. Discord bot: logs to memory dashboard
+   b. Sam session: enrich context for future prompts
+6. Consolidation:
+   a. Weekly scheduled job
+   b. Deduplicate facts
+   c. Prune low-confidence entries
+   d. Surface insights
+   e. Webhook: memory.consolidation.complete
+Timeline: less than 1s per extraction, consolidation: 5-10s
+</documentation>
+
+
+    </element>
+
+    <element xsi:type="archimate:ApplicationInterface" name="Agent Delegation Flow" id="id-flow-delegation">
+
+
+      <documentation>
+1. Skill initiates delegation via Agent tool
+2. Agent spawned with specific permissions
+3. Agent executor receives task + context
+4. Agent processes (sequential, parallel, or nested)
+5. Agent completes work
+6. SubagentStop hook:
+   a. Log completion to observability DB
+   b. Capture output to history
+   c. Update task status
+   d. Webhook: orchestration.agent.completed
+7. Task runner receives webhook:
+   a. Update task record
+   b. Notify Discord (if configured)
+   c. Trigger follow-up (if needed)
+8. Results merged into main session context
+Timeline: Depends on agent work (typically 5s-2m)
+</documentation>
+
+
+    </element>
+
+    <element xsi:type="archimate:ApplicationInterface" name="Service Health Check Flow" id="id-flow-health">
+
+
+      <documentation>
+Trigger: Manual (user command) or periodic (service-monitor every 30s)
+1. Service Monitor polls each service:
+   a. GET /health endpoint
+   b. Check systemctl status (if systemd)
+   c. Verify launchd status (if macOS)
+   d. Measure response time
+2. Aggregate results
+3. If status changed:
+   a. Webhook: infrastructure.service.status_changed
+   b. Discord bot notified
+   c. Observability dashboard updated
+4. If service down >5 minutes:
+   a. Auto-restart attempt (configurable)
+   b. Log incident to history
+   c. Alert user via voice notification
+Timeline: 1-2s per service, less than 5s total for all services
+</documentation>
+
+
+    </element>
+
+    <element xsi:type="archimate:ApplicationInterface" name="Discord Command Processing" id="id-flow-discord">
+
+
+      <documentation>
+1. User sends !sam command to Discord bot
+2. Message event received by discord-remote-control
+3. Command parser identifies command and args
+4. Permission check against user role
+5. Command executor:
+   a. agent list: Query observability API
+   b. service status: Query service-monitor API
+   c. memory search: Query memory-system API
+   d. briefing: GET /api/briefing from awareness
+   e. logs: GET /api/logs/:serviceName from service-monitor
+6. Format response (embed, thread, code block)
+7. Send to Discord channel/thread
+8. Log command to discord.db
+9. Webhook: commands.audit_logged (optional)
+Timeline: 500ms-3s depending on API response
+</documentation>
+
+
+    </element>
+  </folder>
+
+  <!-- DEPLOYMENT & MANAGEMENT -->
+  <folder name="Deployment" id="id-deploy-folder" type="other">
+    <element xsi:type="archimate:Artifact" name="macOS Service Management" id="id-deploy-macos">
+
+      <documentation>
+Service Manager: launchd
+Service Definition Format: plist files in ~/Library/LaunchAgents/
+Service Grouping: pai-infrastructure.target equivalent via load/unload
+
+Service List:
+- com.pai.voice-server (PORT 8888)
+- com.pai.memory-system (PORT 4242)
+- com.pai.awareness-backend (PORT 4100)
+- com.pai.awareness-frontend (PORT 5173)
+- com.pai.observability-dashboard (PORT 5172)
+- com.pai.service-monitor-server (PORT 6000)
+- com.pai.service-monitor-client (PORT 5175)
+- com.pai.discord-remote-control
+- com.pai.markdown-editor (PORT 4444)
+
+Commands:
+- launchctl load ~/Library/LaunchAgents/com.pai.*.plist (start)
+- launchctl unload ~/Library/LaunchAgents/com.pai.*.plist (stop)
+- launchctl list | grep pai (status)
+- log stream --level debug --predicate 'process contains pai' (logs)
+
+Auto-start on boot: Configured via RunAtLoad=true in plist
+</documentation>
+
+    </element>
+
+    <element xsi:type="archimate:Artifact" name="Linux Service Management" id="id-deploy-linux">
+
+
+      <documentation>
+Service Manager: systemd
+Service Definition Location: ~/.config/systemd/user/
+Service Grouping: pai-infrastructure.target
+
+Commands:
+- systemctl --user daemon-reload (reload configs)
+- systemctl --user start pai-infrastructure.target (start all)
+- systemctl --user stop pai-infrastructure.target (stop all)
+- systemctl --user restart SERVICE (restart specific)
+- systemctl --user status pai-infrastructure.target (status)
+- journalctl --user -u SERVICE.service -n 50 --no-pager (logs)
+- systemctl --user enable SERVICE.service (auto-start)
+
+Auto-start on boot: Configured via WantedBy=default.target in unit files
+Multi-user: Each user gets their own pai-infrastructure.target
+
+Example Service File:
+[Unit]
+Description=SAIm Voice Server
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/bun run start
+WorkingDirectory=/home/user/Projects/voice-server
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target
+</documentation>
+
+
+    </element>
+
+    <element xsi:type="archimate:Artifact" name="Port Allocation and Restrictions" id="id-deploy-ports">
+
+
+      <documentation>
+Safe Port Ranges (Chromium cannot use):
+- 4100-4999 (custom applications)
+- 5170-5199 (dashboards)
+- 8800-8899 (services)
+
+Unsafe Ports (Blocked by browsers):
+- 6000 (X11) — PAI Monitor Dashboard moved from 6000 to use alternative
+
+Assigned Ports:
+- 4100: Awareness backend
+- 4200: Cyber Alert Manager backend
+- 4242: Memory System
+- 4444: Markdown Editor
+- 5172: Observability Dashboard
+- 5173: Awareness frontend
+- 5174: Cyber Alert Manager frontend
+- 5175: Service Monitor client
+- 8888: Voice Server
+- 6000: Service Monitor server (BLOCKED by Chromium, needs migration)
+
+Port Checking:
+lsof -i :PORT (macOS/Linux)
+netstat -ano | findstr :PORT (Windows)
+
+Configuration: Each service defines its port in startup script or .env
+</documentation>
+
+
+    </element>
+  </folder>
+
+  <!-- SECURITY MODEL -->
+  <folder name="Security" id="id-security-folder" type="other">
+    <element xsi:type="archimate:Artifact" name="Protected Files Validation" id="id-sec-protected">
+
+      <documentation>
+File: .sam-protected.json
+Purpose: Prevent accidentally committing secrets, API keys, personal data
+Format: { forbidden_patterns: [], exception_files: [] }
+
+Protected Patterns:
+- API keys (ANTHROPIC_API_KEY, VOICE_API_KEY, etc.)
+- Personal emails (jayson.cavendish@gmail.com)
+- Private paths (/Users/delphijc, $HOME, etc.)
+- Credentials (passwords, tokens, OAuth secrets)
+- Session IDs and authentication tokens
+
+Exception Files:
+- .agent/services/*/start.sh (may contain env var references)
+- .agent/settings.json (may contain safe defaults)
+
+Enforcement:
+1. PreToolUse hook checks staged files
+2. Runs: bun .claude/hooks/validate-protected.ts --staged
+3. Blocks commit if forbidden patterns found
+4. Never uses --no-verify (enforcement is mandatory)
+
+Git Isolation:
+1. verify repo identity: git rev-parse --show-toplevel
+2. verify remote: git remote get-url origin
+3. Never: git add . or git add -A (cross-repo contamination risk)
+4. Always: Scope operations to single project
+
+Two-Repository Model:
+- Private (~/.claude/): contains secrets, personal data, voice IDs (NEVER public)
+- Public (sAIm repo): sanitized template, no personal data, no API keys
+</documentation>
+
+    </element>
+
+    <element xsi:type="archimate:Artifact" name="Tool Permissions Model" id="id-sec-permissions">
+
+
+      <documentation>
+Enforcement: PreToolUse hook + settings.json permissions
+Storage: settings.json (global), settings.local.json (user overrides)
+
+Permission Types:
+- Bash: Shell command execution
+- Read: File reading
+- Write: File creation
+- Edit: File modification
+- Grep: Content search
+- Glob: File pattern matching
+- WebFetch: HTTP GET (for URLs)
+- WebSearch: Web search queries
+- Agent: Subagent spawning
+- Skill: Skill invocation
+
+Granularity:
+- Global: apply to all tools
+- User: user-specific overrides
+- Per-tool: can whitelist specific tools
+
+Examples:
+allow: ['Bash', 'Read', 'Edit']
+deny: ['WebSearch', 'Agent']
+
+Fallback Behavior:
+1. User permission (if set)
+2. Global permission
+3. Deny (default)
+</documentation>
+
+
+    </element>
+
+    <element xsi:type="archimate:Artifact" name="Hook Security Context" id="id-sec-hooks">
+
+
+      <documentation>
+Hook Execution Environment:
+- Process: Within Claude Code harness
+- User: Same user as Claude Code
+- File Access: Full (reads/writes to project)
+- Network: Full (if needed)
+- System: Full (launchctl, systemctl access)
+
+Hook Safety Principles:
+1. Hooks are TypeScript, must pass tsc --noEmit (strict mode)
+2. No external dependencies (Bun stdlib only)
+3. Always validate environment variables (PAI_DIR fallback chain)
+4. Never assume file paths (use dynamic resolution)
+5. Always escape shell commands (if shelling out)
+6. Log security events (permitted access, denied access)
+
+Example: load-core-context.ts
+- Resolves PAI_DIR safely
+- Loads settings.json and validates schema
+- Returns context object (never modifies global state)
+- Catches errors and logs (never throws silently)
+</documentation>
+
+
+    </element>
+  </folder>
+
+  <!-- OPERATIONAL RUNBOOKS -->
+  <folder name="Runbooks" id="id-runbook-folder" type="other">
+    <element xsi:type="archimate:ApplicationInterface" name="Service Troubleshooting Runbook" id="id-rb-service-troubleshooting">
+
+      <documentation>
+Symptom: Service fails to start
+
+Steps:
+1. Check if port is in use: lsof -i :PORT
+2. Kill conflicting process: kill -9 PID (if safe)
+3. Check service logs: journalctl --user -u SERVICE.service -n 50
+4. Verify startup script: cat .agent/services/SERVICE/start.sh
+5. Check environment: echo $PAI_DIR (should resolve correctly)
+6. Manually run startup: cd .agent/services/SERVICE &amp;&amp; bash start.sh
+7. If error, read stderr carefully (missing dependency? Permission denied?)
+8. Check dependencies:
+   - bun --version (runtime)
+   - node_modules exist? (for services using npm)
+   - Database file writable? (check .agent/data/)
+9. Restart service: systemctl --user restart SERVICE.service
+10. Verify: systemctl --user status SERVICE.service
+
+Common Issues:
+- 'Command not found': PAI_DIR not set correctly → source .env
+- EADDRINUSE: Port in use → kill existing process or change port in .env
+- EACCES: Permission denied → check file ownership (chown -R user:group)
+- SQLITE error: DB locked → close existing connections, check .db-journal
+</documentation>
+
+    </element>
+
+    <element xsi:type="archimate:ApplicationInterface" name="Memory System Maintenance Runbook" id="id-rb-memory-maintenance">
+
+
+      <documentation>
+Weekly Consolidation (Manual or Automated):
+1. POST /memory/consolidation/run { mode: 'aggressive' }
+2. Monitor response for merged/removed counts
+3. Webhook: memory.consolidation.complete (logged)
+4. Check insights generated: curl http://localhost:4242/memory/search?type=insight
+
+If Memory DB Grows Too Large:
+1. Backup: cp data/memory.db data/memory.db.backup
+2. Analyze: SELECT COUNT(*) FROM facts WHERE created_at &lt; date('-30 days')
+3. Archive old facts (SQLite):
+   a. CREATE TABLE facts_archive AS SELECT * FROM facts WHERE created_at &lt; date('-90 days')
+   b. DELETE FROM facts WHERE created_at &lt; date('-90 days')
+   c. DELETE FROM associations WHERE source_fact_id NOT IN (SELECT id FROM facts)
+   d. VACUUM (reclaim space)
+4. Verify: SELECT COUNT(*) FROM facts (should be reduced)
+5. Test extraction: POST /memory/extract with test transcript
+
+Memory Search Performance:
+1. If slow: ANALYZE; EXPLAIN QUERY PLAN SELECT ... (check indexes)
+2. Add index if needed: CREATE INDEX idx_facts_type_confidence ON facts(type, confidence DESC)
+3. Rebuild: REINDEX (if indexes fragmented)
+</documentation>
+
+
+    </element>
+
+    <element xsi:type="archimate:ApplicationInterface" name="Observability Dashboard Archival Runbook" id="id-rb-obs-archival">
+
+
+      <documentation>
+Monthly Archival (keep recent data, compress old):
+1. Identify cutoff date: date -d '90 days ago' +%s (get unix timestamp)
+2. Export old sessions:
+   a. sqlite3 data/obs.db
+   b. .mode csv
+   c. .output archive-YYYY-MM.csv
+   d. SELECT * FROM sessions WHERE start_time &lt; TIMESTAMP;
+3. Create archive DB:
+   a. sqlite3 data/obs-archive-YYYY-MM.db &lt; schema.sql
+   b. ATTACH 'data/obs.db' AS current;
+   c. INSERT INTO sessions SELECT * FROM current.sessions WHERE start_time &lt; TIMESTAMP;
+4. Delete from current DB: DELETE FROM sessions WHERE start_time &lt; TIMESTAMP;
+5. Compress archive: gzip data/obs-archive-YYYY-MM.db
+6. Verify: unzip, spot-check data
+7. Upload to backup storage (if applicable)
+
+Recovery from Archive:
+1. Restore: zcat data/obs-archive-YYYY-MM.db.gz > data/obs-archive-YYYY-MM.db
+2. Reattach: ATTACH 'data/obs-archive-YYYY-MM.db' AS archive;
+3. Copy back: INSERT INTO sessions SELECT * FROM archive.sessions;
+4. Clean up: DROP TABLE archive.sessions; DETACH archive;
+</documentation>
+
+
+    </element>
+
+    <element xsi:type="archimate:ApplicationInterface" name="Discord Bot Recovery Runbook" id="id-rb-discord-recovery">
+
+
+      <documentation>
+If Bot Goes Offline:
+1. Check bot process: ps aux | grep discord-remote-control
+2. If running, check logs: journalctl --user -u discord-remote-control.service -n 100
+3. Check Discord token: echo $DISCORD_TOKEN (should be set in .env)
+4. If token invalid: Update .env and restart
+5. Restart bot: systemctl --user restart discord-remote-control
+6. Verify: bot status in Discord → should show 'Do !sam help' status
+
+If Webhooks Not Being Received:
+1. Check webhook URL in each service config:
+   a. memory-system: WEBHOOK_URL env var
+   b. awareness: webhook_config.json
+   c. observability: webhooks.json
+2. Test webhook manually: curl -X POST http://localhost:WEBHOOK_PORT/webhooks/test
+3. Check firewall: ufw status (Linux), System Preferences → Security (macOS)
+4. Verify port open: lsof -i :WEBHOOK_PORT
+5. If still failing: Capture webhook in test server:
+   - python -m http.server 9999
+   - Point webhook to http://localhost:9999
+   - Send test event, capture request
+6. Debug request format against expected payload schema
+
+If Command Not Responding:
+1. Restart bot (as above)
+2. If still failing, check memory service: curl http://localhost:4242/health
+3. Check awareness service: curl http://localhost:4100/health
+4. If dependency down, start it: systemctl --user start DEPENDENCY
+5. Retry command
+</documentation>
+
+
+    </element>
+  </folder>
+
+  <!-- DIAGRAM VIEWS -->
+  <folder name="Views" id="id-views" type="diagrams">
+
+    <!-- 01 - System Overview -->
+    <element xsi:type="archimate:ArchimateDiagramModel" name="01 - System Overview" id="id-view-01">
+      <child xsi:type="archimate:Group" id="id-grp-01-business" name="Business">
+        <bounds x="20" y="20" width="560" height="120"/>
+        <child xsi:type="archimate:DiagramObject" id="id-do-01-claudeuser" archimateElement="id-claude-user">
+          <bounds x="20" y="30" width="120" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-01-sysop" archimateElement="id-sys-operator">
+          <bounds x="160" y="30" width="120" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-01-codeassist" archimateElement="id-code-assist">
+          <bounds x="300" y="30" width="120" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-01-paiworkflow" archimateElement="id-pai-workflow">
+          <bounds x="440" y="30" width="100" height="55"/>
+        </child>
+      </child>
+      <child xsi:type="archimate:Group" id="id-grp-01-runtime" name="Core Runtime">
+        <bounds x="20" y="160" width="700" height="120"/>
+        <child xsi:type="archimate:DiagramObject" id="id-do-01-harness" archimateElement="id-cc-harness">
+          <bounds x="20" y="30" width="120" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-01-hooks" archimateElement="id-hook-system">
+          <bounds x="160" y="30" width="120" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-01-skills" archimateElement="id-skills-framework">
+          <bounds x="300" y="30" width="120" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-01-agents" archimateElement="id-agent-system">
+          <bounds x="440" y="30" width="120" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-01-history" archimateElement="id-history-system">
+          <bounds x="580" y="30" width="100" height="55"/>
+        </child>
+      </child>
+    </element>
+
+    <!-- 02 - Hook System Detail -->
+    <element xsi:type="archimate:ArchimateDiagramModel" name="02 - Hook System Detail" id="id-view-02">
+      <child xsi:type="archimate:Group" id="id-grp-02-hooks" name="Hook System">
+        <bounds x="20" y="20" width="700" height="260"/>
+        <child xsi:type="archimate:DiagramObject" id="id-do-02-sessionstart" archimateElement="id-hook-sessionstart">
+          <bounds x="20" y="30" width="160" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-02-pretool" archimateElement="id-hook-pretool">
+          <bounds x="200" y="30" width="160" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-02-posttool" archimateElement="id-hook-posttool">
+          <bounds x="380" y="30" width="160" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-02-stop" archimateElement="id-hook-stop">
+          <bounds x="560" y="30" width="120" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-02-submit" archimateElement="id-hook-submit">
+          <bounds x="20" y="110" width="160" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-02-security" archimateElement="id-hook-security">
+          <bounds x="200" y="110" width="160" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-02-configloader" archimateElement="id-config-loader">
+          <bounds x="380" y="110" width="160" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-02-memclient" archimateElement="id-memory-client">
+          <bounds x="20" y="190" width="160" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-02-voiceclient" archimateElement="id-voice-client">
+          <bounds x="200" y="190" width="160" height="55"/>
+        </child>
+      </child>
+    </element>
+
+    <!-- 03 - Infrastructure Services -->
+    <element xsi:type="archimate:ArchimateDiagramModel" name="03 - Infrastructure Services" id="id-view-03">
+      <child xsi:type="archimate:Group" id="id-grp-03-services" name="PAI Services">
+        <bounds x="20" y="20" width="700" height="300"/>
+        <child xsi:type="archimate:DiagramObject" id="id-do-03-voice" archimateElement="id-svc-voice">
+          <bounds x="20" y="30" width="160" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-03-memory" archimateElement="id-svc-memory">
+          <bounds x="200" y="30" width="160" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-03-awareness-be" archimateElement="id-svc-awareness-be">
+          <bounds x="380" y="30" width="160" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-03-awareness-fe" archimateElement="id-svc-awareness-fe">
+          <bounds x="560" y="30" width="120" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-03-obs" archimateElement="id-svc-obs-dash">
+          <bounds x="20" y="110" width="160" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-03-mon-server" archimateElement="id-svc-mon-server">
+          <bounds x="200" y="110" width="160" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-03-mon-client" archimateElement="id-svc-mon-client">
+          <bounds x="380" y="110" width="160" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-03-discord" archimateElement="id-svc-discord">
+          <bounds x="560" y="110" width="120" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-03-markdown" archimateElement="id-svc-markdown">
+          <bounds x="20" y="190" width="160" height="55"/>
+        </child>
+      </child>
+    </element>
+
+    <!-- 04 - Data Architecture -->
+    <element xsi:type="archimate:ArchimateDiagramModel" name="04 - Data Architecture" id="id-view-04">
+      <child xsi:type="archimate:Group" id="id-grp-04-databases" name="Databases">
+        <bounds x="20" y="20" width="700" height="180"/>
+        <child xsi:type="archimate:DiagramObject" id="id-do-04-db-memory" archimateElement="id-db-memory">
+          <bounds x="20" y="30" width="120" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-04-db-discord" archimateElement="id-db-discord">
+          <bounds x="160" y="30" width="120" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-04-db-obs" archimateElement="id-db-obs">
+          <bounds x="300" y="30" width="120" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-04-db-awareness" archimateElement="id-db-awareness">
+          <bounds x="440" y="30" width="120" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-04-db-history" archimateElement="id-db-history">
+          <bounds x="580" y="30" width="100" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-04-db-settings" archimateElement="id-db-settings">
+          <bounds x="20" y="110" width="120" height="55"/>
+        </child>
+      </child>
+      <child xsi:type="archimate:Group" id="id-grp-04-filestorage" name="File-Based Storage">
+        <bounds x="20" y="220" width="700" height="120"/>
+        <child xsi:type="archimate:DiagramObject" id="id-do-04-fs-history" archimateElement="id-fs-history">
+          <bounds x="20" y="30" width="160" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-04-fs-settings" archimateElement="id-fs-settings">
+          <bounds x="200" y="30" width="160" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-04-fs-protected" archimateElement="id-fs-protected">
+          <bounds x="380" y="30" width="160" height="55"/>
+        </child>
+      </child>
+    </element>
+
+    <!-- 05 - Process Flows -->
+    <element xsi:type="archimate:ArchimateDiagramModel" name="05 - Process Flows" id="id-view-05">
+      <child xsi:type="archimate:Group" id="id-grp-05-flows" name="Process Flows">
+        <bounds x="20" y="20" width="700" height="260"/>
+        <child xsi:type="archimate:DiagramObject" id="id-do-05-session" archimateElement="id-flow-session">
+          <bounds x="20" y="30" width="160" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-05-tool" archimateElement="id-flow-tool">
+          <bounds x="200" y="30" width="160" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-05-memory" archimateElement="id-flow-memory">
+          <bounds x="380" y="30" width="160" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-05-delegation" archimateElement="id-flow-delegation">
+          <bounds x="560" y="30" width="120" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-05-health" archimateElement="id-flow-health">
+          <bounds x="20" y="110" width="160" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-05-discord" archimateElement="id-flow-discord">
+          <bounds x="200" y="110" width="160" height="55"/>
+        </child>
+      </child>
+    </element>
+
+    <!-- 06 - Security Model -->
+    <element xsi:type="archimate:ArchimateDiagramModel" name="06 - Security Model" id="id-view-06">
+      <child xsi:type="archimate:Group" id="id-grp-06-security" name="Security">
+        <bounds x="20" y="20" width="500" height="120"/>
+        <child xsi:type="archimate:DiagramObject" id="id-do-06-sec-protected" archimateElement="id-sec-protected">
+          <bounds x="20" y="30" width="140" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-06-sec-permissions" archimateElement="id-sec-permissions">
+          <bounds x="180" y="30" width="140" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-06-sec-hooks" archimateElement="id-sec-hooks">
+          <bounds x="340" y="30" width="140" height="55"/>
+        </child>
+      </child>
+      <child xsi:type="archimate:Group" id="id-grp-06-deployment" name="Deployment">
+        <bounds x="20" y="160" width="500" height="120"/>
+        <child xsi:type="archimate:DiagramObject" id="id-do-06-macos" archimateElement="id-deploy-macos">
+          <bounds x="20" y="30" width="140" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-06-linux" archimateElement="id-deploy-linux">
+          <bounds x="180" y="30" width="140" height="55"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-do-06-ports" archimateElement="id-deploy-ports">
+          <bounds x="340" y="30" width="140" height="55"/>
+        </child>
+      </child>
+    </element>
+
+  </folder>
+</archimate:model>
