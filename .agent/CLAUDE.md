@@ -79,17 +79,17 @@ Before ANY git operation, verify repo identity:
 
 This file provides guidance to Claude Code when working with this repository.
 
-**This is a PAI (Personal AI Infrastructure) project.** For complete documentation, see `CLAUDE-REFERENCE.md` (loaded on-demand).
+**This is a PAI (Personal AI Infrastructure) project.** For complete documentation, see `claude-reference.md` (loaded on-demand).
 
 ### Key Reference Files
 
 For understanding this project and Sam system:
 
 1. **`.claude/skills/CORE/SKILL.md`** - System identity and quick reference
-2. **`.claude/skills/CORE/CONSTITUTION.md`** - Complete architecture and philosophy
-3. **`.claude/skills/CORE/SkillSystem.md`** - Custom skill system guide
-4. **`.claude/skills/CORE/HookSystem.md`** - Hook documentation
-5. **`CLAUDE-REFERENCE.md`** - Full project reference guide
+2. **`.claude/skills/CORE/constitution.md`** - Complete architecture and philosophy
+3. **`.claude/skills/CORE/skillsystem.md`** - Custom skill system guide
+4. **`.claude/skills/CORE/hooksystem.md`** - Hook documentation
+5. **`claude-reference.md`** - Full project reference guide
 6. **`SAIM_CONTRACT.md`** - Core guarantees vs optional features
 
 ---
@@ -99,7 +99,7 @@ For understanding this project and Sam system:
 ⚠️ **This file has been optimized for progressive disclosure:**
 
 - **Tier 1 (You're reading it):** Infrastructure setup, voice protocol, and reference links
-- **Tier 3 (On-demand):** Full project architecture, technology stack, patterns, and troubleshooting in `CLAUDE-REFERENCE.md`
+- **Tier 3 (On-demand):** Full project architecture, technology stack, patterns, and troubleshooting in `claude-reference.md`
 
 **Load the reference guide when you need detailed information about PAI architecture, common patterns, technology stack, or troubleshooting.**
 
@@ -124,4 +124,4 @@ systemctl --user status voice-server observability-dashboard python-sidecar disc
 
 ---
 
-**Status:** ✅ All infrastructure operational | Extended context available in `CLAUDE-REFERENCE.md`
+**Status:** ✅ All infrastructure operational | Extended context available in `claude-reference.md`

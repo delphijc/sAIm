@@ -204,7 +204,7 @@ Sam uses a 3-tier context loading system for token efficiency:
 ### Tier 3: Reference Files (Just-In-Time)
 - Deep-dive documentation
 - Loaded only when specific detail needed
-- Examples: CONSTITUTION.md, HookSystem.md
+- Examples: constitution.md, hooksystem.md
 
 ---
 

@@ -14,7 +14,7 @@
  * - Agent Reference.md (detailed competencies, standards, workflows)
  *
  * Tier 3: Loaded on explicit request
- * - Full documentation files (CONSTITUTION.md, HookSystem.md, etc.)
+ * - Full documentation files (constitution.md, hooksystem.md, etc.)
  * - Available via /help or user requests
  */
 

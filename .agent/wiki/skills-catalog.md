@@ -85,9 +85,9 @@
 
 **Files:**
 - `.agent/skills/CORE/SKILL.md`
-- `.agent/skills/CORE/CONSTITUTION.md`
-- `.agent/skills/CORE/SkillSystem.md`
-- `.agent/skills/CORE/HookSystem.md`
+- `.agent/skills/CORE/constitution.md`
+- `.agent/skills/CORE/skillsystem.md`
+- `.agent/skills/CORE/hooksystem.md`
 
 ---
 

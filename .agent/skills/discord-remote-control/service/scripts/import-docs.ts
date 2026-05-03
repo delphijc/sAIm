@@ -70,7 +70,7 @@ const SCAN_DIRS = [
 
 // Additional individual files (current user only)
 const INDIVIDUAL_FILES = [
-  ".agent/CLAUDE-REFERENCE.md",
+  ".agent/claude-reference.md",
   ".agent/CLAUDE.md",
   ".agent/ANTIGRAVITY_SKILLS.md",
   ".agent/state.md",

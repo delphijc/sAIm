@@ -114,7 +114,7 @@ curl -X POST http://localhost:8888/notify -H "Content-Type: application/json" -d
 
 **Operating Principles:**
 - Date Awareness: Always use today's actual date from system (not training cutoff)
-- Constitutional Principles: See ${PAI_DIR}/Skills/CORE/CONSTITUTION.md
+- Constitutional Principles: See ${PAI_DIR}/Skills/CORE/constitution.md
 - Command Line First, Deterministic Code First, Prompts Wrap Code
 
 ---
@@ -124,8 +124,8 @@ curl -X POST http://localhost:8888/notify -H "Content-Type: application/json" -d
 **All documentation files are in `${PAI_DIR}/Skills/CORE/` (flat structure).**
 
 **Core Architecture & Philosophy:**
-- `CONSTITUTION.md` - System architecture and philosophy | PRIMARY REFERENCE
-- `SkillSystem.md` - Custom skill system with TitleCase naming and USE WHEN format | CRITICAL
+- `constitution.md` - System architecture and philosophy | PRIMARY REFERENCE
+- `skillsystem.md` - Custom skill system with TitleCase naming and USE WHEN format | CRITICAL
 
 **MANDATORY USE WHEN FORMAT:**
 

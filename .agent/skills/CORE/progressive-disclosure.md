@@ -61,7 +61,7 @@ User: "Tell me about the PAI constitution"
     ↓
 You detect request in response
     ↓
-Use progressive-loader.ts to load CONSTITUTION.md
+Use progressive-loader.ts to load constitution.md
     ↓
 Inject into context
     ↓

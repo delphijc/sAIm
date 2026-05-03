@@ -272,7 +272,7 @@ Sam loads automatically via the `SessionStart` hook.
 ~/.claude/
 ├── skills/
 │   └── CORE/                 # Main Sam documentation
-│       ├── CONSTITUTION.md   # System philosophy & architecture
+│       ├── constitution.md   # System philosophy & architecture
 │       ├── SKILL.md          # Main skill file (loaded at startup)
 │       └── *.md              # Reference documentation
 ├── agents/                   # Agent configurations
@@ -382,7 +382,7 @@ ls -la ~/.claude/.env
 
 ## Next Steps
 
-1. **Read CONSTITUTION.md** — Understand Sam philosophy
+1. **Read constitution.md** — Understand Sam philosophy
 2. **Explore Skills** — See what's available in `~/.claude/skills/`
 3. **Try Voice Feedback** — Start the voice server (macOS)
 4. **Create Your First Skill** — Follow the skill structure guide

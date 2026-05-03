@@ -22,7 +22,7 @@ Progressive Disclosure is now fully operational. The system automatically loads 
 - **Token impact:** Full documentation available without bloating startup context
 
 ### Tier 3: Explicit Request (Future)
-- **What loads:** Full documentation files (CONSTITUTION.md, HookSystem.md, etc.)
+- **What loads:** Full documentation files (constitution.md, hooksystem.md, etc.)
 - **When:** You explicitly request via hooks
 - **Infrastructure:** Ready, hook functions available in progressive-loader.ts
 

@@ -166,8 +166,8 @@ Comprehensive documentation is available in the [**Wiki**](.agent/wiki/):
 - [**SAM Contract**](.agent/wiki/SAIM_CONTRACT.md) - Core guarantees
 
 Additional resources:
-- [**Core Constitution**](.agent/skills/CORE/CONSTITUTION.md) - Complete philosophy
-- [**Reference Guide**](CLAUDE-REFERENCE.md) - Project reference
+- [**Core Constitution**](.agent/skills/CORE/constitution.md) - Complete philosophy
+- [**Reference Guide**](claude-reference.md) - Project reference
 
 <br/>
 

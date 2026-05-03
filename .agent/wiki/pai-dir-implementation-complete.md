@@ -230,7 +230,7 @@ const path = getPAIPath('hooks', 'file.ts');
 - `.agent/wiki/pai-dir-migration.md` (developer guide)
 - `.agent/wiki/pai-dir-migration-status.md` (tracking)
 - `.agent/scripts/verify-pai-dir-migration.ts` (verification)
-- `.agent/wiki/PAI_DIR_IMPLEMENTATION_COMPLETE.md` (this file)
+- `.agent/wiki/pai-dir-implementation-complete.md` (this file)
 
 ### Modified
 - `memory-system/hooks/augment-context.ts`

@@ -206,7 +206,7 @@ const PAI_DIR = process.env.PAI_DIR || join(process.env.HOME || "", ".claude");
 |----------|---------|
 | `pai-dir-migration.md` | How-to guide for developers migrating projects |
 | `pai-dir-migration-status.md` | Real-time status tracking across all phases |
-| `PAI_DIR_PHASE3_COMPLETE.md` | This document — Phase 3 summary |
+| `pai-dir-phase3-complete.md` | This document — Phase 3 summary |
 | `~/.claude/utils/env.ts` | Implementation — read for technical details |
 
 ---

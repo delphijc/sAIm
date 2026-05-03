@@ -337,7 +337,7 @@ Is this session capture or memory service integration?
 ## References
 
 - **memory-system README**: Core concepts, API reference, technical guide
-- **memory-system/EXTERNALIZED_DEPENDENCIES.md**: Full separation rules
+- **memory-system/EXTERNALIZED_dependencies.md**: Full separation rules
 - **discord-remote-control/SKILL.md**: Discord bot capabilities
 - **discord-remote-control/Reference.md**: Discord bot architecture
 - **.agent/hooks/memory-capture.ts**: Sam's integration point
