@@ -10,26 +10,26 @@
 
     <key>ProgramArguments</key>
     <array>
-        <string>/Users/delphijc/.claude/bin/pai-memory-system</string>
+        <string>__HOME__/.claude/bin/pai-memory-system</string>
     </array>
 
     <key>WorkingDirectory</key>
-    <string>/Users/delphijc/Projects/memory-system/services/memory-system</string>
+    <string>__HOME__/Projects/memory-system/services/memory-system</string>
 
     <key>RunAtLoad</key>
     <true/>
 
     <key>KeepAlive</key>
-    <true/>
+    <dict><key>SuccessfulExit</key><false/></dict>
 
     <key>ThrottleInterval</key>
     <integer>10</integer>
 
     <key>StandardOutPath</key>
-    <string>/Users/delphijc/.claude/memory-system/logs/memory-system.log</string>
+    <string>__HOME__/.claude/memory-system/logs/memory-system.log</string>
 
     <key>StandardErrorPath</key>
-    <string>/Users/delphijc/.claude/memory-system/logs/memory-system.err</string>
+    <string>__HOME__/.claude/memory-system/logs/memory-system.err</string>
 
     <key>StandardInPath</key>
     <string>/dev/null</string>
@@ -40,7 +40,7 @@
     <key>EnvironmentVariables</key>
     <dict>
         <key>PAI_DIR</key>
-        <string>/Users/delphijc/.claude</string>
+        <string>__HOME__/.claude</string>
         <key>ENABLE_MEMORY_HOOKS</key>
         <string>true</string>
         <key>MEMORY_HTTP_PORT</key>

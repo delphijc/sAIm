@@ -416,6 +416,18 @@ check_dependencies() {
         print_warning "voice-server — not found at ~/Projects/voice-server"
     fi
 
+    if [ -d "$HOME/Projects/memory-system" ]; then
+        print_success "memory-system — present at ~/Projects/memory-system"
+    else
+        print_warning "memory-system — not found at ~/Projects/memory-system"
+    fi
+
+    if [ -d "$HOME/Projects/awareness" ]; then
+        print_success "awareness — present at ~/Projects/awareness"
+    else
+        print_warning "awareness — not found at ~/Projects/awareness"
+    fi
+
     echo ""
     echo -e "${BLUE}── Whisper Models ──${NC}"
 
@@ -642,7 +654,7 @@ install_services() {
 [Unit]
 Description=PAI Infrastructure Services
 Documentation=man:systemd.target(5)
-Wants=voice-server.service observability-dashboard.service discord-remote-control.service awareness-dashboard.target cyber-alert-mgr-server.service cyber-alert-mgr-frontend.service markdown-editor.service
+Wants=voice-server.service observability-dashboard.service discord-remote-control.service memory-system.service awareness-dashboard.target cyber-alert-mgr-server.service cyber-alert-mgr-frontend.service markdown-editor.service
 
 [Install]
 WantedBy=default.target
@@ -656,7 +668,7 @@ TGTEOF
     print_step "Enabling services..."
     systemctl --user enable pai-infrastructure.target 2>/dev/null || true
 
-    for svc in voice-server observability-dashboard discord-remote-control \
+    for svc in voice-server observability-dashboard discord-remote-control memory-system \
                awareness-dashboard awareness-dashboard-server awareness-dashboard-client \
                cyber-alert-mgr-server cyber-alert-mgr-frontend markdown-editor; do
         local unit_file="$systemd_user_dir/${svc}.service"
@@ -680,7 +692,7 @@ TGTEOF
         sleep 2
 
         echo ""
-        for svc in voice-server observability-dashboard discord-remote-control \
+        for svc in voice-server observability-dashboard discord-remote-control memory-system \
                    awareness-dashboard-server awareness-dashboard-client \
                    cyber-alert-mgr-server cyber-alert-mgr-frontend markdown-editor; do
             if systemctl --user is-active "$svc" >/dev/null 2>&1; then
@@ -832,6 +844,34 @@ exec $HOME/.bun/bin/bun index.ts \"\$@\""
         <key>HOME</key><string>$HOME</string>
         <key>PATH</key><string>$brew_path</string>
         <key>PAI_DIR</key><string>$HOME/.claude</string>
+    </dict>
+</dict></plist>"
+    fi
+
+    # ── memory-system ──────────────────────────────────────────
+    if [ -d "$HOME/Projects/memory-system/services/memory-system" ]; then
+        write_wrapper "pai-memory-system" "#!/bin/sh
+exec $HOME/.bun/bin/bun run start \"\$@\""
+        local memory_logs="$HOME/.claude/memory-system/logs"
+        mkdir -p "$memory_logs"
+        install_plist "com.pai.memory-system" "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+<plist version=\"1.0\"><dict>
+    <key>Label</key><string>com.pai.memory-system</string>
+    <key>Description</key><string>PAI Memory System - Semantic memory backend server</string>
+    <key>ProgramArguments</key><array><string>$bin_dir/pai-memory-system</string></array>
+    <key>WorkingDirectory</key><string>$HOME/Projects/memory-system/services/memory-system</string>
+    <key>RunAtLoad</key><true/>
+    <key>KeepAlive</key><dict><key>SuccessfulExit</key><false/></dict>
+    <key>StandardOutPath</key><string>$memory_logs/memory-system.log</string>
+    <key>StandardErrorPath</key><string>$memory_logs/memory-system.err</string>
+    <key>EnvironmentVariables</key><dict>
+        <key>PAI_DIR</key><string>$HOME/.claude</string>
+        <key>ENABLE_MEMORY_HOOKS</key><string>true</string>
+        <key>MEMORY_HTTP_PORT</key><string>4242</string>
+        <key>MEMORY_HTTP_HOST</key><string>0.0.0.0</string>
+        <key>HOME</key><string>$HOME</string>
+        <key>PATH</key><string>$brew_path</string>
     </dict>
 </dict></plist>"
     fi
@@ -1067,6 +1107,15 @@ propagate_env() {
     else
         print_info "~/Projects/awareness not found — skipping awareness .env copy"
     fi
+
+    local memory_env="$HOME/Projects/memory-system/.env"
+    if [ -d "$HOME/Projects/memory-system" ]; then
+        cp "$env_file" "$memory_env"
+        chmod 600 "$memory_env"
+        print_success "Copied to ~/Projects/memory-system/.env"
+    else
+        print_info "~/Projects/memory-system not found — skipping memory-system .env copy"
+    fi
 }
 
 # ============================================
@@ -1204,6 +1253,7 @@ clone_companion_projects() {
     # PAI companion repos: "name|url|description"
     # realms-of-tomorrow is intentionally excluded (not a PAI component)
     local companions=(
+        "memory-system|https://github.com/yourusername/memory-system.git|Semantic memory backend — persistent knowledge graph with fact extraction & association tracking"
         "awareness|https://github.com/yourusername/awareness.git|Alert monitoring dashboard — integrates with Sam's security feeds"
         "voice-server|https://github.com/yourusername/voice-server.git|Voice server HTTP API — powers Sam's text-to-speech responses"
         "chatterbox|https://github.com/yourusername/chatterbox.git|Local TTS model — free offline voice synthesis for voice-server"
