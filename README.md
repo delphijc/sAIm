@@ -2,14 +2,15 @@
 
 # sAIm - Smart AI Manager.
 
-### Smart AI manager  and operating system
+### Smart AI manager and operating system
 
+**Current Version: v0.2.0.0** — Distributed agent execution, semantic memory integration, enhanced skill ecosystem
 
 [sAIm Avatar](./blue-team-defender.png)
 
 </br>
 
-[![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
+[![Version](https://img.shields.io/badge/version-0.2.0.0-blue?style=for-the-badge)](CHANGELOG.md) [![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
 
 [**Quick Start**](#-quick-start) · [**Documentation**](#-documentation) · [**Components**](#-components) · [**Origins**](#-origins)
 
@@ -26,6 +27,18 @@ Unlike commercial assistants that serve their creators, sAIm is designed to serv
 
 <br/>
 
+## v0.2.0.0 Release Highlights
+
+**What's new in this version:**
+
+- **Agent-Skill Ecosystem Reorganization**: All 27 agents now mapped across 5 Agile phases (Ideation → Implementation → Testing) with contextual skill routing
+- **Phase-Aligned Skills**: 35+ skills reorganized with clear Phase 1-5 boundaries and NOT WHEN clauses to prevent delegation confusion
+- **Enhanced Agent Reference System**: Complete [agent-skill-ecosystem.md](wiki/agent-skill-ecosystem.md) documentation for skill discovery and agent routing
+- **Improved Documentation**: Updated CLAUDE.md files across both global and project levels with phase alignment and optional add-on separation
+- **Public Release**: sAIm announced as open-source framework with clear separation between core system and optional add-ons
+
+<br/>
+
 ## What is sAIm?
 
 sAIm (formerly PAI) is a platform-independent AI infrastructure system. It orchestrates agents, manages long-term memory, and executes complex workflows using "skills". While currently optimized for prompt-based coding and agentic workflows, it is designed to be model-agnostic.
@@ -35,8 +48,8 @@ sAIm (formerly PAI) is a platform-independent AI infrastructure system. It orche
 | Component | Description |
 |-----------|-------------|
 | **Agent Dashboard** | Full-featured React/Bun kanban UI for orchestrating AI agents with real-time SSE updates |
-| **40+ Skills** | Modular capabilities for research, coding, security, content analysis, and more |
-| **26+ Agents** | Specialized personas (Engineer, Architect, Researcher, Pentester, Designer, etc.) |
+| **35+ Skills** | Phase-aligned modular capabilities for research, coding, security, content analysis, and more |
+| **27 Agents** | Specialized personas across 5 Agile phases (Ideation, Requirements, Architecture, Implementation, Testing) |
 | **248 Patterns** | Fabric AI patterns for content processing and extraction |
 | **Voice Output** | Audible responses via ChatterboxTTS (local) |
 | **Discord Remote Control** | Remote access to sAIm via Discord with persistent memory |

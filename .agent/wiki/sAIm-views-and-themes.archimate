@@ -1,0 +1,614 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:ArchimateModel xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="sAIm - Views &amp; Themes" id="id-saim-views-e3d5f2b1a9c7-6f4e2d8b1a5c" version="5.0.0">
+
+  <!-- VIEW 1: SYSTEM OVERVIEW -->
+  <folder name="Views" id="id-views-folder" type="other">
+    <element xsi:type="archimate:DiagramModel" name="1. System Overview" id="id-view-system-overview" documentation="
+DIAGRAM PURPOSE: High-level business-to-infrastructure view showing how Claude Code user interacts with PAI system
+
+LAYOUT:
+- Top row: Business actors and roles (Claude Code User, System Operator)
+- Middle: Core runtime (Claude Code Harness, Hook System, Skills Framework)
+- Bottom: Infrastructure services and dashboards
+
+KEY ELEMENTS:
+- Claude Code User (business actor)
+- System Operator (business role)
+- Code Assistance function
+- System Automation function
+- Claude Code Harness (app component)
+- 9 Infrastructure Services (voice-server, memory-system, awareness, observability, service-monitor, discord, etc.)
+
+RELATIONSHIPS:
+- User uses Claude Code Harness
+- Harness coordinates all services
+- Services provide operational capabilities
+
+INSIGHTS:
+Shows complete system topology without implementation details. Good for stakeholder briefings.
+"/>
+
+    <!-- VIEW 2: CORE RUNTIME ARCHITECTURE -->
+    <element xsi:type="archimate:DiagramModel" name="2. Core Runtime Architecture" id="id-view-core-runtime" documentation="
+DIAGRAM PURPOSE: Detailed view of the Claude Code session lifecycle and core components
+
+LAYOUT:
+- Left: Claude Code Harness (entry point)
+- Center: Hook System with 6 lifecycle hooks
+- Right: Skills Framework, Agent System, History System
+
+COMPONENTS:
+Hook Layer:
+- SessionStart Hook → Load CORE context, resolve PAI_DIR
+- PreToolUse Hook → Validate permissions
+- PostToolUse Hook → Capture to history, extract memory
+- Stop Hook → Voice notification
+- UserPromptSubmit Hook → Log and update memory
+- Security Validator Hook → Enforce protected files
+
+Execution Flow:
+- Skills Framework (28+ composable packages)
+- Agent System (27 specialized personas)
+- History System (UOCS - Universal Output Capture)
+
+RELATIONSHIPS:
+- Each hook flows to its handler
+- Hooks activate skills
+- Skills delegate to agents
+- Agents record to history
+
+INSIGHTS:
+This is the heartbeat of sAIm. Every interaction passes through these hooks.
+"/>
+
+    <!-- VIEW 3: HOOK SYSTEM DETAILED -->
+    <element xsi:type="archimate:DiagramModel" name="3. Hook System Detailed" id="id-view-hooks-detailed" documentation="
+DIAGRAM PURPOSE: Deep dive into hook execution sequence and their responsibilities
+
+LAYOUT:
+Vertical timeline showing 6 hooks in execution order:
+1. SessionStart → config-loader, path-resolver
+2. UserPromptSubmit → memory-capture
+3. PreToolUse → security-validator
+4. Tool Execution
+5. PostToolUse → history capture, memory-capture
+6. Stop → voice-client notification
+
+SEQUENCES:
+Session Initialization (SessionStart):
+  → Resolve PAI_DIR (4-tier fallback: Explicit → HOME → Service → os.homedir())
+  → Load .agent/settings.json
+  → Validate protected files
+  → Load CORE skill
+  → Initialize memory cache
+  → Return context object
+
+Tool Execution (PreToolUse → Execute → PostToolUse):
+  → Validate tool permissions
+  → Check protected files won't commit
+  → Approve/block
+  → Execute tool
+  → Capture output to history
+  → Extract facts (if memory enabled)
+  → Build associations
+
+RELATIONSHIPS:
+Each hook is triggered by Claude Code lifecycle event
+Hooks are isolated TypeScript modules
+Each hook validates its own environment
+
+INSIGHTS:
+Hook execution is sequential, predictable, and auditable. Total overhead ~200ms per cycle.
+"/>
+
+    <!-- VIEW 4: INFRASTRUCTURE SERVICES ARCHITECTURE -->
+    <element xsi:type="archimate:DiagramModel" name="4. Infrastructure Services" id="id-view-infra-services" documentation="
+DIAGRAM PURPOSE: All background services, dashboards, and service dependencies
+
+LAYOUT:
+Organized by service type:
+
+Core Services:
+- Voice Server (PORT 8888) → Text-to-speech with Python sidecar
+- Memory System (PORT 4242) → Semantic memory with extraction
+- Awareness Dashboard (4100 backend, 5173 frontend) → Operations briefing
+
+Monitoring &amp; Observability:
+- Observability Dashboard (PORT 5172) → Real-time agent activity
+- Service Monitor (PORT 6000 server, 5175 client) → PAI service health
+
+Remote Control:
+- Discord Remote Control → Discord bot interface + memory dashboard
+
+Utilities:
+- Markdown Editor (PORT 4444) → Web-based markdown viewer
+
+RELATIONSHIPS:
+- Each service has independent lifecycle
+- Services communicate via HTTP/REST APIs
+- Services emit webhooks for events
+- Service Monitor tracks health of all
+
+DEPLOYMENT:
+- macOS: launchd plist files
+- Linux: systemd unit files
+- All grouped under pai-infrastructure.target
+
+INSIGHTS:
+All services are optional. Core Claude Code functionality works standalone. Services enhance capabilities incrementally.
+"/>
+
+    <!-- VIEW 5: API &amp; INTEGRATION LAYER -->
+    <element xsi:type="archimate:DiagramModel" name="5. API &amp; Integration Layer" id="id-view-api-integration" documentation="
+DIAGRAM PURPOSE: All REST APIs, webhooks, and inter-service communication patterns
+
+LAYOUT:
+Two-layer communication:
+
+Synchronous APIs (Request-Response):
+- Voice Server API → POST /api/speak, POST /api/notify, GET /health
+- Memory System API → POST /memory/extract, GET /memory/search, GET /api/graph
+- Awareness Dashboard API → GET /api/briefing, POST /api/operations/task
+- Observability Dashboard API → GET /api/agents, WebSocket /ws/agents
+- Service Monitor API → GET /api/services, POST /api/services/:name/start|stop|restart
+- Discord Remote Control API → !sam commands (help, agent list, memory search, etc.)
+- Claude Code Hooks API → SessionStart, PreToolUse, PostToolUse, Stop callbacks
+
+Asynchronous Webhooks (Event-Driven):
+- memory.extraction.complete (PostToolUse hook triggers extraction)
+- memory.consolidation.complete (Weekly cycle)
+- operations.task.status_changed (Task updates)
+- infrastructure.service.status_changed (Service state)
+- orchestration.agent.completed (Agent finishes)
+- voice.speech.complete (Text-to-speech done)
+- awareness.briefing.generated (Briefing ready)
+
+RELATIONSHIPS:
+- Hooks call APIs synchronously (PreToolUse → security validation)
+- APIs emit webhooks asynchronously (extraction → bot notification)
+- Webhooks trigger downstream actions (briefing generated → Discord alert)
+
+PATTERNS:
+Request Retry: Exponential backoff (3.5s, 7.5s, 15s)
+Timeout: 30s for most APIs
+Error Codes: 400 (client), 503 (unavailable)
+Authentication: Optional (env vars for API keys)
+
+INSIGHTS:
+Clean separation between sync and async communication. All APIs document error codes and retry strategies.
+"/>
+
+    <!-- VIEW 6: DATA LAYER &amp; PERSISTENCE -->
+    <element xsi:type="archimate:DiagramModel" name="6. Data Layer &amp; Persistence" id="id-view-data-layer" documentation="
+DIAGRAM PURPOSE: All databases, data storage, and data lifecycle
+
+LAYOUT:
+Database inventory organized by purpose:
+
+Semantic Memory:
+- Memory System DB (SQLite) → facts, associations, sessions, insights
+  Tables: facts (id, text, type, confidence, activation_score)
+           associations (source_fact_id, target_fact_id, weight)
+           insights (title, description, confidence)
+  Consolidation: Weekly dedup, pruning, surfacing insights
+  Activation: ACT-R model scoring
+
+Episodic Memory:
+- Discord Remote Control DB → conversation history, commands, tasks
+  Retention: 7-day TTL with weekly rotation
+
+Operational State:
+- Awareness Dashboard DB → tasks, briefings, operations, recommendations
+- Observability Dashboard DB → sessions, agents, messages, events (90-day retention)
+
+Configuration:
+- Settings Files (.agent/settings.json, .agent/settings.local.json) → Hook definitions, permissions, env vars
+- Protected Files Manifest (.sam-protected.json) → Forbidden patterns enforcement
+
+History &amp; Audit:
+- History System (UOCS) → File-based structured naming
+  Pattern: YYYY-MM-DD-HHMMSS_[PROJECT]_[TYPE]_[HIERARCHY]_[DESCRIPTION].md
+
+RELATIONSHIPS:
+- Each service owns its database (no cross-database dependencies)
+- History system is append-only (no deletes)
+- Memory consolidation runs weekly (scheduled job)
+- Observability archives after 90 days
+
+BACKUP STRATEGY:
+- Daily snapshot: memory.db → .agent/backups/memory-*.db
+- Manual: CSV export before archival
+- Disaster recovery: Restore from backup, reconcile state
+
+INSIGHTS:
+Multi-database architecture provides isolation. Semantic memory separate from episodic memory. No shared database lock contention.
+"/>
+
+    <!-- VIEW 7: SECURITY &amp; GOVERNANCE MODEL -->
+    <element xsi:type="archimate:DiagramModel" name="7. Security &amp; Governance" id="id-view-security-governance" documentation="
+DIAGRAM PURPOSE: All security controls, validation, and governance mechanisms
+
+LAYOUT:
+Defense-in-depth approach:
+
+Protected Files Validation:
+- .sam-protected.json manifest defines forbidden patterns:
+  * API keys (ANTHROPIC_API_KEY, VOICE_API_KEY, etc.)
+  * Personal emails (jayson.cavendish@gmail.com, etc.)
+  * Private paths (/Users/delphijc, $HOME references)
+  * Credentials (passwords, OAuth tokens)
+  * Session IDs and auth tokens
+- PreToolUse hook runs: bun .claude/hooks/validate-protected.ts --staged
+- Blocks commit if forbidden patterns detected
+- Exception files whitelist (e.g., start.sh may contain env refs)
+
+Git Isolation:
+- Strict repo identity verification:
+  1. git rev-parse --show-toplevel (confirm expected root)
+  2. git remote get-url origin (confirm expected remote)
+  3. Never: git add . or git add -A
+  4. Always: Scope operations to single project
+- Protected files validation before every commit
+- Two-repository model:
+  * Private (~/.claude): secrets, personal data, voice IDs (NEVER public)
+  * Public (sAIm repo): sanitized template, no personal data
+
+Tool Permissions Model:
+- Global permissions (all tools)
+- User overrides (personal settings)
+- Per-tool granularity (specific tools)
+- Permission types: Bash, Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Agent, Skill
+
+Hook Security Context:
+- Execution: Within Claude Code harness (same user, full file access)
+- Safety: TypeScript strict mode (tsc --noEmit)
+- Validation: Dynamic path resolution (no hardcoded paths)
+- Error handling: Never silently fail, always log
+
+RELATIONSHIPS:
+- All tool execution flows through PreToolUse validation
+- All commits blocked if protected files found
+- All hooks must pass TypeScript strict mode
+- All API requests validated at boundary
+
+INSIGHTS:
+Multi-layered security: validation at commit time, tool time, and hook time. Supply chain protection via language policy (Bash/Go/Bun only).
+"/>
+
+    <!-- VIEW 8: DEPLOYMENT &amp; SERVICE MANAGEMENT -->
+    <element xsi:type="archimate:DiagramModel" name="8. Deployment &amp; Management" id="id-view-deployment-management" documentation="
+DIAGRAM PURPOSE: Service lifecycle, deployment patterns, and operational procedures
+
+LAYOUT:
+Dual-platform service management:
+
+macOS (launchd):
+- Service definitions: ~/Library/LaunchAgents/ (plist files)
+- Service grouping: Manually load/unload multiple services
+- Commands:
+  launchctl load com.pai.*.plist (start)
+  launchctl unload com.pai.*.plist (stop)
+  launchctl list | grep pai (status)
+  log stream --predicate 'process contains pai' (logs)
+- Auto-start: RunAtLoad=true in plist
+
+Linux (systemd):
+- Service definitions: ~/.config/systemd/user/ (unit files)
+- Service grouping: pai-infrastructure.target (start all)
+- Commands:
+  systemctl --user start pai-infrastructure.target (start all)
+  systemctl --user status SERVICE (status)
+  systemctl --user restart SERVICE (restart)
+  journalctl --user -u SERVICE.service -n 50 (logs)
+  systemctl --user enable SERVICE.service (auto-start)
+- Auto-start: WantedBy=default.target in unit file
+
+Service Lifecycle:
+1. Service definition created (plist or systemd unit)
+2. Service registered with system (launchctl load or systemctl daemon-reload)
+3. Service started (manual or auto-start on boot)
+4. Service health monitored (periodic checks)
+5. Service logs captured (system journal)
+6. Service restarted on failure (configurable)
+7. Service stopped (manual unload or disable)
+
+Port Allocation &amp; Restrictions:
+Safe ranges: 4100-4999, 5170-5199, 8800-8899
+Unsafe ports (blocked by Chromium): 6000 (X11)
+Assigned ports:
+- 4100: Awareness backend
+- 4242: Memory System
+- 4444: Markdown Editor
+- 5172: Observability Dashboard
+- 5173: Awareness frontend
+- 5175: Service Monitor client
+- 8888: Voice Server
+
+RELATIONSHIPS:
+- All services grouped under pai-infrastructure.target (Linux)
+- Services registered with system manager at install time
+- Service Monitor dashboard tracks all services
+- Discord bot receives service status webhooks
+
+INSIGHTS:
+Centralized service management via system manager. No custom process supervision needed. Portable across macOS and Linux.
+"/>
+
+    <!-- VIEW 9: PROCESS FLOWS &amp; ORCHESTRATION -->
+    <element xsi:type="archimate:DiagramModel" name="9. Process Flows &amp; Orchestration" id="id-view-process-flows" documentation="
+DIAGRAM PURPOSE: End-to-end process flows showing how components interact across use cases
+
+LAYOUT:
+Six critical process flows:
+
+FLOW 1: New Session Initialization (Timeline: ~500ms)
+1. Claude Code starts new session
+2. SessionStart hook triggered
+3. load-core-context.ts executes:
+   a. Resolve PAI_DIR (4-tier fallback)
+   b. Load .agent/settings.json
+   c. Validate protected files config
+   d. Load CORE skill context
+4. Configuration Loader merges settings.local.json overrides
+5. Memory Cache initialized with session context
+6. Path Resolver ready for dynamic path lookups
+7. Session ready for user interaction
+
+FLOW 2: Tool Execution (Timeline: Tool time + ~200ms overhead)
+1. User requests tool execution
+2. PreToolUse hook validation:
+   a. Check tool in allowed list
+   b. Validate protected files won't commit
+   c. Approve or block with reason
+3. If approved, execute tool
+4. PostToolUse hook capture:
+   a. Save output to history
+   b. Extract facts (if memory enabled)
+   c. Build associations
+   d. Create structured history entry
+5. Tool cycle complete
+
+FLOW 3: Memory Extraction (Timeline: &lt;1s per extraction)
+Triggered: PostToolUse hook (if ENABLE_MEMORY_HOOKS=true)
+1. memory-capture.ts extracts facts from tool output
+2. HTTP POST /memory/extract with transcript
+3. Memory System processing:
+   a. Run 12 fact extraction patterns
+   b. Compute confidence scores
+   c. Build temporal/topic associations
+   d. Store in SQLite
+4. Webhook: memory.extraction.complete
+5. Consumers update state:
+   a. Discord bot logs to dashboard
+   b. Sam session enriches context
+6. Weekly consolidation:
+   a. Deduplicate facts
+   b. Prune low-confidence entries
+   c. Surface insights
+   d. Webhook: consolidation.complete
+
+FLOW 4: Agent Delegation (Timeline: 5s-2m depending on agent work)
+1. Skill initiates delegation via Agent tool
+2. Agent spawned with specific permissions
+3. Agent executor receives task + context
+4. Agent processes work (sequential, parallel, or nested)
+5. Agent completes work
+6. SubagentStop hook:
+   a. Log completion to observability DB
+   b. Capture output to history
+   c. Update task status
+   d. Webhook: agent.completed
+7. Task runner receives webhook:
+   a. Update task record
+   b. Notify Discord (if configured)
+   c. Trigger follow-up (if needed)
+8. Results merged into main session
+
+FLOW 5: Service Health Monitoring (Timeline: 1-2s per service, &lt;5s total)
+Trigger: Manual or periodic (30s interval)
+1. Service Monitor polls each service:
+   a. GET /health endpoint
+   b. Check systemctl status (if systemd)
+   c. Measure response time
+2. Aggregate results
+3. If status changed:
+   a. Webhook: service.status_changed
+   b. Discord bot notified
+   c. Observability dashboard updated
+4. If service down &gt;5 minutes:
+   a. Auto-restart attempt (configurable)
+   b. Log incident to history
+   c. Voice notification alert
+
+FLOW 6: Discord Command Processing (Timeline: 500ms-3s)
+1. User sends !sam command to Discord
+2. Command parser identifies command and args
+3. Permission check against user role
+4. Command executor routes:
+   a. !sam agent list → Query observability API
+   b. !sam service status → Query service-monitor
+   c. !sam memory search → Query memory-system
+   d. !sam briefing daily → GET /api/briefing
+   e. !sam logs → GET /api/logs/:service
+5. Format response (embed, thread, code block)
+6. Send to Discord channel
+7. Log command to discord.db
+
+RELATIONSHIPS:
+- Flows share common components (hooks, APIs, webhooks)
+- Flows are non-blocking (async where possible)
+- Flows are composable (can chain multiple flows)
+- Flows include error handling and rollback
+
+INSIGHTS:
+Each flow is well-defined with clear entry/exit points. Error handling is explicit at each step. Total system latency is optimized for interactive use (SessionStart ~500ms, Tool execution ~200ms overhead).
+"/>
+  </folder>
+
+  <!-- PROFESSIONAL THEME DEFINITIONS -->
+  <folder name="Themes" id="id-themes-folder" type="other">
+    <element xsi:type="archimate:DiagramModel" name="Color Scheme: sAIm Professional" id="id-theme-colors" documentation="
+THEME: sAIm Professional (Architecture-Appropriate Colors)
+
+This theme emphasizes the layered architecture of sAIm with semantic color coding.
+
+Business Layer (Top) - CYAN (#00BCD4)
+- Claude Code User
+- System Operator
+- Business Functions
+- Business Processes
+→ Represents strategic/user-facing concerns
+
+Application Layer (Middle) - PURPLE (#9C27B0)
+- Claude Code Harness
+- Hook System
+- Skills Framework
+- Agent System
+- History System
+→ Represents core runtime and orchestration
+
+Infrastructure Layer (Bottom) - ORANGE (#FF9800)
+- Voice Server
+- Memory System
+- Awareness Dashboard
+- Observability Dashboard
+- Service Monitor
+→ Represents operational services
+
+Technology Stack - TEAL (#009688)
+- Bun Runtime
+- Bash Scripting
+- Go Backend
+- TypeScript
+- SQLite
+→ Represents implementation technology
+
+Security Elements - RED (#F44336)
+- Protected Files Validation
+- Hook Security Context
+- Tool Permissions
+- Git Isolation
+→ Represents security controls
+
+Data &amp; State - BLUE (#2196F3)
+- Memory Cache
+- Configuration Loader
+- Databases
+- History Files
+→ Represents persistence and state
+
+API &amp; Webhooks - GREEN (#4CAF50)
+- REST APIs
+- Webhook System
+- Event-Driven Communication
+→ Represents inter-service communication
+
+Relationships:
+- ServingRelationship: Solid line, weight 2pt
+- FlowRelationship: Directional arrow, weight 1.5pt
+- AssignmentRelationship: Dashed line, weight 1pt
+
+Font:
+- Elements: Arial 11pt
+- Labels: Arial 10pt bold
+- Documentation: Arial 9pt italic
+
+Layout Guidelines:
+- Business layer at top
+- Application layer in middle
+- Infrastructure layer at bottom
+- Left-to-right flow for information
+- Vertical alignment for hierarchy
+- Consistent spacing (20px between elements)
+
+Emphasis:
+- Critical path elements: Bold outline (2pt border)
+- Optional components: Dashed outline
+- Active state: Solid fill + shadow
+- Inactive state: Light gray fill
+"/>
+
+    <element xsi:type="archimate:DiagramModel" name="Visual Hierarchy &amp; Grouping" id="id-theme-hierarchy" documentation="
+HIERARCHY LEVELS:
+
+Level 1 (Broadest): System Overview
+- Single diagram showing all layers
+- Business → Application → Infrastructure
+- Focus: stakeholder communication
+
+Level 2 (Detailed): Component View
+- Individual layers (Business, Application, Infrastructure)
+- Relationships within layer
+- Focus: technical stakeholders
+
+Level 3 (Deepest): Process View
+- Specific workflows (Session, Tool Execution, etc.)
+- Detailed interactions
+- Focus: implementation teams
+
+GROUPING STRATEGY:
+
+By Layer:
+- Business Folder (actors, roles, functions)
+- Application Folder (components, frameworks)
+- Infrastructure Folder (services, databases)
+- Technology Folder (runtime, languages)
+
+By Capability:
+- Hook System (lifecycle events)
+- Skills Framework (composable capabilities)
+- Agent System (delegation patterns)
+- Memory System (semantic extraction)
+- Service Management (deployment)
+
+By Concern:
+- Security (validation, permissions, isolation)
+- Data (databases, persistence, caching)
+- Integration (APIs, webhooks, communication)
+- Operations (monitoring, health checks, runbooks)
+
+LABELING:
+
+Element Names: Descriptive, no abbreviations
+Example: 'Claude Code Harness' not 'CCH' or 'Harness'
+
+Relationship Labels: Action-oriented verbs
+- 'Triggers', 'Activates', 'Delegates', 'Records'
+- 'Validates', 'Captures', 'Notifies', 'Integrates'
+
+Documentation:
+- Hover text: Technical details
+- Full documentation: Complete specification
+- Examples: Code snippets where applicable
+
+SPACING &amp; ALIGNMENT:
+
+Horizontal: 60px between related elements
+Vertical: 40px between layers
+Margins: 20px from diagram edge
+
+Groups:
+- Related elements clustered (20px internal)
+- Group separation: 40px
+- Folder visual boundary with border
+
+EMPHASIS:
+
+Critical Path (hot path):
+- Claude Code User → Harness → Hooks → Skills → Agents
+- Highlight: bold (2pt) outline, solid fill
+
+Optional Components:
+- Memory System, Discord Bot, Dashboards
+- Highlight: dashed outline, light fill
+
+Data Flow (high volume):
+- PostToolUse → History → Memory Extraction
+- Highlight: directional arrows, thicker lines
+
+Infrequent Events:
+- Service failures, manual management
+- Highlight: red outline, warning color
+"/>
+  </folder>
+</archimate:ArchimateModel>
